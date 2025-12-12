@@ -1,0 +1,43 @@
+@startuml
+skinparam style strictuml
+hide circle
+skinparam classAttributeIconSize 0
+
+title Eiffel Bike Corp — Simplified Domain Model (No attributes/operations)
+
+package "Identity" {
+  class Member <<entity>>
+}
+
+package "Catalog" {
+  class Bike <<entity>>
+}
+
+package "Rental" {
+  class Rental <<aggregate root>>
+  class Note <<entity>>
+  class ReturnCondition <<entity>>
+}
+
+package "Waiting List" {
+  class WaitingList <<aggregate root>>
+  class WaitlistEntry <<entity>>
+}
+
+package "Notifications" {
+  class Notification <<entity>>
+}
+
+' Core relationships
+Member "1" -- "0..*" Rental : rents >
+Bike  "1" -- "0..*" Rental : rented in >
+
+Rental "1" *-- "0..*" Note : notes
+Rental "1" *-- "0..1" ReturnCondition : returnCondition
+
+Bike "1" o-- "1" WaitingList : queue (per bike)
+WaitingList "1" *-- "0..*" WaitlistEntry : entries (FIFO)
+
+Notification "*" --> "1" Member : recipient >
+
+@enduml

@@ -1,0 +1,13 @@
+curl -s http://localhost:8080/api/bikes
+
+curl -s -X POST http://localhost:8080/api/bikes \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Moutain bike"}'
+
+curl -s http://localhost:8080/api/bikes/1
+
+curl -s -X PUT http://localhost:8080/api/bikes/1 \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Road bicycle"}'
+
+curl -i -X DELETE http://localhost:8080/api/bikes/1
