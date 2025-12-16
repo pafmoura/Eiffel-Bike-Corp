@@ -1,0 +1,152 @@
+@startuml
+skinparam style strictuml
+skinparam classAttributeIconSize 0
+
+' =========================
+' Enums
+' =========================
+enum BikeStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+}
+
+enum RentalStatus {
+  ACTIVE
+  CLOSED
+  CANCELED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SaleOfferStatus {
+  LISTED
+  SOLD
+  REMOVED
+}
+
+' =========================
+' Provider / Customer hierarchy
+' =========================
+abstract class Provider {
+  +id: Long
+}
+
+abstract class Customer {
+  +fullName: String
+  +email: String
+}
+
+class Student
+class Employee
+
+class EiffelBikeCorp {
+  +name: String
+}
+
+Provider <|-- Customer
+Customer <|-- Student
+Customer <|-- Employee
+Provider <|-- EiffelBikeCorp
+
+' =========================
+' Bike + offers
+' =========================
+class Bike {
+  +id: Long
+  +description: String
+  +status: BikeStatus
+  +rentalDailyRateEur: BigDecimal
+}
+
+Bike "0..*" --> "1" Provider : offeredBy (rent)
+
+' =========================
+' Rental + payment + return note
+' =========================
+class Rental {
+  +id: Long
+  +startAt: DateTime
+  +endAt: DateTime
+  +status: RentalStatus
+  +totalAmountEur: BigDecimal
+}
+
+Customer "1" --> "0..*" Rental : rents >
+Bike     "1" --> "0..*" Rental : isRentedIn >
+
+class RentalPayment {
+  +id: Long
+  +originalAmount: BigDecimal
+  +originalCurrency: String
+  +fxRateToEur: BigDecimal
+  +amountEur: BigDecimal
+  +status: PaymentStatus
+  +paidAt: DateTime
+}
+
+Rental "1" o-- "0..*" RentalPayment : payments
+
+class ReturnNote {
+  +id: Long
+  +comment: String
+  +condition: String
+  +createdAt: DateTime
+}
+
+Rental "1" o-- "0..1" ReturnNote : returnNote
+Customer "1" --> "0..*" ReturnNote : writes >
+
+' =========================
+' Waiting list + notifications (FIFO)
+' =========================
+class WaitingList {
+  +id: Long
+}
+
+class WaitingListEntry {
+  +id: Long
+  +createdAt: DateTime
+}
+
+class Notification {
+  +id: Long
+  +message: String
+  +sentAt: DateTime
+}
+
+Bike "1" o-- "0..1" WaitingList : has
+WaitingList "1" o-- "0..*" WaitingListEntry : entries (FIFO)
+Customer "1" --> "0..*" WaitingListEntry : joins >
+WaitingListEntry "1" o-- "0..*" Notification : notifies >
+
+' =========================
+' Sale flow (Corp sells bikes + notes)
+' =========================
+class SaleOffer {
+  +id: Long
+  +askingPriceEur: BigDecimal
+  +status: SaleOfferStatus
+  +listedAt: DateTime
+  +soldAt: DateTime
+}
+
+class SaleNote {
+  +id: Long
+  +title: String
+  +content: String
+  +createdAt: DateTime
+  +createdBy: String
+}
+
+Bike "1" o-- "0..1" SaleOffer : saleOffer
+SaleOffer "0..*" --> "1" EiffelBikeCorp : seller >
+SaleOffer "0..1" --> "0..1" Customer : buyer >
+SaleOffer "1" o-- "0..*" SaleNote : notes
+
+@enduml

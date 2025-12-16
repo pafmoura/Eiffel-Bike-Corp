@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: uge_bike
+    environment:
+      POSTGRES_DB: uge_bike
+      POSTGRES_USER: uge
+      POSTGRES_PASSWORD: uge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
