@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# Install build tools
+RUN apk add --no-cache bash git python3 make g++
+
+WORKDIR /app
+
+# Install Angular CLI globally
+RUN npm install -g @angular/cli
+
+# Copy package.json & package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the app
+COPY . .
+
+EXPOSE 4200
+
+CMD ["ng", "serve", "--host", "0.0.0.0"]

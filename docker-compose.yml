@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./bike-api
+      dockerfile: Dockerfile.dev
+    container_name: bike-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./bike-api:/app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/uge_bike
+      SPRING_DATASOURCE_USERNAME: uge
+      SPRING_DATASOURCE_PASSWORD: uge
+    depends_on:
+      - postgres
+    command: mvn spring-boot:run
+
+  frontend:
+    build:
+      context: ./bike-frontend
+      dockerfile: Dockerfile.dev
+    container_name: bike-frontend
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./bike-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: ng serve --host 0.0.0.0 --poll=2000
+
+
+  postgres:
+    image: postgres:16
+    container_name: uge_bike
+    environment:
+      POSTGRES_DB: uge_bike
+      POSTGRES_USER: uge
+      POSTGRES_PASSWORD: uge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
