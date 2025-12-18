@@ -13,6 +13,9 @@ public record UserRegisterRequest(
         String fullName,
 
         @NotBlank @Email @Size(max = 255)
-        String email
+        String email,
+
+        @NotBlank @Size(min = 6, max = 100) // Added this!
+        String password
 ) {
 }
