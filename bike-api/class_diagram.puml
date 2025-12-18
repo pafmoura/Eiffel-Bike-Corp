@@ -31,31 +31,28 @@ enum SaleOfferStatus {
 }
 
 ' =========================
-' BikeProvider / Customer hierarchy
+' Core actors / identities
 ' =========================
 abstract class BikeProvider {
   +id: UUID
 }
 
-class Customer {
-    +id: UUID
-  +fullName: String
-  +email: String
-}
-
 class Student
 class Employee
-
-class EiffelBikeCorp {
-  +name: String
-}
+class EiffelBikeCorp
 
 BikeProvider <|-- Student
 BikeProvider <|-- Employee
 BikeProvider <|-- EiffelBikeCorp
 
+class Customer {
+  +id: UUID
+  +fullName: String
+  +email: String
+}
+
 ' =========================
-' Bike + offers
+' Bike & rental
 ' =========================
 class Bike {
   +id: Long
@@ -64,21 +61,13 @@ class Bike {
   +rentalDailyRateEur: BigDecimal
 }
 
-Bike "0..*" --> "1" BikeProvider : offeredBy (rent)
-
-' =========================
-' Rental + payment + return note
-' =========================
 class Rental {
   +id: Long
-  +startAt: DateTime
-  +endAt: DateTime
+  +startAt: LocalDateTime
+  +endAt: LocalDateTime
   +status: RentalStatus
   +totalAmountEur: BigDecimal
 }
-
-Customer "1" --> "0..*" Rental : rents >
-Bike     "1" --> "0..*" Rental : isRentedIn >
 
 class RentalPayment {
   +id: Long
@@ -87,23 +76,26 @@ class RentalPayment {
   +fxRateToEur: BigDecimal
   +amountEur: BigDecimal
   +status: PaymentStatus
-  +paidAt: DateTime
+  +paidAt: LocalDateTime
+  +stripePaymentIntentId: String
 }
-
-Rental "1" o-- "0..*" RentalPayment : payments
 
 class ReturnNote {
   +id: Long
   +comment: String
   +condition: String
-  +createdAt: DateTime
+  +createdAt: LocalDateTime
 }
 
+Bike "0..*" --> "1" BikeProvider : offeredBy
+Customer "1" --> "0..*" Rental : rents >
+Bike     "1" --> "0..*" Rental : isRentedIn >
+Rental "1" o-- "0..*" RentalPayment : payments
 Rental "1" o-- "0..1" ReturnNote : returnNote
 Customer "1" --> "0..*" ReturnNote : writes >
 
 ' =========================
-' Waiting list + notifications (FIFO)
+' Waiting list
 ' =========================
 class WaitingList {
   +id: Long
@@ -111,42 +103,43 @@ class WaitingList {
 
 class WaitingListEntry {
   +id: Long
-  +createdAt: DateTime
+  +createdAt: LocalDateTime
+  +servedAt: LocalDateTime
 }
 
 class Notification {
   +id: Long
   +message: String
-  +sentAt: DateTime
+  +sentAt: LocalDateTime
 }
 
-Bike "1" o-- "0..1" WaitingList : has
+Bike "1" o-- "0..1" WaitingList : waitingList
 WaitingList "1" o-- "0..*" WaitingListEntry : entries (FIFO)
 Customer "1" --> "0..*" WaitingListEntry : joins >
-WaitingListEntry "1" o-- "0..*" Notification : notifies >
+WaitingListEntry "1" o-- "0..*" Notification : notifications >
 
 ' =========================
-' Sale flow (Corp sells bikes + notes)
+' Sale offers
 ' =========================
 class SaleOffer {
   +id: Long
   +askingPriceEur: BigDecimal
   +status: SaleOfferStatus
-  +listedAt: DateTime
-  +soldAt: DateTime
+  +listedAt: LocalDateTime
+  +soldAt: LocalDateTime
 }
 
 class SaleNote {
   +id: Long
   +title: String
   +content: String
-  +createdAt: DateTime
+  +createdAt: LocalDateTime
   +createdBy: String
 }
 
 Bike "1" o-- "0..1" SaleOffer : saleOffer
 SaleOffer "0..*" --> "1" EiffelBikeCorp : seller >
-SaleOffer "0..1" --> "0..1" Customer : buyer >
+SaleOffer "0..*" --> "0..1" Customer : buyer >
 SaleOffer "1" o-- "0..*" SaleNote : notes
 
 @enduml

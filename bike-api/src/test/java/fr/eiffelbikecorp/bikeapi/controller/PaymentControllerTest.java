@@ -3,8 +3,10 @@ package fr.eiffelbikecorp.bikeapi.controller;
 import fr.eiffelbikecorp.bikeapi.domain.Customer;
 import fr.eiffelbikecorp.bikeapi.domain.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.payment.PaymentGateway;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.service.FxRateService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,11 @@ class PaymentControllerTest {
     @Autowired
     CustomerRepository customerRepository;
 
+    @Autowired
+    PaymentGateway paymentGateway;
+    @Autowired
+    FxRateService fxRateService;
+
     private UUID corpId = UUID.randomUUID();
     private UUID customerId = UUID.randomUUID();
 
@@ -64,6 +71,7 @@ class PaymentControllerTest {
 
     @Test
     void should_pay_rental_and_return_201_with_response_body() {
+        // Arrange: create bike + rent
         BikeResponse bike = createBike(new BikeCreateRequest(
                 "Bike for payment test",
                 ProviderType.EIFFEL_BIKE_CORP,
@@ -74,14 +82,17 @@ class PaymentControllerTest {
         PayRentalRequest payReq = new PayRentalRequest(
                 rentalId,
                 new BigDecimal("10.00"),
-                "USD"
+                "USD",
+                "pm_test_visa"
         );
+        // Act
         ResponseEntity<RentalPaymentResponse> r = rest.exchange(
                 "/api/payments",
                 HttpMethod.POST,
                 jsonEntity(payReq),
                 RentalPaymentResponse.class
         );
+        // Assert
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(r.getHeaders().getContentType()).isNotNull();
         assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
@@ -106,16 +117,16 @@ class PaymentControllerTest {
                 new BigDecimal("3.00")
         ));
         Long rentalId = rentBikeAndGetRentalId(bike.id(), customerId, 1);
-        // Pay once
         rest.exchange(
                 "/api/payments",
                 HttpMethod.POST,
-                jsonEntity(new PayRentalRequest(rentalId, new BigDecimal("5.00"), "EUR")),
+                jsonEntity(new PayRentalRequest(rentalId, new BigDecimal("5.00"), "EUR", "pm_test_visa")),
                 RentalPaymentResponse.class
         );
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(customerId.toString());
+        // Keep your existing endpoint path from the pasted test
         ResponseEntity<List<RentalPaymentResponse>> r = rest.exchange(
                 "/api/payments/rentals/" + rentalId,
                 HttpMethod.GET,
@@ -140,8 +151,8 @@ class PaymentControllerTest {
 
     @Test
     void should_return_400_when_pay_request_is_invalid() {
-        // invalid: rentalId null, amount null, currency blank (violates @NotNull, @NotBlank, @Pattern)
-        PayRentalRequest invalid = new PayRentalRequest(null, null, "");
+        // If PayRentalRequest now includes paymentMethodId, keep it invalid too.
+        PayRentalRequest invalid = new PayRentalRequest(null, null, "", "");
         ResponseEntity<String> r = rest.exchange(
                 "/api/payments",
                 HttpMethod.POST,
@@ -188,7 +199,7 @@ class PaymentControllerTest {
 
     private <T> HttpEntity<T> jsonEntity(T body) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(customerId.toString());
+        headers.setBearerAuth(customerId.toString()); // your token = customer UUID
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(body, headers);
     }

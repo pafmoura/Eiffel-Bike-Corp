@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Generate Stripe paymentMethodId</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: system-ui, Arial, sans-serif; max-width: 560px; margin: 40px auto; padding: 0 16px; }
+        #card { padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+        button { margin-top: 12px; padding: 10px 14px; border-radius: 8px; border: 0; cursor: pointer; }
+        pre { margin-top: 12px; padding: 12px; border-radius: 8px; background:#111; color:#eee; overflow:auto; }
+    </style>
+</head>
+<body>
+<h2>Create Stripe PaymentMethod (test)</h2>
+<p>Use test card <code>4242 4242 4242 4242</code>, any future expiry, any CVC.</p>
+
+<div id="card"></div>
+<button id="btn">Generate paymentMethodId</button>
+
+<pre id="out">{}</pre>
+
+<script>
+    const stripe = Stripe("pk_test_51SfS3wCaQMBvcQcb7TJTsY0Yw8tOfgyKyogkokiGGDVCiL9ChqVWgK7LT5L0PMcgstEE01laly3Lc2VC8Jgwu2u500utMMgUkK");
+    const elements = stripe.elements();
+    const card = elements.create("card");
+    card.mount("#card");
+
+    document.getElementById("btn").addEventListener("click", async () => {
+        const out = document.getElementById("out");
+        out.textContent = "{}";
+
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: "card",
+            card
+        });
+
+        if (error) {
+            out.textContent = JSON.stringify({ error: error.message }, null, 2);
+            return;
+        }
+
+        out.textContent = JSON.stringify({
+            paymentMethodId: paymentMethod.id
+        }, null, 2);
+    });
+</script>
+<a href="https://docs.stripe.com/testing" target="_blank" rel="noopener">Stripe test cards documentation</a>
+</body>
+</html>

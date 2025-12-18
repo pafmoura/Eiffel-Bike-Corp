@@ -120,8 +120,8 @@ class UserControllerTest {
     void should_return_409_when_email_already_registered() {
         String email = randomEmail();
         // Added 4th argument to both
-        UserRegisterRequest req1 = new UserRegisterRequest(UserType.CUSTOMER, "First", email, "pass1");
-        UserRegisterRequest req2 = new UserRegisterRequest(UserType.STUDENT, "Second", email, "pass2");
+        UserRegisterRequest req1 = new UserRegisterRequest(UserType.CUSTOMER, "First", email, "pass1333");
+        UserRegisterRequest req2 = new UserRegisterRequest(UserType.STUDENT, "Second", email, "pass2333");
 
         rest.exchange("/api/users/register", HttpMethod.POST, jsonEntity(req1), UserResponse.class);
 
