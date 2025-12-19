@@ -24,6 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static fr.eiffelbikecorp.bikeapi.Utils.randomEmail;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,7 +84,8 @@ class PaymentControllerTest {
                 rentalId,
                 new BigDecimal("10.00"),
                 "USD",
-                "pm_test_visa"
+                randomPaymentMethodId()
+
         );
         // Act
         ResponseEntity<RentalPaymentResponse> r = rest.exchange(
@@ -202,5 +204,28 @@ class PaymentControllerTest {
         headers.setBearerAuth(customerId.toString()); // your token = customer UUID
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(body, headers);
+    }
+
+    private static final List<String> PAYMENT_METHOD_IDS = List.of(
+            "pm_1Sfpr8CaQMBvcQcb3VTFjgVW",
+            "pm_1SfprTCaQMBvcQcb2a4vaYQi",
+            "pm_1SfpraCaQMBvcQcbp4YjJDRY",
+            "pm_1SfprgCaQMBvcQcbnOUN1vXH",
+            "pm_1SfprnCaQMBvcQcbfyKXu8av",
+            "pm_1SfprxCaQMBvcQcbTUwLhTR5",
+            "pm_1Sfps3CaQMBvcQcbpOfuKYhv",
+            "pm_1Sfps9CaQMBvcQcbISv3PPbO",
+            "pm_1SfpsECaQMBvcQcbNgFOFNXY",
+            "pm_1SfpsJCaQMBvcQcb9fybyK8V",
+            "pm_1SfpsNCaQMBvcQcby1NkTcrZ",
+            "pm_1SfpsSCaQMBvcQcbjemAVXwO",
+            "pm_1SfpsYCaQMBvcQcbePh2xnA2",
+            "pm_1SfpseCaQMBvcQcbesrDCkmc",
+            "pm_1SfpsiCaQMBvcQcbg0Yi57tn"
+    );
+
+    public static String randomPaymentMethodId() {
+        int i = ThreadLocalRandom.current().nextInt(PAYMENT_METHOD_IDS.size());
+        return PAYMENT_METHOD_IDS.get(i);
     }
 }

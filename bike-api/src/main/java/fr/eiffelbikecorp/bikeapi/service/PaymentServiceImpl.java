@@ -1,7 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import com.stripe.model.PaymentMethod;
-import com.stripe.param.PaymentMethodCreateParams;
 import fr.eiffelbikecorp.bikeapi.domain.PaymentStatus;
 import fr.eiffelbikecorp.bikeapi.domain.Rental;
 import fr.eiffelbikecorp.bikeapi.domain.RentalPayment;
@@ -23,7 +21,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -58,10 +55,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(PaymentStatus.PAID)
                 .paidAt(LocalDateTime.now())
                 .build();
-        //@see stripe.html
-        String paymentMethodId = randomPaymentMethodId(); //FIXME: replace with real PM from request
         // 1) authorize funds (hold)
-        var auth = paymentGateway.authorize(currency, request.amount(), paymentMethodId, "rental:" + rental.getId());
+        var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
         if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
             throw new BusinessRuleException("Payment not authorized: " + auth.message());
         }
@@ -88,29 +83,4 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(RentalPaymentMapper::toResponse)
                 .toList();
     }
-
-    private static final List<String> PAYMENT_METHOD_IDS = List.of(
-            "pm_1Sfpr8CaQMBvcQcb3VTFjgVW",
-            "pm_1SfprTCaQMBvcQcb2a4vaYQi",
-            "pm_1SfpraCaQMBvcQcbp4YjJDRY",
-            "pm_1SfprgCaQMBvcQcbnOUN1vXH",
-            "pm_1SfprnCaQMBvcQcbfyKXu8av",
-            "pm_1SfprxCaQMBvcQcbTUwLhTR5",
-            "pm_1Sfps3CaQMBvcQcbpOfuKYhv",
-            "pm_1Sfps9CaQMBvcQcbISv3PPbO",
-            "pm_1SfpsECaQMBvcQcbNgFOFNXY",
-            "pm_1SfpsJCaQMBvcQcb9fybyK8V",
-            "pm_1SfpsNCaQMBvcQcby1NkTcrZ",
-            "pm_1SfpsSCaQMBvcQcbjemAVXwO",
-            "pm_1SfpsYCaQMBvcQcbePh2xnA2",
-            "pm_1SfpseCaQMBvcQcbesrDCkmc",
-            "pm_1SfpsiCaQMBvcQcbg0Yi57tn"
-    );
-
-    public static String randomPaymentMethodId() {
-        int i = ThreadLocalRandom.current().nextInt(PAYMENT_METHOD_IDS.size());
-        return PAYMENT_METHOD_IDS.get(i);
-    }
-
-
 }
