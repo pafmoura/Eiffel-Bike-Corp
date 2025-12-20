@@ -11,6 +11,7 @@ services:
     volumes:
       - ./bike-api:/app
     environment:
+      SPRING_DOCKER_COMPOSE_ENABLED: false
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/uge_bike
       SPRING_DATASOURCE_USERNAME: uge
       SPRING_DATASOURCE_PASSWORD: uge
