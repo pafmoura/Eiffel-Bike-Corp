@@ -2,7 +2,7 @@ package fr.eiffelbikecorp.bikeapi.controller;
 
 import fr.eiffelbikecorp.bikeapi.dto.*;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
-import fr.eiffelbikecorp.bikeapi.service.SaleService;
+import fr.eiffelbikecorp.bikeapi.service.SaleOfferService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -12,82 +12,83 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-@Path("/sales")
+@Path("/sales" )
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Secured
 @CrossOrigin(origins = "http://localhost:4200") // Add this line
-public class SaleController {
+public class SaleOfferController {
 
-    private final SaleService saleService;
+    private final SaleOfferService saleOfferService;
 
     /**
-     * US_04:
-     * EiffelBikeCorp lists a bike for sale.
-     *
+     * US_04 + US_19:
+     * EiffelBikeCorp lists a bike for sale (only corp bikes rented at least once).
+     * <p>
      * POST /api/sales/offers
      * Body: { "bikeId": 1, "sellerCorpId": 100, "askingPriceEur": 250.00 }
      */
     @POST
-    @Path("/offers")
+    @Path("/offers" )
+    @Secured
     public Response createSaleOffer(@Valid CreateSaleOfferRequest request) {
-        SaleOfferResponse created = saleService.createSaleOffer(request);
+        SaleOfferResponse created = saleOfferService.createSaleOffer(request);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
     /**
      * US_04:
      * EiffelBikeCorp adds a note to a listed sale offer.
-     *
-     * POST /api/sales/notes
+     * <p>
+     * POST /api/sales/offers/notes
      * Body: { "saleOfferId": 10, "title": "...", "content": "...", "createdBy": "Alice" }
      */
     @POST
-    @Path("/notes")
+    @Path("/offers/notes" )
+    @Secured
     public Response addSaleNote(@Valid CreateSaleNoteRequest request) {
-        SaleNoteResponse created = saleService.addSaleNote(request);
+        SaleNoteResponse created = saleOfferService.addSaleNote(request);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
     /**
-     * US_11:
-     * Customer searches bikes to buy (LISTED sale offers).
-     *
+     * US_11 + US_13 + US_14:
+     * Customer searches/list sale offers (LISTED).
+     * <p>
      * GET /api/sales/offers?q=mountain
      */
     @GET
-    @Path("/offers")
-    public Response searchSaleOffers(@QueryParam("q") String q) {
-        List<SaleOfferResponse> results = saleService.searchSaleOffers(q);
+    @Path("/offers" )
+    public Response searchSaleOffers(@QueryParam("q" ) String q) {
+        List<SaleOfferResponse> results = saleOfferService.searchSaleOffers(q);
         return Response.ok(results).build();
     }
 
     /**
      * US_12:
-     * Customer views the sale offer and its notes for a given bike.
-     *
-     * GET /api/sales/bikes/{bikeId}
+     * Customer views offer details + notes by offer id.
+     * <p>
+     * GET /api/sales/offers/{saleOfferId}
      */
     @GET
-    @Path("/bikes/{bikeId}")
-    public Response getSaleOfferDetailsByBike(@PathParam("bikeId") Long bikeId) {
-        SaleOfferDetailsResponse details = saleService.getSaleOfferDetailsByBike(bikeId);
+    @Path("/offers/{saleOfferId}" )
+    public Response getSaleOfferDetails(@PathParam("saleOfferId" ) Long saleOfferId) {
+        SaleOfferDetailsResponse details = saleOfferService.getSaleOfferDetails(saleOfferId);
         return Response.ok(details).build();
     }
 
     /**
-     * Alternative: details by offer id
-     *
-     * GET /api/sales/offers/{saleOfferId}
+     * US_12:
+     * Customer views offer details + notes by bike id.
+     * <p>
+     * GET /api/sales/offers/by-bike/{bikeId}
      */
     @GET
-    @Path("/offers/{saleOfferId}")
-    public Response getSaleOfferDetails(@PathParam("saleOfferId") Long saleOfferId) {
-        SaleOfferDetailsResponse details = saleService.getSaleOfferDetails(saleOfferId);
+    @Path("/offers/by-bike/{bikeId}" )
+    public Response getSaleOfferDetailsByBike(@PathParam("bikeId" ) Long bikeId) {
+        SaleOfferDetailsResponse details = saleOfferService.getSaleOfferDetailsByBike(bikeId);
         return Response.ok(details).build();
     }
 }
