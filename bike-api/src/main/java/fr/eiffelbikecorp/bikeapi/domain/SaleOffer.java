@@ -16,8 +16,8 @@ import java.util.List;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 @Table(
-        uniqueConstraints = @UniqueConstraint(name = "uk_sale_offer_bike", columnNames = "bike_id")
-)
+        name = "sale_offer",
+        uniqueConstraints = @UniqueConstraint(name = "uk_sale_offer_bike", columnNames = "bike_id"))
 public class SaleOffer {
 
     @Id
@@ -25,11 +25,11 @@ public class SaleOffer {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @OneToOne(optional = false)
     @JoinColumn(name = "bike_id", nullable = false)
     private Bike bike;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "seller_corp_id", nullable = false)
     private EiffelBikeCorp seller;
 
@@ -45,11 +45,12 @@ public class SaleOffer {
 
     private LocalDateTime soldAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "buyer_customer_id")
     private Customer buyer;
 
     @OneToMany(mappedBy = "saleOffer", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt DESC")
     private List<SaleNote> notes = new ArrayList<>();
+
 }

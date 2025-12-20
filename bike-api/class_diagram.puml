@@ -30,6 +30,18 @@ enum SaleOfferStatus {
   REMOVED
 }
 
+enum BasketStatus {
+  OPEN
+  CHECKED_OUT
+  ABANDONED
+}
+
+enum PurchaseStatus {
+  CREATED
+  PAID
+  CANCELED
+}
+
 ' =========================
 ' Core actors / identities
 ' =========================
@@ -139,7 +151,66 @@ class SaleNote {
 
 Bike "1" o-- "0..1" SaleOffer : saleOffer
 SaleOffer "0..*" --> "1" EiffelBikeCorp : seller >
-SaleOffer "0..*" --> "0..1" Customer : buyer >
+SaleOffer "0..1" --> "0..1" Customer : buyer >
 SaleOffer "1" o-- "0..*" SaleNote : notes
+
+' =========================
+' Basket
+' =========================
+class Basket {
+  +id: Long
+  +status: BasketStatus
+  +createdAt: LocalDateTime
+  +updatedAt: LocalDateTime
+}
+
+class BasketItem {
+  +id: Long
+  +unitPriceEurSnapshot: BigDecimal
+  +addedAt: LocalDateTime
+}
+
+Customer "1" --> "0..*" Basket : baskets >
+Basket "1" o-- "0..*" BasketItem : items
+BasketItem "0..*" --> "1" SaleOffer : offer >
+
+' =========================
+' Purchase (Order)
+' =========================
+class Purchase {
+  +id: Long
+  +status: PurchaseStatus
+  +totalAmountEur: BigDecimal
+  +createdAt: LocalDateTime
+  +paidAt: LocalDateTime
+}
+
+class PurchaseItem {
+  +id: Long
+  +unitPriceEurSnapshot: BigDecimal
+}
+
+class SalePayment {
+  +id: Long
+  +originalAmount: BigDecimal
+  +originalCurrency: String
+  +fxRateToEur: BigDecimal
+  +amountEur: BigDecimal
+  +status: PaymentStatus
+  +paidAt: LocalDateTime
+  +stripePaymentIntentId: String
+}
+
+Customer "1" --> "0..*" Purchase : purchases >
+Purchase "1" o-- "1..*" PurchaseItem : items
+PurchaseItem "0..*" --> "1" SaleOffer : offer >
+Purchase "1" o-- "0..*" SalePayment : payments
+
+note right of SaleOffer
+Only bikes that:
+1) are offeredBy EiffelBikeCorp
+2) have at least one Rental
+can be LISTED
+end note
 
 @enduml

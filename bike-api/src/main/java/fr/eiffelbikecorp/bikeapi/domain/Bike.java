@@ -26,16 +26,17 @@ public class Bike {
     @Column(nullable = false, length = 32)
     private BikeStatus status;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "offered_by_provider_id", nullable = false)
     private BikeProvider offeredBy;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal rentalDailyRateEur;
 
-    @OneToOne(mappedBy = "bike", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "bike", cascade = CascadeType.ALL, orphanRemoval = true)
     private WaitingList waitingList;
 
-    @OneToOne(mappedBy = "bike", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "bike")
     private SaleOffer saleOffer;
+
 }
