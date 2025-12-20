@@ -23,4 +23,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     // active rentals list
     List<Rental> findByStatus(RentalStatus status);
+
+    boolean existsByBike_Id(Long bikeId);
 }
