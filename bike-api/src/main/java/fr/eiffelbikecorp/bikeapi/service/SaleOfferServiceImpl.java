@@ -13,13 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class SaleServiceImpl implements SaleService {
+public class SaleOfferServiceImpl implements SaleOfferService {
 
     private final BikeRepository bikeRepository;
+    private final RentalRepository rentalRepository;
     private final SaleOfferRepository saleOfferRepository;
     private final SaleNoteRepository saleNoteRepository;
     private final EiffelBikeCorpRepository eiffelBikeCorpRepository;
@@ -37,6 +37,20 @@ public class SaleServiceImpl implements SaleService {
         // Rule: one sale offer per bike
         if (saleOfferRepository.findByBike_Id(bike.getId()).isPresent()) {
             throw new BusinessRuleException("This bike already has a sale offer.");
+        }
+
+        // NEW RULE (US_19): only corp bikes that have been rented at least once
+        if (!(bike.getOfferedBy() instanceof EiffelBikeCorp)) {
+            throw new BusinessRuleException("Only EiffelBikeCorp bikes can be listed for sale.");
+        }
+
+        EiffelBikeCorp offeredByCorp = (EiffelBikeCorp) bike.getOfferedBy();
+        if (offeredByCorp.getId() == null || !offeredByCorp.getId().equals(seller.getId())) {
+            throw new BusinessRuleException("Bike is not owned/offered by the given EiffelBikeCorp seller.");
+        }
+
+        if (!rentalRepository.existsByBike_Id(bike.getId())) {
+            throw new BusinessRuleException("Bike must have been rented at least once to be listed for sale.");
         }
 
         SaleOffer offer = SaleOffer.builder()
