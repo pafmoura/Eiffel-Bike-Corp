@@ -112,6 +112,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (amountEur.compareTo(purchase.getTotalAmountEur()) < 0) {
             throw new BusinessRuleException("Insufficient amount to cover purchase total in EUR." );
         }
+        /** FIXME: gateway integration disabled for now
         // Stripe: authorize then capture
         PaymentGateway.AuthorizationResult auth = paymentGateway.authorize(
                 currency,
@@ -126,6 +127,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (cap.status() != PaymentGateway.GatewayStatus.PAID) {
             throw new BusinessRuleException("Payment capture failed: " + cap.message());
         }
+         */
         LocalDateTime now = LocalDateTime.now();
         SalePayment payment = SalePayment.builder()
                 .purchase(purchase)
@@ -135,7 +137,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .amountEur(amountEur)
                 .status(PaymentStatus.PAID)
                 .paidAt(now)
-                .stripePaymentIntentId(cap.paymentId()) // store PaymentIntent id
+                //.stripePaymentIntentId(cap.paymentId()) // store PaymentIntent id
+                .stripePaymentIntentId("some_id")
                 .build();
         SalePayment saved = salePaymentRepository.save(payment);
         // mark purchase PAID

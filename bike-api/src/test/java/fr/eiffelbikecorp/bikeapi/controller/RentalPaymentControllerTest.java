@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class PaymentControllerTest {
+class RentalPaymentControllerTest {
 
     @Autowired
     TestRestTemplate rest;
@@ -89,7 +89,7 @@ class PaymentControllerTest {
         );
         // Act
         ResponseEntity<RentalPaymentResponse> r = rest.exchange(
-                "/api/payments",
+                "/api/payments/rentals",
                 HttpMethod.POST,
                 jsonEntity(payReq),
                 RentalPaymentResponse.class
@@ -120,7 +120,7 @@ class PaymentControllerTest {
         ));
         Long rentalId = rentBikeAndGetRentalId(bike.id(), customerId, 1);
         rest.exchange(
-                "/api/payments",
+                "/api/payments/rentals",
                 HttpMethod.POST,
                 jsonEntity(new PayRentalRequest(rentalId, new BigDecimal("5.00"), "EUR", randomPaymentMethodId())),
                 RentalPaymentResponse.class
@@ -156,7 +156,7 @@ class PaymentControllerTest {
         // If PayRentalRequest now includes paymentMethodId, keep it invalid too.
         PayRentalRequest invalid = new PayRentalRequest(null, null, "", "");
         ResponseEntity<String> r = rest.exchange(
-                "/api/payments",
+                "/api/payments/rentals",
                 HttpMethod.POST,
                 jsonEntity(invalid),
                 String.class
