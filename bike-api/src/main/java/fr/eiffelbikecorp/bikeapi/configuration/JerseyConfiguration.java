@@ -1,6 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.configuration;
 
-import fr.eiffelbikecorp.bikeapi.exceptions.*;
+import fr.eiffelbikecorp.bikeapi.mapper.*;
 import fr.eiffelbikecorp.bikeapi.security.AuthFilter;
 import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.ApplicationPath;

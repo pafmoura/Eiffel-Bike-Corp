@@ -1,5 +1,7 @@
-package fr.eiffelbikecorp.bikeapi.exceptions;
+package fr.eiffelbikecorp.bikeapi.mapper;
 
+import fr.eiffelbikecorp.bikeapi.dto.ApiError;
+import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import jakarta.ws.rs.core.*;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;

@@ -1,4 +1,4 @@
-package fr.eiffelbikecorp.bikeapi.exceptions;
+package fr.eiffelbikecorp.bikeapi.mapper;
 
 import fr.eiffelbikecorp.bikeapi.domain.Customer;
 import fr.eiffelbikecorp.bikeapi.dto.UserLoginResponse;

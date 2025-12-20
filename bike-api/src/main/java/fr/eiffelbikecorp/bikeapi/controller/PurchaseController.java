@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-@Path("/api/purchases")
+@Path("/purchases")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Secured
@@ -53,7 +53,7 @@ public class PurchaseController {
     }
 
     private UUID customerId() {
-        Object v = requestContext.getProperty("customerId");
+        Object v = requestContext.getProperty("userId");
         if (v instanceof UUID id) return id;
         throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
     }

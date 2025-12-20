@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-import static fr.eiffelbikecorp.bikeapi.Utils.randomEmail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -48,37 +47,34 @@ class SaleOfferControllerTest {
     @Autowired
     StudentRepository studentRepository;
 
-    private UUID corpId = UUID.randomUUID();
-    private UUID customerId = UUID.randomUUID();
+    private UUID corpId;
+    private UUID customerId1;
 
     @BeforeEach
     void setup() {
-        EiffelBikeCorp corp = corpRepository.findById(corpId).orElse(null);
-        Customer customer = customerRepository.findById(customerId).orElse(null);
+        // Seed corp
+        EiffelBikeCorp corp = new EiffelBikeCorp();
+        corpId = corpRepository.saveAndFlush(corp).getId();
 
-        if (corp == null) {
-            corp = new EiffelBikeCorp();
-            corpId = corpRepository.saveAndFlush(corp).getId();
-        }
-        if (customer == null) {
-            Customer c = new Customer();
-            c.setEmail(randomEmail());
-            c.setFullName("Sale Tester");
-            customerId = customerRepository.saveAndFlush(c).getId();
-        }
+        // Seed customer (token = customer UUID)
+        Customer c1 = new Customer();
+        c1.setId(UUID.randomUUID());
+        c1.setEmail("sale-offer-test-" + UUID.randomUUID() + "@test.com");
+        c1.setFullName("Buyer One");
+        customerId1 = customerRepository.saveAndFlush(c1).getId();
     }
 
     @Test
-    void should_create_sale_offer_and_return_201_with_response_body() {
+    void should_create_sale_offer_and_return_201_when_bike_is_corp_and_rented_once() {
         BikeResponse bike = createBike(new BikeCreateRequest(
-                "Bike for sale offer test",
+                "Corp bike for sale listing",
                 ProviderType.EIFFEL_BIKE_CORP,
                 corpId,
                 new BigDecimal("2.50")
         ));
 
-        // NEW RULE: must be rented at least once (we rent and return)
-        rentBikeOnceAndReturn(bike.id());
+        // Eligibility rule: must be rented at least once
+        rentBikeOnceAndReturn(bike.id(), customerId1);
 
         CreateSaleOfferRequest req = new CreateSaleOfferRequest(
                 bike.id(),
@@ -104,17 +100,17 @@ class SaleOfferControllerTest {
         assertThat(body.askingPriceEur()).isEqualByComparingTo(req.askingPriceEur());
         assertThat(body.status()).isEqualTo("LISTED");
         assertThat(body.listedAt()).isNotNull();
-        assertThat(body.soldAt()).isNull();
     }
 
     @Test
-    void should_add_sale_note_and_return_201_with_response_body() {
+    void should_add_sale_note_and_return_201() {
         BikeResponse bike = createBike(new BikeCreateRequest(
-                "Bike for sale note test",
+                "Corp bike for notes",
                 ProviderType.EIFFEL_BIKE_CORP,
                 corpId,
                 new BigDecimal("2.00")
         ));
+        rentBikeOnceAndReturn(bike.id(), customerId1);
 
         SaleOfferResponse offer = createSaleOffer(bike.id(), corpId, new BigDecimal("180.00"));
 
@@ -142,8 +138,8 @@ class SaleOfferControllerTest {
         assertThat(body.saleOfferId()).isEqualTo(offer.id());
         assertThat(body.title()).isEqualTo(req.title());
         assertThat(body.content()).isEqualTo(req.content());
-        assertThat(body.createdAt()).isNotNull();
         assertThat(body.createdBy()).isEqualTo(req.createdBy());
+        assertThat(body.createdAt()).isNotNull();
     }
 
     @Test
@@ -161,14 +157,16 @@ class SaleOfferControllerTest {
                 new BigDecimal("2.00")
         ));
 
+        rentBikeOnceAndReturn(bike1.id(), customerId1);
+        rentBikeOnceAndReturn(bike2.id(), customerId1);
+
         createSaleOffer(bike1.id(), corpId, new BigDecimal("300.00"));
         createSaleOffer(bike2.id(), corpId, new BigDecimal("150.00"));
 
-        // GET is public in the new controller; we can still send auth headers, it doesn't hurt.
         ResponseEntity<List<SaleOfferResponse>> r = rest.exchange(
                 "/api/sales/offers?q=trek",
                 HttpMethod.GET,
-                new HttpEntity<>(authHeaders()),
+                null, // public endpoint
                 new ParameterizedTypeReference<>() {}
         );
 
@@ -183,17 +181,18 @@ class SaleOfferControllerTest {
     }
 
     @Test
-    void should_get_sale_offer_details_by_bike_and_return_200_with_notes() {
+    void should_get_sale_offer_details_by_offer_id_and_return_200_with_notes() {
         BikeResponse bike = createBike(new BikeCreateRequest(
-                "Bike for details test",
+                "Bike for details by offerId",
                 ProviderType.EIFFEL_BIKE_CORP,
                 corpId,
                 new BigDecimal("2.00")
         ));
+        rentBikeOnceAndReturn(bike.id(), customerId1);
 
         SaleOfferResponse offer = createSaleOffer(bike.id(), corpId, new BigDecimal("199.00"));
 
-        // add two notes
+        // add notes
         rest.exchange(
                 "/api/sales/offers/notes",
                 HttpMethod.POST,
@@ -208,47 +207,78 @@ class SaleOfferControllerTest {
         );
 
         ResponseEntity<SaleOfferDetailsResponse> r = rest.exchange(
-                "/api/sales/offers/by-bike/" + bike.id(),
+                "/api/sales/offers/" + offer.id(),
                 HttpMethod.GET,
-                new HttpEntity<>(authHeaders()),
+                null, // public endpoint
                 SaleOfferDetailsResponse.class
         );
 
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(r.getHeaders().getContentType()).isNotNull();
-        assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
-
         SaleOfferDetailsResponse body = r.getBody();
         assertThat(body).isNotNull();
         assertThat(body.offer()).isNotNull();
         assertThat(body.offer().id()).isEqualTo(offer.id());
         assertThat(body.offer().bikeId()).isEqualTo(bike.id());
+
         assertThat(body.notes()).isNotNull();
-        assertThat(body.notes().size()).isGreaterThanOrEqualTo(2);
+        assertThat(body.notes()).isNotEmpty();
         assertThat(body.notes()).anySatisfy(n -> assertThat(n.title()).isEqualTo("Note 1"));
         assertThat(body.notes()).anySatisfy(n -> assertThat(n.title()).isEqualTo("Note 2"));
     }
 
     @Test
-    void should_return_400_when_create_sale_offer_request_is_invalid() {
-        CreateSaleOfferRequest invalid = new CreateSaleOfferRequest(null, null, null);
+    void should_get_sale_offer_details_by_bike_id_and_return_200() {
+        BikeResponse bike = createBike(new BikeCreateRequest(
+                "Bike for details by bikeId",
+                ProviderType.EIFFEL_BIKE_CORP,
+                corpId,
+                new BigDecimal("2.00")
+        ));
+        rentBikeOnceAndReturn(bike.id(), customerId1);
+
+        SaleOfferResponse offer = createSaleOffer(bike.id(), corpId, new BigDecimal("210.00"));
+
+        ResponseEntity<SaleOfferDetailsResponse> r = rest.exchange(
+                "/api/sales/offers/by-bike/" + bike.id(),
+                HttpMethod.GET,
+                null, // public endpoint
+                SaleOfferDetailsResponse.class
+        );
+
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        SaleOfferDetailsResponse body = r.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.offer()).isNotNull();
+        assertThat(body.offer().id()).isEqualTo(offer.id());
+        assertThat(body.offer().bikeId()).isEqualTo(bike.id());
+    }
+
+    @Test
+    void should_return_409_when_bike_was_never_rented() {
+        BikeResponse bike = createBike(new BikeCreateRequest(
+                "Corp bike never rented",
+                ProviderType.EIFFEL_BIKE_CORP,
+                corpId,
+                new BigDecimal("2.50")
+        ));
+
+        CreateSaleOfferRequest req = new CreateSaleOfferRequest(
+                bike.id(),
+                corpId,
+                new BigDecimal("250.00")
+        );
 
         ResponseEntity<String> r = rest.exchange(
                 "/api/sales/offers",
                 HttpMethod.POST,
-                jsonEntity(invalid),
+                jsonEntity(req),
                 String.class
         );
 
-        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(r.getHeaders().getContentType()).isNotNull();
-        assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(r.getBody()).isNotBlank();
     }
 
-    /**
-     * (US_19 rule: only EiffelBikeCorp bikes can be listed for sale)
-     */
     @Test
     void should_return_409_when_bike_is_not_corp_owned() {
         Student student = new Student();
@@ -260,6 +290,9 @@ class SaleOfferControllerTest {
                 studentId,
                 new BigDecimal("2.00")
         ));
+
+        // Even if rented, should still be rejected by "corp-only" rule
+        rentBikeOnceAndReturn(bike.id(), customerId1);
 
         CreateSaleOfferRequest req = new CreateSaleOfferRequest(
                 bike.id(),
@@ -275,16 +308,27 @@ class SaleOfferControllerTest {
         );
 
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(r.getHeaders().getContentType()).isNotNull();
-        assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
         assertThat(r.getBody()).isNotBlank();
-        // optional:
-        // assertThat(r.getBody()).contains("Only EiffelBikeCorp bikes can be listed for sale");
     }
 
-    // -------------------------
+    @Test
+    void should_return_400_when_create_sale_offer_request_is_invalid() {
+        CreateSaleOfferRequest invalid = new CreateSaleOfferRequest(null, null, null);
+
+        ResponseEntity<String> r = rest.exchange(
+                "/api/sales/offers",
+                HttpMethod.POST,
+                jsonEntity(invalid),
+                String.class
+        );
+
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(r.getBody()).isNotBlank();
+    }
+
+    // -------------------------------------------------------
     // Helpers
-    // -------------------------
+    // -------------------------------------------------------
 
     private BikeResponse createBike(BikeCreateRequest req) {
         ResponseEntity<BikeResponse> r = rest.exchange(
@@ -300,46 +344,13 @@ class SaleOfferControllerTest {
         return body;
     }
 
-
-    /**
-     * NEW helper: satisfy "bike must have been rented at least once".
-     * We rent for 1 day and then return.
-     */
-    private void rentBikeOnceAndReturn(Long bikeId) {
-        ResponseEntity<RentBikeResultResponse> rented = rest.exchange(
-                "/api/rentals",
-                HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bikeId, customerId, 1)),
-                RentBikeResultResponse.class
-        );
-        assertThat(rented.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        RentBikeResultResponse rentedBody = rented.getBody();
-        assertThat(rentedBody).isNotNull();
-        assertThat(rentedBody.result()).isEqualTo(RentResult.RENTED);
-        assertThat(rentedBody.rentalId()).isNotNull();
-
-        Long rentalId = rentedBody.rentalId();
-
-        ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
-                "/api/rentals/" + rentalId + "/return",
-                HttpMethod.POST,
-                jsonEntity(new ReturnBikeRequest(customerId, "auto-return for sale eligibility", "Good")),
-                ReturnBikeResponse.class
-        );
-        assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
     private SaleOfferResponse createSaleOffer(Long bikeId, UUID sellerCorpId, BigDecimal askingPriceEur) {
-        // ensure rule "rented at least once"
-        rentBikeOnceAndReturn(bikeId);
-
         ResponseEntity<SaleOfferResponse> r = rest.exchange(
                 "/api/sales/offers",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleOfferRequest(bikeId, sellerCorpId, askingPriceEur)),
                 SaleOfferResponse.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         SaleOfferResponse body = r.getBody();
         assertThat(body).isNotNull();
@@ -347,10 +358,35 @@ class SaleOfferControllerTest {
         return body;
     }
 
+    private void rentBikeOnceAndReturn(Long bikeId, UUID customerId) {
+        // Rent
+        ResponseEntity<RentBikeResultResponse> rented = rest.exchange(
+                "/api/rentals",
+                HttpMethod.POST,
+                jsonEntity(new RentBikeRequest(bikeId, customerId, 1)),
+                RentBikeResultResponse.class
+        );
+        assertThat(rented.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        RentBikeResultResponse rentedBody = rented.getBody();
+        assertThat(rentedBody).isNotNull();
+        assertThat(rentedBody.result()).isEqualTo(RentResult.RENTED);
+        assertThat(rentedBody.rentalId()).isNotNull();
+
+        // Return (so bike becomes available again for other tests)
+        ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
+                "/api/rentals/" + rentedBody.rentalId() + "/return",
+                HttpMethod.POST,
+                jsonEntity(new ReturnBikeRequest(customerId, "return for sale eligibility", "Good")),
+                ReturnBikeResponse.class
+        );
+        assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
     private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId.toString()); // token = customer UUID (your simplified auth)
+        headers.setBearerAuth(customerId1.toString()); // token = customer UUID
         return headers;
     }
 

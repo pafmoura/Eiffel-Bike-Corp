@@ -7,7 +7,7 @@ import fr.eiffelbikecorp.bikeapi.dto.UserRegisterRequest;
 import fr.eiffelbikecorp.bikeapi.dto.UserResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.AuthenticationException;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
-import fr.eiffelbikecorp.bikeapi.exceptions.UserLoginMapper;
+import fr.eiffelbikecorp.bikeapi.mapper.UserLoginMapper;
 import fr.eiffelbikecorp.bikeapi.mapper.UserMapper;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;

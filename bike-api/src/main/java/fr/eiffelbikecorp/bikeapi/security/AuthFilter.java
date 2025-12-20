@@ -1,6 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.security;
 
-import fr.eiffelbikecorp.bikeapi.exceptions.ApiError;
+import fr.eiffelbikecorp.bikeapi.dto.ApiError;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;

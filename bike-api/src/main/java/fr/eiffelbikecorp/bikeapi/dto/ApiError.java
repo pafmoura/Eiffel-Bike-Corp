@@ -1,4 +1,4 @@
-package fr.eiffelbikecorp.bikeapi.exceptions;
+package fr.eiffelbikecorp.bikeapi.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;

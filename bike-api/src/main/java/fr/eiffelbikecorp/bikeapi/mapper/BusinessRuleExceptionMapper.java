@@ -1,5 +1,7 @@
-package fr.eiffelbikecorp.bikeapi.exceptions;
+package fr.eiffelbikecorp.bikeapi.mapper;
 
+import fr.eiffelbikecorp.bikeapi.dto.ApiError;
+import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import jakarta.ws.rs.core.*;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -8,23 +10,22 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Provider
-public class AuthenticationExceptionMapper implements ExceptionMapper<AuthenticationException> {
+public class BusinessRuleExceptionMapper implements ExceptionMapper<BusinessRuleException> {
 
     @Context
     private UriInfo uriInfo;
 
     @Override
-    public Response toResponse(AuthenticationException ex) {
+    public Response toResponse(BusinessRuleException ex) {
         ApiError body = new ApiError(
-                401,
-                "Unauthorized",
+                409,
+                "Conflict",
                 ex.getMessage(),
                 uriInfo != null ? uriInfo.getPath() : null,
                 OffsetDateTime.now(),
                 List.of()
         );
-
-        return Response.status(Response.Status.UNAUTHORIZED)
+        return Response.status(Response.Status.CONFLICT)
                 .type(MediaType.APPLICATION_JSON)
                 .entity(body)
                 .build();
