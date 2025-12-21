@@ -1,9 +1,9 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.Purchase;
-import fr.eiffelbikecorp.bikeapi.domain.PurchaseItem;
-import fr.eiffelbikecorp.bikeapi.dto.PurchaseItemResponse;
-import fr.eiffelbikecorp.bikeapi.dto.PurchaseResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Purchase;
+import fr.eiffelbikecorp.bikeapi.domain.entity.PurchaseItem;
+import fr.eiffelbikecorp.bikeapi.dto.response.PurchaseItemResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.PurchaseResponse;
 
 import java.util.List;
 

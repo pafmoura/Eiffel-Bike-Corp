@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.AddToBasketRequest;
-import fr.eiffelbikecorp.bikeapi.dto.BasketResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.AddToBasketRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BasketResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.BasketService;
 import jakarta.validation.Valid;

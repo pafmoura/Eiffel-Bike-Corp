@@ -1,6 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 
 import java.util.List;
 import java.util.UUID;

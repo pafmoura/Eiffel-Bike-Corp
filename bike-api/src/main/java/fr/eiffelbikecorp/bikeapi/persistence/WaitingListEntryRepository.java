@@ -1,6 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.persistence;
 
-import fr.eiffelbikecorp.bikeapi.domain.WaitingListEntry;
+import fr.eiffelbikecorp.bikeapi.domain.entity.WaitingListEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

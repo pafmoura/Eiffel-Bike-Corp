@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.RentalPayment;
-import fr.eiffelbikecorp.bikeapi.dto.RentalPaymentResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.RentalPayment;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
 
 public final class RentalPaymentMapper {
     private RentalPaymentMapper() {}

@@ -1,9 +1,9 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.Basket;
-import fr.eiffelbikecorp.bikeapi.domain.BasketItem;
-import fr.eiffelbikecorp.bikeapi.dto.BasketItemResponse;
-import fr.eiffelbikecorp.bikeapi.dto.BasketResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Basket;
+import fr.eiffelbikecorp.bikeapi.domain.entity.BasketItem;
+import fr.eiffelbikecorp.bikeapi.dto.response.BasketItemResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.BasketResponse;
 
 import java.util.List;
 

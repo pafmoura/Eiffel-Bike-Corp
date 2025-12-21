@@ -1,6 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.PurchaseResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.PurchaseResponse;
 
 import java.util.List;
 import java.util.UUID;

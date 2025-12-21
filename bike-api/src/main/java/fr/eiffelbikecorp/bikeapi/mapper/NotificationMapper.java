@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.Notification;
-import fr.eiffelbikecorp.bikeapi.dto.NotificationResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Notification;
+import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
 
 public final class NotificationMapper {
     private NotificationMapper() {

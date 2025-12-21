@@ -1,9 +1,9 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.UserResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 
 public interface UserService {
     UserResponse register(UserRegisterRequest request);

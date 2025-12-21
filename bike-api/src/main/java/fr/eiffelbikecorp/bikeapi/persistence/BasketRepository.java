@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.persistence;
 
-import fr.eiffelbikecorp.bikeapi.domain.Basket;
-import fr.eiffelbikecorp.bikeapi.domain.BasketStatus;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Basket;
+import fr.eiffelbikecorp.bikeapi.domain.enums.BasketStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

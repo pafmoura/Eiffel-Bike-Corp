@@ -1,8 +1,16 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.domain.Customer;
-import fr.eiffelbikecorp.bikeapi.domain.EiffelBikeCorp;
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
+import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
+import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
@@ -64,12 +72,16 @@ class RentalControllerTest {
             Customer c1 = new Customer();
             c1.setEmail(randomEmail());
             c1.setFullName("John Doe");
+            c1.setPassword("testpassword");
+
             customerId1 = customerRepository.saveAndFlush(c1).getId();
         }
         if (customer2 == null) {
             Customer c2 = new Customer();
             c2.setEmail(randomEmail());
             c2.setFullName("John Doe2");
+            c2.setPassword("testpassword");
+
             customerId2 = customerRepository.saveAndFlush(c2).getId();
         }
     }

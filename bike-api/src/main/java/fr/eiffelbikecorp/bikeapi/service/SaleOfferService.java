@@ -1,6 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleNoteRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleOfferRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleNoteResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferDetailsResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
 
 import java.util.List;
 

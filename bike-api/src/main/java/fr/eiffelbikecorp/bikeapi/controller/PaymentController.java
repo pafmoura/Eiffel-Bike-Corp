@@ -1,9 +1,9 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.PayPurchaseRequest;
-import fr.eiffelbikecorp.bikeapi.dto.PayRentalRequest;
-import fr.eiffelbikecorp.bikeapi.dto.RentalPaymentResponse;
-import fr.eiffelbikecorp.bikeapi.dto.SalePaymentResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.PayPurchaseRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.PayRentalRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.SalePaymentResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.PaymentService;
 import jakarta.validation.Valid;

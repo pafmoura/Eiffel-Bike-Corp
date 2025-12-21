@@ -1,6 +1,11 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
+import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.RentalService;
 import jakarta.validation.Valid;

@@ -1,8 +1,8 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;

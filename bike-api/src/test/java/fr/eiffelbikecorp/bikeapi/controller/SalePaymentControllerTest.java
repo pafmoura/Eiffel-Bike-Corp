@@ -1,8 +1,11 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.domain.Customer;
-import fr.eiffelbikecorp.bikeapi.domain.EiffelBikeCorp;
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
+import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
+import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
+import fr.eiffelbikecorp.bikeapi.dto.request.*;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +55,7 @@ class SalePaymentControllerTest {
         c.setId(UUID.randomUUID());
         c.setEmail("sale-payment-test-" + UUID.randomUUID() + "@test.com");
         c.setFullName("Sale Payment Tester");
+        c.setPassword("testpassword");
         customerId = customerRepository.saveAndFlush(c).getId();
     }
 

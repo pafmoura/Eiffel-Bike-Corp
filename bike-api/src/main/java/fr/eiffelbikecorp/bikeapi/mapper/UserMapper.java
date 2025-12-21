@@ -1,8 +1,8 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.BikeProvider;
-import fr.eiffelbikecorp.bikeapi.domain.Customer;
-import fr.eiffelbikecorp.bikeapi.dto.UserResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.BikeProvider;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 
 public final class UserMapper {
     private UserMapper() {}

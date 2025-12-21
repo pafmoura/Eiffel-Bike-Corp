@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.mapper;
 
-import fr.eiffelbikecorp.bikeapi.domain.SaleOffer;
-import fr.eiffelbikecorp.bikeapi.dto.SaleOfferResponse;
+import fr.eiffelbikecorp.bikeapi.domain.entity.SaleOffer;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
 
 public final class SaleOfferMapper {
     private SaleOfferMapper() {}

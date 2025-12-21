@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.persistence;
 
-import fr.eiffelbikecorp.bikeapi.domain.SaleOffer;
-import fr.eiffelbikecorp.bikeapi.domain.SaleOfferStatus;
+import fr.eiffelbikecorp.bikeapi.domain.entity.SaleOffer;
+import fr.eiffelbikecorp.bikeapi.domain.enums.SaleOfferStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

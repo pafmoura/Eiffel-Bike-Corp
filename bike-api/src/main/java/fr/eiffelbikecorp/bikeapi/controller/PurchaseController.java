@@ -1,6 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.PurchaseResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.PurchaseResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.PurchaseService;
 import jakarta.ws.rs.*;

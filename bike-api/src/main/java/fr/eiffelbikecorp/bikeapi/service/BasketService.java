@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
-import fr.eiffelbikecorp.bikeapi.dto.AddToBasketRequest;
-import fr.eiffelbikecorp.bikeapi.dto.BasketResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.AddToBasketRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BasketResponse;
 
 import java.util.UUID;
 

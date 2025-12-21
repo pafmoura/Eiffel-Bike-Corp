@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.persistence;
 
-import fr.eiffelbikecorp.bikeapi.domain.PaymentStatus;
-import fr.eiffelbikecorp.bikeapi.domain.RentalPayment;
+import fr.eiffelbikecorp.bikeapi.domain.enums.PaymentStatus;
+import fr.eiffelbikecorp.bikeapi.domain.entity.RentalPayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

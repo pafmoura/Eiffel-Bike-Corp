@@ -1,10 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.domain.UserType;
-import fr.eiffelbikecorp.bikeapi.dto.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.UserResponse;
+import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
+import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
@@ -171,7 +171,8 @@ class UserControllerTest {
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         UserLoginResponse body = r.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.token()).isNotNull();
+        assertThat(body.accessToken()).isNotNull();
+        System.out.println("Login token: " + body.accessToken());
     }
 
     @Test

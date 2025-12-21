@@ -1,8 +1,15 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.domain.Customer;
-import fr.eiffelbikecorp.bikeapi.domain.EiffelBikeCorp;
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
+import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
+import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.PayRentalRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
 import fr.eiffelbikecorp.bikeapi.payment.PaymentGateway;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
@@ -66,6 +73,8 @@ class RentalPaymentControllerTest {
             Customer c = new Customer();
             c.setEmail(randomEmail());
             c.setFullName("Payment Tester");
+            c.setPassword("testpassword");
+
             customerId = customerRepository.saveAndFlush(c).getId();
         }
     }

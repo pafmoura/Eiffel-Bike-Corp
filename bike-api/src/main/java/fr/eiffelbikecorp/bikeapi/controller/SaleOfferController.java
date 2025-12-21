@@ -1,6 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.*;
+import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleNoteRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleOfferRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleNoteResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferDetailsResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.SaleOfferService;
 import jakarta.validation.Valid;

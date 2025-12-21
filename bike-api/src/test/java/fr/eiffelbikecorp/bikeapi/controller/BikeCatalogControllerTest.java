@@ -1,11 +1,11 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.domain.Customer;
-import fr.eiffelbikecorp.bikeapi.domain.EiffelBikeCorp;
-import fr.eiffelbikecorp.bikeapi.dto.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.BikeUpdateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.ProviderType;
+import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
+import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +61,8 @@ class BikeCatalogControllerTest {
             Customer c = new Customer();
             c.setEmail(randomEmail());
             c.setFullName("Bike Catalog Tester");
+            c.setPassword("testpassword");
+
             autenticatedCustumerId = customerRepository.saveAndFlush(c).getId();
         }
 

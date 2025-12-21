@@ -1,7 +1,7 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
 import fr.eiffelbikecorp.bikeapi.configuration.ExchangeRateApiProperties;
-import fr.eiffelbikecorp.bikeapi.dto.ExchangeRateApiResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.ExchangeRateApiResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
 import org.jboss.logging.Logger;
