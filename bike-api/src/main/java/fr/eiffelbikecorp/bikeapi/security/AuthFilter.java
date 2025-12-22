@@ -27,68 +27,62 @@ public class AuthFilter implements ContainerRequestFilter {
 
     private final CustomerRepository customerRepository;
 
+    // 1. INJETAR O TOKEN SERVICE AQUI
+    private final TokenService tokenService;
+
     @Context
     private UriInfo uriInfo;
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
         if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) {
-            logger.info("Bypassing authentication for OPTIONS request to " + requestContext.getUriInfo().getPath());
             return;
         }
 
-        logger.info("Authenticating request to " + requestContext.getUriInfo().getPath());
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth == null || auth.isBlank() || !auth.startsWith("Bearer ")) {
             abort401(requestContext, "Missing or invalid Authorization header.");
             return;
         }
+
         String token = auth.substring("Bearer ".length()).trim();
-        UUID userId;
-        try {
-            userId = UUID.fromString(token);
-        } catch (IllegalArgumentException ex) {
-            abort401(requestContext, "Invalid token.");
+
+        // 2. CORREÇÃO: Usar o TokenService para validar o JWT e obter o UUID
+        UUID userId = tokenService.validateAndGetUserId(token);
+
+        // Se o token for inválido ou expirado, o método acima retorna null (conforme o teu TokenService)
+        if (userId == null) {
+            abort401(requestContext, "Invalid or expired token.");
             return;
         }
-        // check if the user exists. We don't check roles/permissions here for simplicity.
-        // we just check the customer existence because all users are customers in this simplified model.
+
+        // check if the user exists
         if (!customerRepository.existsById(userId)) {
             abort404(requestContext, "User not found.");
             return;
         }
-        // put the userId in the request context for further use in the resource methods
+
         requestContext.setProperty("userId", userId);
-        logger.info("Authenticated user " + userId + " for request to " + requestContext.getUriInfo().getPath());
+        logger.info("Authenticated user " + userId);
     }
 
     private void abort401(ContainerRequestContext ctx, String message) {
         ApiError body = new ApiError(
-                401,
-                "Unauthorized",
-                message,
+                401, "Unauthorized", message,
                 uriInfo != null ? uriInfo.getPath() : null,
-                OffsetDateTime.now(),
-                List.of()
+                OffsetDateTime.now(), List.of()
         );
         ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(body)
-                .build());
+                .type(MediaType.APPLICATION_JSON).entity(body).build());
     }
 
     private void abort404(ContainerRequestContext ctx, String message) {
         ApiError body = new ApiError(
-                404,
-                "Not Found",
-                message,
+                404, "Not Found", message,
                 uriInfo != null ? uriInfo.getPath() : null,
-                OffsetDateTime.now(),
-                List.of()
+                OffsetDateTime.now(), List.of()
         );
         ctx.abortWith(Response.status(Response.Status.NOT_FOUND)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(body)
-                .build());
+                .type(MediaType.APPLICATION_JSON).entity(body).build());
     }
 }

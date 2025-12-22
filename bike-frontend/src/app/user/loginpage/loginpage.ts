@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user-service';
-import { FormsModule } from '@angular/forms'; // 1. Add this import
+import { FormsModule } from '@angular/forms'; 
 
 @Component({
   selector: 'app-loginpage',
-  standalone: true, // Ensure this is present if using imports
-  imports: [FormsModule], // 2. Add this to your imports array
+  standalone: true,
+  imports: [FormsModule], 
   templateUrl: './loginpage.html',
   styleUrl: './loginpage.scss',
 })
@@ -18,8 +18,14 @@ export class Loginpage {
 
   onLogin() {
     this.userService.login(this.credentials).subscribe({
-      next: (res) => {
+      next: (res: any) => { // Ensure res is typed or use any to access properties
         console.log('Login successful!', res);
+        
+        // --- FIX START ---
+        // Store the token so other components/interceptors can use it
+        localStorage.setItem('token', res.accessToken); 
+        // --- FIX END ---
+
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
