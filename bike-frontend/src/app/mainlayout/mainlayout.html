@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-slate-50 flex font-sans">
+  
+  <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0 shadow-2xl z-20">
+    
+    <div class="p-8 pb-4">
+      <div class="flex items-center gap-3 text-white">
+        <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+        <span class="text-2xl font-bold tracking-tight">EiffelBike</span>
+      </div>
+    </div>
+    
+    <nav class="mt-8 px-4 space-y-2 flex-1">
+      
+      <a routerLink="/dashboard" 
+         routerLinkActive="bg-indigo-600/10 text-indigo-400 border-indigo-500/20 shadow-md" 
+         [routerLinkActiveOptions]="{exact: true}"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
+         <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+         <span class="font-medium">Rent a Bike</span>
+      </a>
+
+      <a routerLink="/sales" 
+         routerLinkActive="bg-indigo-600/10 text-indigo-400 border-indigo-500/20 shadow-md"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
+         <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+         <span class="font-medium">Buy a Bike</span>
+      </a>
+
+      <a routerLink="/rentals" 
+         routerLinkActive="bg-indigo-600/10 text-indigo-400 border-indigo-500/20 shadow-md"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
+         <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+         <span class="font-medium">My Rentals</span>
+      </a>
+
+      <a routerLink="/offer" 
+         routerLinkActive="bg-indigo-600/10 text-indigo-400 border-indigo-500/20 shadow-md"
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
+         <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+         <span class="font-medium">Offer a Bike</span>
+      </a>
+    </nav>
+    
+    <div class="p-4 border-t border-slate-800">
+      <button (click)="logout()" class="flex items-center gap-3 text-sm font-medium hover:text-white transition w-full p-2 rounded-lg hover:bg-slate-800">
+        <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">
+          {{ username().charAt(0) | uppercase }}
+        </div>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-8 lg:p-12 overflow-y-auto h-screen">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
