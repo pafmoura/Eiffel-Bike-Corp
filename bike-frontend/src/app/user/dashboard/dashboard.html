@@ -28,12 +28,12 @@
           <p class="text-xs text-slate-400 font-medium uppercase">Daily Rate</p>
           <span class="text-2xl font-extrabold text-slate-900">{{ bike.rentalDailyRateEur }}€</span>
         </div>
-        <button (click)="rentBike(bike.id)" 
-                class="px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95"
-                [ngClass]="bike.status === 'AVAILABLE' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-400 border border-slate-200'">
-          {{ bike.status === 'AVAILABLE' ? 'Rent' : 'Join Waitlist' }}
-        </button>
-      </div>
+<button (click)="rentBike(bike.id)" 
+        class="px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95"
+        [ngClass]="bike.status === 'AVAILABLE' 
+           ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+           : 'bg-orange-500 text-white hover:bg-orange-600'"> {{ bike.status === 'AVAILABLE' ? 'Rent' : 'Join Waitlist' }}
+</button>      </div>
     </div>
   </div>
 </div>

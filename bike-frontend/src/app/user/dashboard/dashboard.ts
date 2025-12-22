@@ -38,7 +38,7 @@ private http = inject(HttpClient);
     });
   }
 
-  rentBike(bikeId: number) {
+rentBike(bikeId: number) {
     const token = localStorage.getItem('token');
     if (!token) { alert('Please log in first'); return; };
 
@@ -51,7 +51,14 @@ private http = inject(HttpClient);
           alert(res.result === 'RENTED' ? 'Success! Bike Rented.' : 'Added to Waiting List');
           this.loadBikes(); 
         },
-        error: () => alert('Error processing rental')
+        // IMPROVED ERROR HANDLING HERE
+        error: (err) => {
+          if (err.status === 409) {
+            alert('You are already on the waiting list for this bike!');
+          } else {
+            console.error(err);
+            alert('Error processing rental. Please try again.');
+          }
+        }
       });
-  }
-}
+  }}
