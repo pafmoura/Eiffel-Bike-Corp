@@ -30,7 +30,7 @@ public class TokenService {
     private static final String SECRET_KEY_STRING = "s3cr3tK3yF0rJwTg3n3rati0nAndV4lidati0nInEiff3lBik3C0rpAppl1cat10n";
 
     public String generateToken(Customer user) {
-        String userType = CustomerType.SILVER.name();
+        String userType = CustomerType.ORDINARY.name();
         if (studentRepository.existsById(user.getId())
                 || employeeRepository.existsById(user.getId())
                 || eiffelBikeCorpRepository.existsById(user.getId())) {
