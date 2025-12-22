@@ -14,6 +14,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +60,10 @@ class RentalControllerTest {
     private UUID customerId1 = UUID.randomUUID();
     private UUID customerId2 = UUID.randomUUID();
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     @BeforeEach
     void setup() {
         EiffelBikeCorp corp = corpRepository.findById(corpId).orElse(null);
@@ -73,15 +78,15 @@ class RentalControllerTest {
             c1.setEmail(randomEmail());
             c1.setFullName("John Doe");
             c1.setPassword("testpassword");
-
-            customerId1 = customerRepository.saveAndFlush(c1).getId();
+            c1 = customerRepository.saveAndFlush(c1);
+            customerId1 = c1.getId();
+            accessToken = tokenService.generateToken(c1);
         }
         if (customer2 == null) {
             Customer c2 = new Customer();
             c2.setEmail(randomEmail());
             c2.setFullName("John Doe2");
             c2.setPassword("testpassword");
-
             customerId2 = customerRepository.saveAndFlush(c2).getId();
         }
     }
@@ -98,7 +103,7 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> r = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(rentReq),
+                new HttpEntity<>(rentReq, authHeaders()),
                 RentBikeResultResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -123,7 +128,7 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId1, 2)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders()),
                 RentBikeResultResponse.class
         );
         assertThat(firstRent.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -131,7 +136,7 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> secondRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId2, 2)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 2), authHeaders()),
                 RentBikeResultResponse.class
         );
         assertThat(secondRent.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -154,7 +159,7 @@ class RentalControllerTest {
         RentBikeResultResponse firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId1, 1)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders()),
                 RentBikeResultResponse.class
         ).getBody();
         assertThat(firstRent).isNotNull();
@@ -165,7 +170,7 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> secondRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId2, 1)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders()),
                 RentBikeResultResponse.class
         );
         assertThat(secondRent.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -178,7 +183,7 @@ class RentalControllerTest {
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 "/api/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
-                jsonEntity(returnReq),
+                new HttpEntity<>(returnReq, authHeaders()),
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -214,7 +219,7 @@ class RentalControllerTest {
         RentBikeResultResponse firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId1, 1)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 1), authHeaders()),
                 RentBikeResultResponse.class
         ).getBody();
         assertThat(firstRent).isNotNull();
@@ -222,22 +227,19 @@ class RentalControllerTest {
         rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(new RentBikeRequest(bike.id(), customerId2, 1)),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders()),
                 RentBikeResultResponse.class
         );
         rest.exchange(
                 "/api/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
-                jsonEntity(new ReturnBikeRequest(customerId1, "Ok", "Good")),
+                new HttpEntity<>(new ReturnBikeRequest(customerId1, "Ok", "Good"), authHeaders()),
                 ReturnBikeResponse.class
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId1.toString());
         ResponseEntity<List<NotificationResponse>> r = rest.exchange(
                 "/api/rentals/notifications?customerId=" + customerId2,
                 HttpMethod.GET,
-                new HttpEntity<>(headers),
+                new HttpEntity<>(authHeaders()),
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -259,7 +261,7 @@ class RentalControllerTest {
         ResponseEntity<String> r = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                jsonEntity(invalid),
+                new HttpEntity<>(invalid, authHeaders()),
                 String.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -272,7 +274,7 @@ class RentalControllerTest {
         ResponseEntity<BikeResponse> r = rest.exchange(
                 "/api/bikes",
                 HttpMethod.POST,
-                jsonEntity(req),
+                new HttpEntity<>(req, authHeaders()),
                 BikeResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -282,10 +284,10 @@ class RentalControllerTest {
         return body;
     }
 
-    private <T> HttpEntity<T> jsonEntity(T body) {
+    private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(customerId1.toString());
         headers.setContentType(MediaType.APPLICATION_JSON);
-        return new HttpEntity<>(body, headers);
+        headers.setBearerAuth(accessToken); // token = customer UUID
+        return headers;
     }
 }

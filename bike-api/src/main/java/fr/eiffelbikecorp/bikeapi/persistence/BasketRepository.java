@@ -10,6 +10,4 @@ import java.util.UUID;
 public interface BasketRepository extends JpaRepository<Basket, Long> {
 
     Optional<Basket> findByCustomer_IdAndStatus(UUID customerId, BasketStatus status);
-
-    boolean existsByCustomer_IdAndStatus(UUID customerId, BasketStatus status);
 }

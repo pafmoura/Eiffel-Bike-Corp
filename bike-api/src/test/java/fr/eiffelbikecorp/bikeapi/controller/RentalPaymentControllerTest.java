@@ -13,6 +13,8 @@ import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
 import fr.eiffelbikecorp.bikeapi.payment.PaymentGateway;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.security.AuthFilter;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import fr.eiffelbikecorp.bikeapi.service.FxRateService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.orm.jpa.EntityManagerFactoryAccessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -58,8 +61,16 @@ class RentalPaymentControllerTest {
     @Autowired
     FxRateService fxRateService;
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     private UUID corpId = UUID.randomUUID();
     private UUID customerId = UUID.randomUUID();
+    @Autowired
+    private EntityManagerFactoryAccessor entityManagerFactoryAccessor;
+    @Autowired
+    private AuthFilter authFilter;
 
     @BeforeEach
     void setup() {
@@ -74,8 +85,9 @@ class RentalPaymentControllerTest {
             c.setEmail(randomEmail());
             c.setFullName("Payment Tester");
             c.setPassword("testpassword");
-
-            customerId = customerRepository.saveAndFlush(c).getId();
+            c = customerRepository.saveAndFlush(c);
+            customerId = c.getId();
+            accessToken = tokenService.generateToken(c);
         }
     }
 
@@ -94,7 +106,6 @@ class RentalPaymentControllerTest {
                 new BigDecimal("10.00"),
                 "USD",
                 randomPaymentMethodId()
-
         );
         // Act
         ResponseEntity<RentalPaymentResponse> r = rest.exchange(
@@ -134,14 +145,11 @@ class RentalPaymentControllerTest {
                 jsonEntity(new PayRentalRequest(rentalId, new BigDecimal("5.00"), "EUR", randomPaymentMethodId())),
                 RentalPaymentResponse.class
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId.toString());
         // Keep your existing endpoint path from the pasted test
         ResponseEntity<List<RentalPaymentResponse>> r = rest.exchange(
                 "/api/payments/rentals/" + rentalId,
                 HttpMethod.GET,
-                new HttpEntity<>(headers),
+                new HttpEntity<>(authHeaders()),
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -209,10 +217,14 @@ class RentalPaymentControllerTest {
     }
 
     private <T> HttpEntity<T> jsonEntity(T body) {
+        return new HttpEntity<>(body, authHeaders());
+    }
+
+    private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(customerId.toString()); // your token = customer UUID
         headers.setContentType(MediaType.APPLICATION_JSON);
-        return new HttpEntity<>(body, headers);
+        headers.setBearerAuth(accessToken);
+        return headers;
     }
 
     private static final List<String> PAYMENT_METHOD_IDS = List.of("pm_1SgN4CCaQMBvcQcbDYKaJorf",
