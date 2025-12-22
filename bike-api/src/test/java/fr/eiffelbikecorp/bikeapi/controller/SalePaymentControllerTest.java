@@ -88,7 +88,7 @@ class SalePaymentControllerTest {
         assertThat(purchase.totalAmountEur()).isEqualByComparingTo(offer.askingPriceEur());
         // 2) Pay
         // If Stripe is used for real, replace paymentMethodId with a valid fresh one.
-        String paymentMethodId = "pm_test_visa";
+        String paymentMethodId = "pm_card_visa";
         PayPurchaseRequest payReq = new PayPurchaseRequest(
                 purchase.id(),
                 purchase.totalAmountEur(), // simplest: pay exact total in EUR
@@ -143,9 +143,8 @@ class SalePaymentControllerTest {
                 purchase.id(),
                 purchase.totalAmountEur(),
                 "EUR",
-                "pm_test_visa"
+                "pm_card_visa"
         );
-        // First payment -> 201
         ResponseEntity<String> first = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
@@ -154,10 +153,16 @@ class SalePaymentControllerTest {
         );
         assertThat(first.getStatusCode()).isIn(HttpStatus.CREATED, HttpStatus.OK);
         // Second payment -> 409 (BusinessRuleException)
+        PayPurchaseRequest payReq2 = new PayPurchaseRequest(
+                purchase.id(),
+                purchase.totalAmountEur(),
+                "EUR",
+                "pm_1ShHOZCaQMBvcQcbf6p9dnkt"
+        );
         ResponseEntity<String> second = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
-                jsonEntity(payReq),
+                jsonEntity(payReq2),
                 String.class
         );
         assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);

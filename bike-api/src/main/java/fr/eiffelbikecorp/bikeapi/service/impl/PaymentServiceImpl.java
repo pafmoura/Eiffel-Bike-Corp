@@ -49,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
         Rental rental = rentalRepository.findById(request.rentalId())
                 .orElseThrow(() -> new NotFoundException("Rental not found: " + request.rentalId()));
         if (rental.getStatus() != RentalStatus.ACTIVE) {
-            throw new BusinessRuleException("Only ACTIVE rentals can be paid." );
+            throw new BusinessRuleException("Only ACTIVE rentals can be paid.");
         }
         String currency = request.currency().trim().toUpperCase();
         BigDecimal rateToEur = fxRateService.getRateToEur(currency);
@@ -65,19 +65,17 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(PaymentStatus.PAID)
                 .paidAt(LocalDateTime.now())
                 .build();
-        /** TODO: gateway integration disabled fow now
-         // 1) authorize funds (hold)
-         var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
-         if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
-         throw new BusinessRuleException("Payment not authorized: " + auth.message());
-         }
-         // 2) capture funds
-         var capture = paymentGateway.capture(auth.authorizationId());
-         if (capture.status() != PaymentGateway.GatewayStatus.PAID) {
-         throw new BusinessRuleException("Payment capture failed: " + capture.message());
-         }
-         logger.info("Payment captured: " + capture.paymentId() + " for rental " + rental.getId());
-         */
+        // 1) authorize funds (hold)
+        var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
+        if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
+            throw new BusinessRuleException("Payment not authorized: " + auth.message());
+        }
+        // 2) capture funds
+        var capture = paymentGateway.capture(auth.authorizationId());
+        if (capture.status() != PaymentGateway.GatewayStatus.PAID) {
+            throw new BusinessRuleException("Payment capture failed: " + capture.message());
+        }
+        logger.info("Payment captured: " + capture.paymentId() + " for rental " + rental.getId());
         // save payment record
         RentalPayment saved = rentalPaymentRepository.save(payment);
         return RentalPaymentMapper.toResponse(saved);
@@ -104,10 +102,10 @@ public class PaymentServiceImpl implements PaymentService {
         Purchase purchase = purchaseRepository.findById(request.purchaseId())
                 .orElseThrow(() -> new NotFoundException("Purchase not found: " + request.purchaseId()));
         if (!purchase.getCustomer().getId().equals(customerId)) {
-            throw new BusinessRuleException("Purchase does not belong to customer." );
+            throw new BusinessRuleException("Purchase does not belong to customer.");
         }
         if (purchase.getStatus() != PurchaseStatus.CREATED) {
-            throw new BusinessRuleException("Only CREATED purchases can be paid." );
+            throw new BusinessRuleException("Only CREATED purchases can be paid.");
         }
         String currency = request.currency().trim().toUpperCase();
         BigDecimal rateToEur = fxRateService.getRateToEur(currency);
@@ -116,9 +114,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .setScale(2, RoundingMode.HALF_UP);
         // ensure enough amount to cover total (simple rule)
         if (amountEur.compareTo(purchase.getTotalAmountEur()) < 0) {
-            throw new BusinessRuleException("Insufficient amount to cover purchase total in EUR." );
+            throw new BusinessRuleException("Insufficient amount to cover purchase total in EUR.");
         }
-        /** FIXME: gateway integration disabled for now
         // Stripe: authorize then capture
         PaymentGateway.AuthorizationResult auth = paymentGateway.authorize(
                 currency,
@@ -133,7 +130,6 @@ public class PaymentServiceImpl implements PaymentService {
         if (cap.status() != PaymentGateway.GatewayStatus.PAID) {
             throw new BusinessRuleException("Payment capture failed: " + cap.message());
         }
-         */
         LocalDateTime now = LocalDateTime.now();
         SalePayment payment = SalePayment.builder()
                 .purchase(purchase)
