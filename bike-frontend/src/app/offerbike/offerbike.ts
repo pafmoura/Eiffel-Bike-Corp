@@ -1,9 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+
+/* ===== UI ALERT TYPE ===== */
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
 
 @Component({
   selector: 'app-offerbike',
@@ -34,6 +41,9 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
   myOffers: any[] = [];
   private retryTimeout: any;
 
+  // Custom Alert Signal
+  alert = signal<AlertState>({ show: false, message: '', type: 'info' });
+
   constructor(
     private http: HttpClient, 
     private router: Router,
@@ -49,6 +59,12 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
     }
+  }
+
+  /* ===== UI HELPERS ===== */
+  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
   }
 
   private tryLoadOffers() {
@@ -143,7 +159,7 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response: any) => {
-          alert('Bike listed successfully!');
+          this.showAlert('Bike listed successfully!', 'success');
 
           const newBikeVisual = {
             ...payload,
@@ -157,7 +173,8 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error submitting offer:', error);
-          alert('Failed: ' + (error.error?.detail || error.message || "Check console"));
+          const errorMsg = error.error?.detail || error.message || "Check connection";
+          this.showAlert('Failed: ' + errorMsg, 'error');
         }
       });
   }
