@@ -10,7 +10,10 @@ import fr.eiffelbikecorp.bikeapi.dto.response.BasketResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import fr.eiffelbikecorp.bikeapi.mapper.BasketMapper;
-import fr.eiffelbikecorp.bikeapi.persistence.*;
+import fr.eiffelbikecorp.bikeapi.persistence.BasketItemRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.BasketRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.SaleOfferRepository;
 import fr.eiffelbikecorp.bikeapi.service.BasketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,7 +35,6 @@ public class BasketServiceImpl implements BasketService {
     @Transactional
     public BasketResponse getOrCreateOpenBasket(UUID customerId) {
         ensureCustomerExists(customerId);
-
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseGet(() -> {
                     LocalDateTime now = LocalDateTime.now();
@@ -44,7 +46,6 @@ public class BasketServiceImpl implements BasketService {
                             .build();
                     return basketRepository.save(b);
                 });
-
         // Load items (if LAZY)
         basket.getItems().size();
         return BasketMapper.toResponse(basket);
@@ -54,7 +55,6 @@ public class BasketServiceImpl implements BasketService {
     @Transactional
     public BasketResponse addItem(UUID customerId, AddToBasketRequest request) {
         ensureCustomerExists(customerId);
-
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseGet(() -> {
                     LocalDateTime now = LocalDateTime.now();
@@ -66,28 +66,22 @@ public class BasketServiceImpl implements BasketService {
                             .build();
                     return basketRepository.save(b);
                 });
-
         SaleOffer offer = saleOfferRepository.findById(request.saleOfferId())
                 .orElseThrow(() -> new NotFoundException("SaleOffer not found: " + request.saleOfferId()));
-
         if (offer.getStatus() != SaleOfferStatus.LISTED) {
             throw new BusinessRuleException("Offer is not available: " + offer.getId());
         }
-
         if (basketItemRepository.existsByBasket_IdAndOffer_Id(basket.getId(), offer.getId())) {
             throw new BusinessRuleException("Offer already in basket: " + offer.getId());
         }
-
         BasketItem item = BasketItem.builder()
                 .basket(basket)
                 .offer(offer)
                 .unitPriceEurSnapshot(offer.getAskingPriceEur())
                 .addedAt(LocalDateTime.now())
                 .build();
-
         basket.getItems().add(item);
         basket.setUpdatedAt(LocalDateTime.now());
-
         basketRepository.save(basket);
         return BasketMapper.toResponse(basket);
     }
@@ -95,19 +89,13 @@ public class BasketServiceImpl implements BasketService {
     @Override
     @Transactional
     public BasketResponse removeItem(UUID customerId, Long saleOfferId) {
-        ensureCustomerExists(customerId);
-
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseThrow(() -> new NotFoundException("Open basket not found for customer: " + customerId));
-
-        long deleted = basketItemRepository.deleteByBasket_IdAndOffer_Id(basket.getId(), saleOfferId);
-        if (deleted == 0) {
+        boolean removed = basket.removeOffer(saleOfferId);
+        if (!removed) {
             throw new NotFoundException("BasketItem not found for offer: " + saleOfferId);
         }
-
-        basket.setUpdatedAt(LocalDateTime.now());
         Basket saved = basketRepository.save(basket);
-        saved.getItems().size();
         return BasketMapper.toResponse(saved);
     }
 
@@ -115,10 +103,8 @@ public class BasketServiceImpl implements BasketService {
     @Transactional
     public BasketResponse clear(UUID customerId) {
         ensureCustomerExists(customerId);
-
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseThrow(() -> new NotFoundException("Open basket not found for customer: " + customerId));
-
         basket.getItems().clear();
         basket.setUpdatedAt(LocalDateTime.now());
         Basket saved = basketRepository.save(basket);
