@@ -30,33 +30,17 @@ public class RentalController {
 
     private final RentalService rentalService;
 
-    /**
-     * US_06 + US_09:
-     * Rent a bike if available, otherwise join the waiting list (FIFO).
-     *
-     * POST /api/rentals
-     * Body: { "bikeId": 1, "customerId": 10, "days": 3 }
-     *
-     * Response indicates whether it was RENTED or WAITLISTED.
-     */
     @POST
     public Response rentBikeOrJoinWaitingList(@Valid RentBikeRequest request) {
         RentBikeResultResponse result = rentalService.rentBikeOrJoinWaitingList(request);
 
-        // 201 when rental created; 202 when put in waiting list (accepted)
         if (result.result() == RentResult.RENTED) {
             return Response.status(Response.Status.CREATED).entity(result).build();
         }
         return Response.status(Response.Status.ACCEPTED).entity(result).build();
     }
 
-    /**
-     * US_08 + (domain rule) close rental + add return note
-     * plus US_10: notify next waiting customer and auto-create next rental (FIFO).
-     *
-     * POST /api/rentals/{rentalId}/return
-     * Body: { "authorCustomerId": 10, "comment": "...", "condition": "Good" }
-     */
+
     @POST
     @Path("/{rentalId}/return")
     public Response returnBike(
@@ -68,10 +52,7 @@ public class RentalController {
     }
 
 
-    /**
-     * Fetch active rentals for a specific customer.
-     * Matches frontend call: /rentals/active?customerId=...
-     */
+
     @GET
     @Path("/active")
     public Response getActiveRentals(@QueryParam("customerId") UUID customerId) {
@@ -85,10 +66,7 @@ public class RentalController {
         return Response.ok(activeRentals).build();
     }
 
-    /**
-     * Fetch the waiting list entries for a specific customer.
-     * Matches frontend call: /rentals/waitlist?customerId=...
-     */
+
     @GET
     @Path("/waitlist")
     public Response getCustomerWaitlist(@QueryParam("customerId") UUID customerId) {
@@ -97,18 +75,10 @@ public class RentalController {
                     .entity("Query param 'customerId' is required.")
                     .build();
         }
-        // You'll need to implement this in your RentalService
-        // This should return items where 'servedAt' is null as per your frontend logic
         List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
         return Response.ok(waitlist).build();
     }
 
-    /**
-     * US_10:
-     * Customer checks notifications about bike availability.
-     *
-     * GET /api/notifications?customerId=10
-     */
     @GET
     @Path("/notifications")
     public Response listNotifications(@QueryParam("customerId") UUID customerId) {

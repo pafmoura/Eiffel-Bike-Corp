@@ -1,4 +1,4 @@
-*US_01:** As a Student, I want to offer my bike for rent so that other university members can rent it.
+* **US_01:** As a Student, I want to offer my bike for rent so that other university members can rent it.
 * **US_02:** As an Employee, I want to offer my bike for rent so that other university members can rent it.
 * **US_03:** As EiffelBikeCorp, I want to offer company bikes for rent so that customers can rent bikes even when no private bikes are available.
 * **US_04:** As EiffelBikeCorp, I want to offer bikes for sale with detailed notes so that buyers can assess the bike’s condition before purchasing.
