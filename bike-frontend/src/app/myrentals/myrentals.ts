@@ -17,6 +17,12 @@ interface WaitlistDto {
   servedAt?: string | null;
 }
 
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 @Component({
   selector: 'app-myrentals',
   standalone: true,
@@ -32,11 +38,13 @@ export class Myrentals implements OnInit {
   allRentalsRaw = signal<ActiveRentalDto[]>([]);
   allWaitlistRaw = signal<WaitlistDto[]>([]);
   searchQuery = signal('');
+  
+  // Custom Alert Signal
+  alert = signal<AlertState>({ show: false, message: '', type: 'info' });
 
   /* ===== COMPUTED ===== */
   myActiveRentals = computed(() => {
     const query = this.searchQuery().toLowerCase();
-
     return this.allRentalsRaw().filter(r =>
       r.result === 'RENTED' &&
       (
@@ -62,11 +70,15 @@ export class Myrentals implements OnInit {
     this.refreshData();
   }
 
+  /* ===== UI HELPERS ===== */
+  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
+  }
+
   /* ===== DATA LOADING ===== */
   refreshData() {
     const userId = this.getUserId();
-    console.log('[MyRentals] refreshData() userId:', userId);
-
     if (!userId) return;
 
     const headers = this.getHeaders();
@@ -74,37 +86,29 @@ export class Myrentals implements OnInit {
     this.http
       .get<ActiveRentalDto[]>(`${this.baseUrl}/rentals/active?customerId=${userId}`, { headers })
       .subscribe({
-        next: (data) => {
-          console.log('[MyRentals] Active rentals:', data);
-          this.allRentalsRaw.set(data);
-        },
-        error: (err) =>
-          console.error('[MyRentals] Active rentals error:', err),
+        next: (data) => this.allRentalsRaw.set(data),
+        error: (err) => console.error('[MyRentals] Active rentals error:', err),
       });
 
     this.http
       .get<WaitlistDto[]>(`${this.baseUrl}/rentals/waitlist?customerId=${userId}`, { headers })
       .subscribe({
-        next: (data) => {
-          console.log('[MyRentals] Waitlist:', data);
-          this.allWaitlistRaw.set(data);
-        },
-        error: (err) =>
-          console.error('[MyRentals] Waitlist error:', err),
+        next: (data) => this.allWaitlistRaw.set(data),
+        error: (err) => console.error('[MyRentals] Waitlist error:', err),
       });
   }
 
-/* ===== ACTIONS ===== */
+  /* ===== ACTIONS ===== */
   returnBike() {
-    const userId = this.getUserId(); // This returns the UUID from the token
+    const userId = this.getUserId();
     
     if (!this.returnForm.rentalId) {
-      alert('Please select a rental first.');
+      this.showAlert('Please select a rental from the list first.', 'info');
       return;
     }
 
     if (!userId) {
-      alert('User session expired. Please log in again.');
+      this.showAlert('User session expired. Please log in again.', 'error');
       return;
     }
 
@@ -115,26 +119,24 @@ export class Myrentals implements OnInit {
     };
 
     this.http
-      .post(
-        `${this.baseUrl}/rentals/${this.returnForm.rentalId}/return`,
-        body,
-        { headers: this.getHeaders() }
-      )
+      .post(`${this.baseUrl}/rentals/${this.returnForm.rentalId}/return`, body, { headers: this.getHeaders() })
       .subscribe({
         next: () => {
-          alert('Bike returned successfully! ');
+          this.showAlert('Bike returned successfully! The next user has been notified.', 'success');
           this.returnForm = { rentalId: null, condition: 'GOOD', comment: '' };
           this.refreshData(); 
         },
         error: (err) => {
+          this.showAlert('Return failed. Please check your comments and try again.', 'error');
           console.error('Return error:', err);
-          alert('Return failed. Ensure all fields are filled correctly.');
         },
       });
   }
+
   prefillReturn(rentalId: number) {
     this.returnForm.rentalId = rentalId;
-    document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
+    const formElement = document.querySelector('form');
+    formElement?.scrollIntoView({ behavior: 'smooth' });
   }
 
   /* ===== HELPERS ===== */
@@ -146,7 +148,6 @@ export class Myrentals implements OnInit {
   private getUserId(): string | null {
     const token = localStorage.getItem('token');
     if (!token) return null;
-
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.sub;
