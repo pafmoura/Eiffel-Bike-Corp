@@ -94,14 +94,22 @@ export class Myrentals implements OnInit {
       });
   }
 
-  /* ===== ACTIONS ===== */
+/* ===== ACTIONS ===== */
   returnBike() {
+    const userId = this.getUserId(); // This returns the UUID from the token
+    
     if (!this.returnForm.rentalId) {
       alert('Please select a rental first.');
       return;
     }
 
+    if (!userId) {
+      alert('User session expired. Please log in again.');
+      return;
+    }
+
     const body = {
+      authorCustomerId: userId, 
       comment: this.returnForm.comment,
       condition: this.returnForm.condition,
     };
@@ -114,14 +122,16 @@ export class Myrentals implements OnInit {
       )
       .subscribe({
         next: () => {
-          alert('Bike returned successfully!');
+          alert('Bike returned successfully! ');
           this.returnForm = { rentalId: null, condition: 'GOOD', comment: '' };
-          this.refreshData();
+          this.refreshData(); 
         },
-        error: () => alert('Return failed. Please try again.'),
+        error: (err) => {
+          console.error('Return error:', err);
+          alert('Return failed. Ensure all fields are filled correctly.');
+        },
       });
   }
-
   prefillReturn(rentalId: number) {
     this.returnForm.rentalId = rentalId;
     document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
