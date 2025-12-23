@@ -27,19 +27,12 @@ public class BikeCatalogController {
 
     private final BikeCatalogService bikeCatalogService;
 
-    /**
-     * US_01/US_02/US_03:
-     * Student/Employee/EiffelBikeCorp offers a bike to rent.
-     */
     @POST
     public Response offerBikeForRent(@Valid BikeCreateRequest request) {
         BikeResponse created = bikeCatalogService.offerBikeForRent(request);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
-    /**
-     * Admin/provider maintenance endpoint (useful to change status, description, price).
-     */
     @PUT
     @Path("/{bikeId}")
     public Response updateBike(@PathParam("bikeId") Long bikeId, @Valid BikeUpdateRequest request) {
@@ -48,7 +41,6 @@ public class BikeCatalogController {
     }
 
     /**
-     * US_05:
      * Customer searches bikes to rent.
      * <p>
      * Examples:
@@ -66,7 +58,6 @@ public class BikeCatalogController {
         return Response.ok(results).build();
     }
 
-    //find all bikes: Test purpose
     @GET
     @Path("/all")
     public Response findAllBikes() {

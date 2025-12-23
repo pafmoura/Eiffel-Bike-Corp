@@ -27,7 +27,6 @@ public class PurchaseController {
     @Context
     private ContainerRequestContext requestContext;
 
-    // US_17: checkout basket => create purchase
     @POST
     @Path("/checkout")
     public Response checkout() {
@@ -36,7 +35,6 @@ public class PurchaseController {
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
-    // helpful: list purchase history
     @GET
     public Response listPurchases() {
         UUID customerId = customerId();
@@ -44,7 +42,6 @@ public class PurchaseController {
         return Response.ok(purchases).build();
     }
 
-    // view one purchase (customer-owned)
     @GET
     @Path("/{purchaseId}")
     public Response getPurchase(@PathParam("purchaseId") Long purchaseId) {

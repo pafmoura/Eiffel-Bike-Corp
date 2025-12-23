@@ -35,7 +35,6 @@ public class PaymentController {
     private ContainerRequestContext requestContext;
 
     /**
-     * US_07:
      * Pay a rental in any currency, stored with conversion to EUR.
      * <p>
      * POST /api/payments
@@ -61,7 +60,6 @@ public class PaymentController {
         return Response.ok(payments).build();
     }
 
-    // US_18: pay purchase (authorize + capture)
     @POST
     @Path("/purchases")
     public Response payPurchases(@Valid PayPurchaseRequest request) {

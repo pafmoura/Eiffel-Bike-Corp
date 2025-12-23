@@ -28,7 +28,6 @@ public class BasketController {
     @Context
     private ContainerRequestContext requestContext;
 
-    // US_15: view basket
     @GET
     public Response getOpenBasket() {
         UUID customerId = customerId();
@@ -36,7 +35,6 @@ public class BasketController {
         return Response.ok(basket).build();
     }
 
-    // US_15: add to basket
     @POST
     @Path("/items")
     public Response addToBasket(@Valid AddToBasketRequest request) {
@@ -45,7 +43,6 @@ public class BasketController {
         return Response.ok(basket).build();
     }
 
-    // US_16: remove from basket
     @DELETE
     @Path("/items/{saleOfferId}")
     public Response removeFromBasket(@PathParam("saleOfferId") Long saleOfferId) {
@@ -54,7 +51,6 @@ public class BasketController {
         return Response.ok(basket).build();
     }
 
-    // optional helper: clear basket
     @DELETE
     public Response clearBasket() {
         UUID customerId = customerId();
