@@ -4,7 +4,7 @@
 * **US_02:** As an Employee, I want to offer my bike for rent so that other university members can rent it.
 * **US_03:** As EiffelBikeCorp, I want to offer company bikes for rent so that customers can rent bikes even when no private bikes are available.
 
-## SEARCHING, RENTING, PAYING, RETURNING
+## SEARCHING, RENTING, WAITING LIST, PAYING, RETURNING
 
 * **US_04:** As a Customer, I want to search for bikes available for rent so that I can quickly find a suitable bike.
 * **US_05:** As a Customer, I want to rent a bike so that I can use it for my commute or daily needs.
@@ -28,3 +28,5 @@
 * **US_17:** As a Customer, I want to remove bikes from my basket so that I can adjust my selection.
 * **US_18:** As a Customer, I want to purchase the bikes in my basket so that I can complete the transaction.
 * **US_19:** As a Customer, I want to pay for my purchase through a payment gateway so that the system can verify funds and complete the payment.
+
+## OTHER
