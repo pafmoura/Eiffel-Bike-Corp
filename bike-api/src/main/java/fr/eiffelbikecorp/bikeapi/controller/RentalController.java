@@ -67,6 +67,42 @@ public class RentalController {
         return Response.ok(response).build();
     }
 
+
+    /**
+     * Fetch active rentals for a specific customer.
+     * Matches frontend call: /rentals/active?customerId=...
+     */
+    @GET
+    @Path("/active")
+    public Response getActiveRentals(@QueryParam("customerId") UUID customerId) {
+        if (customerId == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Query param 'customerId' is required.")
+                    .build();
+        }
+        // You'll need to implement this in your RentalService
+        List<RentBikeResultResponse> activeRentals = rentalService.findActiveRentalsByCustomer(customerId);
+        return Response.ok(activeRentals).build();
+    }
+
+    /**
+     * Fetch the waiting list entries for a specific customer.
+     * Matches frontend call: /rentals/waitlist?customerId=...
+     */
+    @GET
+    @Path("/waitlist")
+    public Response getCustomerWaitlist(@QueryParam("customerId") UUID customerId) {
+        if (customerId == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Query param 'customerId' is required.")
+                    .build();
+        }
+        // You'll need to implement this in your RentalService
+        // This should return items where 'servedAt' is null as per your frontend logic
+        List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
+        return Response.ok(waitlist).build();
+    }
+
     /**
      * US_10:
      * Customer checks notifications about bike availability.

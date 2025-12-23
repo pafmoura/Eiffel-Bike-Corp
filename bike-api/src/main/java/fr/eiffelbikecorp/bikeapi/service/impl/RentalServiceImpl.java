@@ -160,7 +160,8 @@ public class RentalServiceImpl implements RentalService {
         bikeRepository.save(bike);
         // mark as served
         nextEntry.setServedAt(LocalDateTime.now());
-        waitingListEntryRepository.save(nextEntry);        Notification notification = Notification.builder()
+        waitingListEntryRepository.save(nextEntry);
+        Notification notification = Notification.builder()
                 .entry(nextEntry)
                 .message("Bike " + bike.getId() + " is now available. A rental has been created for you.")
                 .sentAt(LocalDateTime.now())
@@ -183,6 +184,37 @@ public class RentalServiceImpl implements RentalService {
         return notificationRepository.findByEntry_Customer_IdOrderBySentAtDesc(customerId)
                 .stream()
                 .map(NotificationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RentBikeResultResponse> findActiveRentalsByCustomer(UUID customerId) {
+        // Fetch only ACTIVE rentals for this specific user
+        return rentalRepository.findByCustomer_IdAndStatusIn(customerId, List.of(RentalStatus.ACTIVE))
+                .stream()
+                .map(rental -> new RentBikeResultResponse(
+                        RentResult.RENTED,             // RentResult result
+                        rental.getId(),                // Long rentalId
+                        null,                          // Long waitingListEntryId (not applicable here)
+                        rental.getBike().getDescription() // String message
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NotificationResponse> findWaitlistByCustomer(UUID customerId) {
+        // Fetch waiting list entries for this customer that haven't been served yet
+        return waitingListEntryRepository.findByCustomer_IdAndServedAtIsNull(customerId)
+                .stream()
+                .map(entry -> new NotificationResponse(
+                        entry.getId(),                                     // Long id
+                        entry.getCustomer().getId(),                       // UUID customerId
+                        entry.getWaitingList().getBike().getId(),          // Long bikeId
+                        "Waiting for " + entry.getWaitingList().getBike().getDescription(), // String message
+                        entry.getCreatedAt()                               // LocalDateTime (using createdAt as sentAt)
+                ))
                 .toList();
     }
 }

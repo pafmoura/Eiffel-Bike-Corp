@@ -16,4 +16,10 @@ public interface RentalService {
     ReturnBikeResponse returnBike(Long rentalId, ReturnBikeRequest request);
 
     List<NotificationResponse> listMyNotifications(UUID customerId);
+
+
+    List<RentBikeResultResponse> findActiveRentalsByCustomer(UUID customerId);
+
+
+    List<NotificationResponse> findWaitlistByCustomer(UUID customerId);
 }

@@ -3,6 +3,20 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+/* ===== DTO TYPES (MATCH BACKEND) ===== */
+interface ActiveRentalDto {
+  rentalId: number;
+  message: string;          // Bike name
+  result: 'RENTED' | 'ACTIVE';
+  waitingListEntryId: number | null;
+}
+
+interface WaitlistDto {
+  bikeId: number;
+  createdAt: string;
+  servedAt?: string | null;
+}
+
 @Component({
   selector: 'app-myrentals',
   standalone: true,
@@ -14,100 +28,106 @@ export class Myrentals implements OnInit {
   private http = inject(HttpClient);
   private baseUrl = 'http://localhost:8080/api';
 
-  // --- SIGNALS (Reactive State) ---
-  // We store the "raw" data from the server here
-  allRentalsRaw = signal<any[]>([]);
-  allWaitlistRaw = signal<any[]>([]);
-  
-  // UI Search/Filter state
-  searchQuery = signal<string>('');
+  /* ===== STATE ===== */
+  allRentalsRaw = signal<ActiveRentalDto[]>([]);
+  allWaitlistRaw = signal<WaitlistDto[]>([]);
+  searchQuery = signal('');
 
-  // --- COMPUTED SIGNALS (Auto-filtering) ---
-  // These update automatically whenever raw data or the search query changes
+  /* ===== COMPUTED ===== */
   myActiveRentals = computed(() => {
-    const userId = this.getUserId();
-    return this.allRentalsRaw().filter(r => 
-      r.customerId === userId && 
-      (r.status === 'ACTIVE' || r.status === 'RENTED') &&
-      (r.id.toString().includes(this.searchQuery()) || 
-       r.bikeName?.toLowerCase().includes(this.searchQuery().toLowerCase()))
+    const query = this.searchQuery().toLowerCase();
+
+    return this.allRentalsRaw().filter(r =>
+      r.result === 'RENTED' &&
+      (
+        r.rentalId.toString().includes(query) ||
+        r.message.toLowerCase().includes(query)
+      )
     );
   });
 
   myWaitlist = computed(() => {
-    const userId = this.getUserId();
-    return this.allWaitlistRaw().filter(w => 
-      w.customerId === userId && 
-      !w.servedAt // Only show those not yet served
-    );
+    return this.allWaitlistRaw().filter(w => !w.servedAt);
   });
 
-  // --- FORM STATE ---
+  /* ===== FORM ===== */
   returnForm = {
     rentalId: null as number | null,
     condition: 'GOOD',
     comment: ''
   };
 
+  /* ===== LIFECYCLE ===== */
   ngOnInit() {
     this.refreshData();
   }
 
-  // --- DATA LOADING ---
+  /* ===== DATA LOADING ===== */
   refreshData() {
     const userId = this.getUserId();
+    console.log('[MyRentals] refreshData() userId:', userId);
+
     if (!userId) return;
 
     const headers = this.getHeaders();
 
-    // Strategy: Fetch from the existing endpoints and filter locally
-    // If your backend has a 'GET /rentals' that returns all, use that.
-    // Otherwise, we use the specific ones you might have.
-    this.http.get<any[]>(`${this.baseUrl}/rentals/active?customerId=${userId}`, { headers })
+    this.http
+      .get<ActiveRentalDto[]>(`${this.baseUrl}/rentals/active?customerId=${userId}`, { headers })
       .subscribe({
-        next: (data) => this.allRentalsRaw.set(data),
-        error: (err) => console.error('Error fetching rentals:', err)
+        next: (data) => {
+          console.log('[MyRentals] Active rentals:', data);
+          this.allRentalsRaw.set(data);
+        },
+        error: (err) =>
+          console.error('[MyRentals] Active rentals error:', err),
       });
 
-    this.http.get<any[]>(`${this.baseUrl}/rentals/waitlist?customerId=${userId}`, { headers })
+    this.http
+      .get<WaitlistDto[]>(`${this.baseUrl}/rentals/waitlist?customerId=${userId}`, { headers })
       .subscribe({
-        next: (data) => this.allWaitlistRaw.set(data),
-        error: (err) => console.error('Error fetching waitlist:', err)
+        next: (data) => {
+          console.log('[MyRentals] Waitlist:', data);
+          this.allWaitlistRaw.set(data);
+        },
+        error: (err) =>
+          console.error('[MyRentals] Waitlist error:', err),
       });
   }
 
-  // --- ACTIONS ---
+  /* ===== ACTIONS ===== */
   returnBike() {
-    const userId = this.getUserId();
-    if (!this.returnForm.rentalId || !userId) {
-      alert('Please select a bike to return.');
+    if (!this.returnForm.rentalId) {
+      alert('Please select a rental first.');
       return;
     }
 
     const body = {
-      authorCustomerId: userId,
       comment: this.returnForm.comment,
-      condition: this.returnForm.condition
+      condition: this.returnForm.condition,
     };
 
-    this.http.post(`${this.baseUrl}/rentals/${this.returnForm.rentalId}/return`, body, { headers: this.getHeaders() })
+    this.http
+      .post(
+        `${this.baseUrl}/rentals/${this.returnForm.rentalId}/return`,
+        body,
+        { headers: this.getHeaders() }
+      )
       .subscribe({
         next: () => {
           alert('Bike returned successfully!');
           this.returnForm = { rentalId: null, condition: 'GOOD', comment: '' };
-          this.refreshData(); // Reload lists
+          this.refreshData();
         },
-        error: (err) => alert('Return failed. Ensure the Rental ID is correct.')
+        error: () => alert('Return failed. Please try again.'),
       });
   }
 
   prefillReturn(rentalId: number) {
     this.returnForm.rentalId = rentalId;
-    // Optional: smooth scroll to form
     document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  // --- HELPERS ---
+  /* ===== HELPERS ===== */
   private getHeaders() {
     const token = localStorage.getItem('token');
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
@@ -116,10 +136,11 @@ export class Myrentals implements OnInit {
   private getUserId(): string | null {
     const token = localStorage.getItem('token');
     if (!token) return null;
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub; // This is your UUID
-    } catch (e) {
+      return payload.sub;
+    } catch {
       return null;
     }
   }
