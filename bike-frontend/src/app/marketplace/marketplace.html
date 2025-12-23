@@ -1,53 +1,153 @@
 <div class="flex h-screen bg-slate-50 overflow-hidden font-sans">
-      <div class="flex-1 p-8 overflow-y-auto">
-        <header class="flex justify-between items-center mb-8">
-          <div>
-            <h2 class="text-3xl font-extrabold text-slate-900">Bike Marketplace</h2>
-            <p class="text-slate-500">Buy premium used bikes from the corporate fleet.</p>
-          </div>
-          <button (click)="toggleBasket()" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative hover:shadow-md transition">
-             🛒 <span *ngIf="count() > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">{{ count() }}</span>
-          </button>
-        </header>
-
-        <input type="text" (keyup.enter)="search($event)" placeholder="Search sales..." 
-               class="w-full md:w-96 px-4 py-3 mb-8 rounded-xl border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div *ngFor="let offer of offers()" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition flex flex-col">
-            <div class="h-40 bg-slate-100 rounded-xl mb-4 overflow-hidden">
-               <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuqnSeZPqSaCHmM8Wj8fqD8bPkHKd1HODlCw&s" class="w-full h-full object-cover">
-            </div>
-            <h3 class="font-bold text-slate-800 text-lg">{{ offer.bike?.description }}</h3>
-            <p class="text-xs text-slate-400 mb-4">{{ offer.bike.type }}</p>
-            <div class="mt-auto flex justify-between items-center">
-              <span class="text-2xl font-black text-indigo-600">{{ offer.askingPriceEur }}€</span>
-              <button (click)="addToBasket(offer.id)" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold">Add to Basket</button>
-            </div>
-          </div>
-        </div>
+  <div class="flex-1 p-8 overflow-y-auto">
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h2 class="text-3xl font-extrabold text-slate-900">Bike Marketplace</h2>
+        <p class="text-slate-500">Buy premium used bikes from the corporate fleet.</p>
       </div>
 
-      <div *ngIf="isOpen" class="w-96 bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center">
-          <h3 class="font-bold text-xl">Your Basket</h3>
-          <button (click)="toggleBasket()">✕</button>
+      <button (click)="isOpen.set(!isOpen())" class="bg-white p-3 rounded-xl border shadow-sm relative">
+        🛒
+        <span *ngIf="basketItems().length"
+              class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+          {{ basketItems().length }}
+        </span>
+      </button>
+    </header>
+
+    <input type="text" (input)="loadOffers($any($event.target).value)" placeholder="Search sales..."
+           class="w-full md:w-96 px-4 py-3 mb-8 rounded-xl border shadow-sm">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div *ngFor="let offer of offers()" class="bg-white p-4 rounded-2xl shadow border hover:shadow-xl transition flex flex-col">
+        <div class="h-40 bg-slate-100 rounded-xl mb-4 overflow-hidden relative">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuqnSeZPqSaCHmM8Wj8fqD8bPkHKd1HODlCw&s" class="w-full h-full object-cover">
+          <span class="absolute top-2 right-2 bg-green-500 text-white text-[10px] px-2 py-1 rounded-md font-bold">
+            {{ offer.availability }}
+          </span>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 space-y-4">
-           <div *ngIf="basket().length === 0" class="text-center text-slate-400 mt-10">Empty</div>
-           <div *ngFor="let item of basket()" class="flex justify-between items-center">
-             <div>
-               <p class="font-bold text-sm">{{ item.saleOffer.bike?.description }}</p>
-               <p class="text-indigo-600 font-bold text-xs">{{ item.saleOffer.askingPriceEur }}€</p>
-             </div>
-             <button (click)="remove(item.saleOffer.id)" class="text-red-500">🗑</button>
-           </div>
-        </div>
-        <div class="p-6 bg-slate-50 border-t">
-          <div class="flex justify-between mb-4 font-bold text-lg">
-            <span>Total</span><span>{{ total() }}€</span>
+
+        <h3 class="font-bold text-lg">Bike #{{ offer.bikeId }}</h3>
+        <p class="text-xs text-slate-400 mb-4">Listing ID: {{ offer.id }}</p>
+
+        <div class="mt-auto flex justify-between items-center">
+          <span class="text-2xl font-black text-indigo-600">{{ offer.askingPriceEur }}€</span>
+          <div class="flex gap-2">
+            <button (click)="viewDetails(offer.id)" class="px-3 py-2 bg-slate-100 rounded-lg text-xs font-bold">Details</button>
+            <button (click)="addToBasket(offer.id)" class="px-4 py-2 bg-slate-900 text-white rounded-lg font-bold">Add</button>
           </div>
-          <button (click)="checkout()" [disabled]="basket().length === 0" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50">Checkout</button>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Basket Drawer -->
+  <div *ngIf="isOpen()" class="w-96 bg-white border-l shadow-2xl z-50 flex flex-col">
+    <div class="p-6 border-b flex justify-between items-center">
+      <h3 class="font-bold text-xl">{{ isPaymentStep() ? 'Secure Payment' : 'Your Basket' }}</h3>
+      <button (click)="closeDrawer()">✕</button>
+    </div>
+
+    <div class="flex-1 p-6 overflow-y-auto space-y-4">
+
+      <div *ngIf="basketItems().length === 0" class="text-center text-slate-400 mt-10">
+        Your basket is empty
+      </div>
+
+      <!-- Basket -->
+      <ng-container *ngIf="!isPaymentStep()">
+        <div *ngFor="let item of basketItems()" class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border">
+          <div>
+            <p class="font-bold text-sm">Bike #{{ item.bikeId }}</p>
+            <p class="text-indigo-600 font-bold text-xs">{{ item.unitPriceEurSnapshot }}€</p>
+          </div>
+          <button (click)="remove(item.saleOfferId || item.id)" class="text-red-500">🗑</button>
+        </div>
+      </ng-container>
+
+      <!-- Payment -->
+      <ng-container *ngIf="isPaymentStep()">
+        <div class="space-y-6">
+          <div class="p-4 bg-indigo-50 rounded-xl border">
+            <label class="text-[10px] uppercase font-bold text-indigo-400">Total</label>
+            <p class="text-3xl font-black text-indigo-700">{{ total() }}€</p>
+          </div>
+
+          <form (ngSubmit)="confirmPayment()" autocomplete="cc-number">
+
+  <div class="space-y-4">
+    <div>
+      <label class="block text-xs font-bold text-slate-500 mb-1">CARD NUMBER</label>
+      <input
+        name="cc-number"
+        autocomplete="cc-number"
+        [value]="cardNumber()"
+        (input)="cardNumber.set($any($event.target).value)"
+        placeholder="4242 4242 4242 4242"
+        class="w-full p-3 border rounded-lg">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-500 mb-1">EXPIRY</label>
+        <input
+          name="cc-exp"
+          autocomplete="cc-exp"
+          [value]="expiry()"
+          (input)="expiry.set($any($event.target).value)"
+          placeholder="MM / YY"
+          class="w-full p-3 border rounded-lg">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-500 mb-1">CVC</label>
+        <input
+          name="cc-csc"
+          autocomplete="cc-csc"
+          [value]="cvc()"
+          (input)="cvc.set($any($event.target).value)"
+          placeholder="CVC"
+          class="w-full p-3 border rounded-lg">
+      </div>
+    </div>
+  </div>
+
+  <button type="submit"
+          class="w-full mt-6 py-4 bg-green-600 text-white rounded-xl font-bold">
+    Authorize & Pay {{ total() }}€
+  </button>
+</form>
+
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="p-6 bg-slate-50 border-t">
+      <button *ngIf="!isPaymentStep()" (click)="startCheckout()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold">
+        Checkout ({{ total() }}€)
+      </button>
+
+
+      <button *ngIf="isPaymentStep()" (click)="isPaymentStep.set(false)"
+              class="w-full mt-2 text-xs text-slate-400">
+        Back to Basket
+      </button>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div *ngIf="selectedOffer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden">
+      <div class="p-6 border-b flex justify-between">
+        <h3 class="font-bold text-xl">Condition & Notes</h3>
+        <button (click)="selectedOffer.set(null)">×</button>
+      </div>
+      <div class="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
+        <div *ngFor="let note of selectedOffer().notes" class="p-4 bg-slate-50 rounded-xl border">
+          <h4 class="font-bold text-indigo-600 text-sm">{{ note.title }}</h4>
+          <p class="text-sm">{{ note.content }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

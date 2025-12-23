@@ -90,13 +90,16 @@ public class BasketServiceImpl implements BasketService {
     @Transactional
     public BasketResponse removeItem(UUID customerId, Long saleOfferId) {
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
-                .orElseThrow(() -> new NotFoundException("Open basket not found for customer: " + customerId));
+                .orElseThrow(() -> new NotFoundException("Open basket not found"));
+
         boolean removed = basket.removeOffer(saleOfferId);
         if (!removed) {
-            throw new NotFoundException("BasketItem not found for offer: " + saleOfferId);
+            throw new NotFoundException("Item not found in basket");
         }
-        Basket saved = basketRepository.save(basket);
-        return BasketMapper.toResponse(saved);
+
+        basketRepository.saveAndFlush(basket);
+
+        return BasketMapper.toResponse(basket);
     }
 
     @Override

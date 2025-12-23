@@ -1,54 +1,125 @@
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { BikeMarketplace } from '../services/bike-marketplace';
 
 @Component({
   selector: 'app-marketplace',
-  imports: [CommonModule],
-  templateUrl: './marketplace.html',
-  styleUrl: './marketplace.scss',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './marketplace.html'
 })
 export class MarketplaceComponent implements OnInit {
-  private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api';
-  
+  private marketService = inject(BikeMarketplace);
+
   offers = signal<any[]>([]);
-  basket = signal<any[]>([]);
-  isOpen = false;
+  basketItems = signal<any[]>([]);
+  selectedOffer = signal<any | null>(null);
 
-  count = computed(() => this.basket().length);
-  total = computed(() => this.basket().reduce((acc, i) => acc + i.saleOffer.askingPriceEur, 0));
+  isOpen = signal(false);
+  isPaymentStep = signal(false);
+  currentPurchaseId = signal<number | null>(null);
 
-  ngOnInit() { this.loadOffers(); this.loadBasket(); }
+  // Payment form signals
+  cardNumber = signal('');
+  expiry = signal('');
+  cvc = signal('');
 
-  toggleBasket() { this.isOpen = !this.isOpen; }
-  
-  getHeader() { 
-    const t = localStorage.getItem('token'); 
-    return t ? new HttpHeaders().set('Authorization', `Bearer ${t}`) : new HttpHeaders(); 
+  total = computed(() =>
+    this.basketItems().reduce((acc, i) => acc + (i.unitPriceEurSnapshot || 0), 0)
+  );
+
+  ngOnInit() {
+    this.loadOffers();
+    this.loadBasket();
   }
 
-  loadOffers(q = '') { this.http.get<any[]>(`${this.baseUrl}/sales/offers?q=${q}`).subscribe(d => this.offers.set(d)); }
-  search(e: any) { this.loadOffers(e.target.value); }
-
-  loadBasket() { this.http.get<any>(`${this.baseUrl}/basket`, { headers: this.getHeader() }).subscribe(d => this.basket.set(d.items || [])); }
-
-  addToBasket(id: number) { 
-    this.http.post(`${this.baseUrl}/basket/items`, { saleOfferId: id }, { headers: this.getHeader() }).subscribe((d: any) => {
-      this.basket.set(d.items);
-      this.isOpen = true;
-    }); 
-  }
-
-  remove(id: number) { 
-    this.http.delete(`${this.baseUrl}/basket/items/${id}`, { headers: this.getHeader() }).subscribe((d: any) => this.basket.set(d.items)); 
-  }
-
-  checkout() { 
-    this.http.post(`${this.baseUrl}/purchases/checkout`, {}, { headers: this.getHeader() }).subscribe(() => {
-      alert('Purchase Successful!');
-      this.basket.set([]);
-      this.isOpen = false;
+  loadOffers(q = '') {
+    this.marketService.getOffers(q).subscribe({
+      next: data => this.offers.set(data),
+      error: err => console.error(err)
     });
+  }
+
+  loadBasket() {
+    this.marketService.getBasket().subscribe({
+      next: data => this.basketItems.set(data.items || []),
+      error: err => console.error(err)
+    });
+  }
+
+  viewDetails(id: number) {
+    this.marketService.getOfferDetails(id).subscribe({
+      next: details => this.selectedOffer.set(details)
+    });
+  }
+
+  addToBasket(id: number) {
+    this.marketService.addToBasket(id).subscribe({
+      next: res => {
+        this.basketItems.set(res.items);
+        this.isOpen.set(true);
+      }
+    });
+  }
+
+  remove(id?: number) {
+    if (!id) return;
+    this.marketService.removeFromBasket(id).subscribe({
+      next: res => this.basketItems.set(res.items)
+    });
+  }
+
+  startCheckout() {
+    this.marketService.checkout().subscribe({
+      next: purchase => {
+        this.currentPurchaseId.set(purchase.id);
+        this.isPaymentStep.set(true);
+        this.isOpen.set(true);
+      }
+    });
+  }
+
+  confirmPayment() {
+    if (!this.isValidCard()) {
+      return alert('Please enter valid card details.');
+    }
+
+    const id = this.currentPurchaseId();
+    if (!id) return;
+
+    this.marketService.payPurchase(id, {
+      purchaseId: id,
+      amount: this.total(),
+      currency: 'EUR',
+      paymentMethodId: 'pm_card_visa'
+    }).subscribe({
+      next: () => {
+        alert('Payment successful!');
+        this.resetUI();
+      }
+    });
+  }
+
+  private resetUI() {
+    this.basketItems.set([]);
+    this.isPaymentStep.set(false);
+    this.isOpen.set(false);
+    this.currentPurchaseId.set(null);
+    this.cardNumber.set('');
+    this.expiry.set('');
+    this.cvc.set('');
+    this.loadOffers();
+  }
+
+  isValidCard() {
+    return this.cardNumber().length >= 16 &&
+           this.expiry().length >= 4 &&
+           this.cvc().length >= 3;
+  }
+
+  closeDrawer() {
+    this.isOpen.set(false);
+    this.isPaymentStep.set(false);
   }
 }
