@@ -12,8 +12,11 @@ interface ActiveRentalDto {
 }
 
 interface WaitlistDto {
+  id: number;          
+  customerId: string;  
   bikeId: number;
-  createdAt: string;
+  message: string;     
+  sentAt: string;      
   servedAt?: string | null;
 }
 
@@ -55,6 +58,7 @@ export class Myrentals implements OnInit {
   });
 
   myWaitlist = computed(() => {
+    console.log(this.allWaitlistRaw().filter(w => !w.servedAt));
     return this.allWaitlistRaw().filter(w => !w.servedAt);
   });
 
