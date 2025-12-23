@@ -10,6 +10,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,10 @@ class SaleOfferControllerTest {
     private UUID corpId;
     private UUID customerId1;
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     @BeforeEach
     void setup() {
         // Seed corp
@@ -66,7 +71,9 @@ class SaleOfferControllerTest {
         c1.setFullName("Buyer One");
         c1.setPassword("testpassword");
 
-        customerId1 = customerRepository.saveAndFlush(c1).getId();
+        c1 = customerRepository.saveAndFlush(c1);
+        customerId1 = c1.getId();
+        accessToken = tokenService.generateToken(c1);
     }
 
     @Test
@@ -391,7 +398,7 @@ class SaleOfferControllerTest {
     private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId1.toString()); // token = customer UUID
+        headers.setBearerAuth(accessToken);
         return headers;
     }
 

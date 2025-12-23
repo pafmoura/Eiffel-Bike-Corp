@@ -11,5 +11,4 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     List<Purchase> findByCustomer_IdOrderByCreatedAtDesc(UUID customerId);
 
-    List<Purchase> findByCustomer_IdAndStatusOrderByCreatedAtDesc(UUID customerId, PurchaseStatus status);
 }

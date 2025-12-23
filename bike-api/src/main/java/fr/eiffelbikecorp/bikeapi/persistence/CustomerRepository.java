@@ -8,5 +8,6 @@ import java.util.UUID;
 
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     boolean existsByEmailIgnoreCase(String email);
+
     Optional<Customer> findByEmailIgnoreCase_AndPassword(String email, String password);
 }

@@ -8,6 +8,7 @@ import fr.eiffelbikecorp.bikeapi.dto.request.*;
 import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,31 +47,34 @@ class SalePaymentControllerTest {
     private UUID corpId;
     private UUID customerId;
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     @BeforeEach
     void setup() {
         EiffelBikeCorp corp = new EiffelBikeCorp();
         corpId = corpRepository.saveAndFlush(corp).getId();
-
         Customer c = new Customer();
         c.setId(UUID.randomUUID());
         c.setEmail("sale-payment-test-" + UUID.randomUUID() + "@test.com");
         c.setFullName("Sale Payment Tester");
         c.setPassword("testpassword");
-        customerId = customerRepository.saveAndFlush(c).getId();
+        c = customerRepository.saveAndFlush(c);
+        customerId = c.getId();
+        accessToken = tokenService.generateToken(c);
     }
 
     @Test
     void should_pay_purchase_and_return_201_with_response_body() {
         // 1) Create eligible sale offer + add to basket + checkout purchase
         SaleOfferResponse offer = createEligibleSaleOffer("Bike for purchase payment", new BigDecimal("240.00"));
-
         rest.exchange(
                 "/api/basket/items",
                 HttpMethod.POST,
                 jsonEntity(new AddToBasketRequest(offer.id())),
                 BasketResponse.class
         );
-
         ResponseEntity<PurchaseResponse> checkout = rest.exchange(
                 "/api/purchases/checkout",
                 HttpMethod.POST,
@@ -78,34 +82,28 @@ class SalePaymentControllerTest {
                 PurchaseResponse.class
         );
         assertThat(checkout.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         PurchaseResponse purchase = checkout.getBody();
         assertThat(purchase).isNotNull();
         assertThat(purchase.id()).isNotNull();
         assertThat(purchase.totalAmountEur()).isEqualByComparingTo(offer.askingPriceEur());
-
         // 2) Pay
         // If Stripe is used for real, replace paymentMethodId with a valid fresh one.
-        String paymentMethodId = "pm_test_visa";
-
+        String paymentMethodId = "pm_card_visa";
         PayPurchaseRequest payReq = new PayPurchaseRequest(
                 purchase.id(),
                 purchase.totalAmountEur(), // simplest: pay exact total in EUR
                 "EUR",
                 paymentMethodId
         );
-
         ResponseEntity<SalePaymentResponse> paid = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
                 jsonEntity(payReq),
                 SalePaymentResponse.class
         );
-
         assertThat(paid.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(paid.getHeaders().getContentType()).isNotNull();
         assertThat(paid.getHeaders().getContentType().toString()).contains("application/json");
-
         SalePaymentResponse body = paid.getBody();
         assertThat(body).isNotNull();
         assertThat(body.id()).isNotNull();
@@ -113,7 +111,6 @@ class SalePaymentControllerTest {
         assertThat(body.status()).isEqualTo("PAID");
         assertThat(body.amountEur()).isNotNull();
         assertThat(body.paidAt()).isNotNull();
-
         // Optional: confirm offer is now SOLD (if your service sets it on successful payment)
         ResponseEntity<SaleOfferDetailsResponse> offerDetails = rest.exchange(
                 "/api/sales/offers/" + offer.id(),
@@ -129,14 +126,12 @@ class SalePaymentControllerTest {
     @Test
     void should_return_409_when_paying_same_purchase_twice() {
         SaleOfferResponse offer = createEligibleSaleOffer("Bike for double-pay", new BigDecimal("199.00"));
-
         rest.exchange(
                 "/api/basket/items",
                 HttpMethod.POST,
                 jsonEntity(new AddToBasketRequest(offer.id())),
                 BasketResponse.class
         );
-
         PurchaseResponse purchase = rest.exchange(
                 "/api/purchases/checkout",
                 HttpMethod.POST,
@@ -144,15 +139,12 @@ class SalePaymentControllerTest {
                 PurchaseResponse.class
         ).getBody();
         assertThat(purchase).isNotNull();
-
         PayPurchaseRequest payReq = new PayPurchaseRequest(
                 purchase.id(),
                 purchase.totalAmountEur(),
                 "EUR",
-                "pm_test_visa"
+                "pm_card_visa"
         );
-
-        // First payment -> 201
         ResponseEntity<String> first = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
@@ -160,12 +152,17 @@ class SalePaymentControllerTest {
                 String.class
         );
         assertThat(first.getStatusCode()).isIn(HttpStatus.CREATED, HttpStatus.OK);
-
         // Second payment -> 409 (BusinessRuleException)
+        PayPurchaseRequest payReq2 = new PayPurchaseRequest(
+                purchase.id(),
+                purchase.totalAmountEur(),
+                "EUR",
+                "pm_1ShHOZCaQMBvcQcbf6p9dnkt"
+        );
         ResponseEntity<String> second = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
-                jsonEntity(payReq),
+                jsonEntity(payReq2),
                 String.class
         );
         assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -182,14 +179,12 @@ class SalePaymentControllerTest {
                 "",
                 ""
         );
-
         ResponseEntity<String> r = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
                 jsonEntity(invalid),
                 String.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(r.getHeaders().getContentType()).isNotNull();
         assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
@@ -205,18 +200,15 @@ class SalePaymentControllerTest {
                 "EUR",
                 "pm_test_visa"
         );
-
         ResponseEntity<String> r = rest.exchange(
                 "/api/payments/purchases",
                 HttpMethod.POST,
                 jsonEntity(req),
                 String.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(r.getBody()).isNotBlank();
     }
-
     // -------------------------------------------------------
     // Helpers (same pattern you used before)
     // -------------------------------------------------------
@@ -228,10 +220,8 @@ class SalePaymentControllerTest {
                 corpId,
                 new BigDecimal("2.50")
         ));
-
         // Eligibility rule: must be rented at least once
         rentBikeOnceAndReturn(bike.id(), customerId);
-
         ResponseEntity<SaleOfferResponse> created = rest.exchange(
                 "/api/sales/offers",
                 HttpMethod.POST,
@@ -239,7 +229,6 @@ class SalePaymentControllerTest {
                 SaleOfferResponse.class
         );
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         SaleOfferResponse offer = created.getBody();
         assertThat(offer).isNotNull();
         assertThat(offer.id()).isNotNull();
@@ -255,7 +244,6 @@ class SalePaymentControllerTest {
                 BikeResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         BikeResponse body = r.getBody();
         assertThat(body).isNotNull();
         assertThat(body.id()).isNotNull();
@@ -270,12 +258,10 @@ class SalePaymentControllerTest {
                 RentBikeResultResponse.class
         );
         assertThat(rented.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         RentBikeResultResponse rentedBody = rented.getBody();
         assertThat(rentedBody).isNotNull();
         assertThat(rentedBody.result()).isEqualTo(RentResult.RENTED);
         assertThat(rentedBody.rentalId()).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 "/api/rentals/" + rentedBody.rentalId() + "/return",
                 HttpMethod.POST,
@@ -288,7 +274,7 @@ class SalePaymentControllerTest {
     private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId.toString()); // token = customer UUID
+        headers.setBearerAuth(accessToken); // token = customer UUID
         return headers;
     }
 

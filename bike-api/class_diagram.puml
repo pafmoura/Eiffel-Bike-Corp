@@ -42,8 +42,31 @@ enum PurchaseStatus {
   CANCELED
 }
 
+' Present in codebase (not referenced by the entities above)
+enum ProviderType {
+  EIFFEL_BIKE_CORP
+  STUDENT
+  EMPLOYEE
+}
+
+enum UserType {
+  CUSTOMER
+  STUDENT
+  EMPLOYEE
+}
+
+enum CustomerType {
+  ORDINARY,
+  PROVIDER
+}
+
+enum RentResult {
+  RENTED
+  WAITLISTED
+}
+
 ' =========================
-' Core actors / identities
+' Core identities
 ' =========================
 abstract class BikeProvider {
   +id: UUID
@@ -61,10 +84,11 @@ class Customer {
   +id: UUID
   +fullName: String
   +email: String
+  +password: String
 }
 
 ' =========================
-' Bike & rental
+' Bike, waiting list, notifications
 ' =========================
 class Bike {
   +id: Long
@@ -73,6 +97,25 @@ class Bike {
   +rentalDailyRateEur: BigDecimal
 }
 
+class WaitingList {
+  +id: Long
+}
+
+class WaitingListEntry {
+  +id: Long
+  +createdAt: LocalDateTime
+  +servedAt: LocalDateTime
+}
+
+class Notification {
+  +id: Long
+  +message: String
+  +sentAt: LocalDateTime
+}
+
+' =========================
+' Rental
+' =========================
 class Rental {
   +id: Long
   +startAt: LocalDateTime
@@ -99,39 +142,8 @@ class ReturnNote {
   +createdAt: LocalDateTime
 }
 
-Bike "0..*" --> "1" BikeProvider : offeredBy
-Customer "1" --> "0..*" Rental : rents >
-Bike     "1" --> "0..*" Rental : isRentedIn >
-Rental "1" o-- "0..*" RentalPayment : payments
-Rental "1" o-- "0..1" ReturnNote : returnNote
-Customer "1" --> "0..*" ReturnNote : writes >
-
 ' =========================
-' Waiting list
-' =========================
-class WaitingList {
-  +id: Long
-}
-
-class WaitingListEntry {
-  +id: Long
-  +createdAt: LocalDateTime
-  +servedAt: LocalDateTime
-}
-
-class Notification {
-  +id: Long
-  +message: String
-  +sentAt: LocalDateTime
-}
-
-Bike "1" o-- "0..1" WaitingList : waitingList
-WaitingList "1" o-- "0..*" WaitingListEntry : entries (FIFO)
-Customer "1" --> "0..*" WaitingListEntry : joins >
-WaitingListEntry "1" o-- "0..*" Notification : notifications >
-
-' =========================
-' Sale offers
+' Sale offers (buy)
 ' =========================
 class SaleOffer {
   +id: Long
@@ -149,13 +161,8 @@ class SaleNote {
   +createdBy: String
 }
 
-Bike "1" o-- "0..1" SaleOffer : saleOffer
-SaleOffer "0..*" --> "1" EiffelBikeCorp : seller >
-SaleOffer "0..1" --> "0..1" Customer : buyer >
-SaleOffer "1" o-- "0..*" SaleNote : notes
-
 ' =========================
-' Basket
+' Basket + purchase
 ' =========================
 class Basket {
   +id: Long
@@ -170,13 +177,6 @@ class BasketItem {
   +addedAt: LocalDateTime
 }
 
-Customer "1" --> "0..*" Basket : baskets >
-Basket "1" o-- "0..*" BasketItem : items
-BasketItem "0..*" --> "1" SaleOffer : offer >
-
-' =========================
-' Purchase (Order)
-' =========================
 class Purchase {
   +id: Long
   +status: PurchaseStatus
@@ -201,16 +201,57 @@ class SalePayment {
   +stripePaymentIntentId: String
 }
 
+' =========================
+' Associations (from JPA mappings)
+' =========================
+
+' Bike ownership
+Bike "0..*" --> "1" BikeProvider : offeredBy
+
+' Waiting list
+Bike "1" o-- "0..1" WaitingList : waitingList
+WaitingList "1" o-- "0..*" WaitingListEntry : entries (FIFO)
+WaitingListEntry "0..*" --> "1" Customer : customer >
+WaitingListEntry "1" o-- "0..*" Notification : notifications >
+
+' Rental
+Customer "1" --> "0..*" Rental : rents >
+Bike     "1" --> "0..*" Rental : isRentedIn >
+Rental "1" o-- "0..*" RentalPayment : payments
+Rental "1" o-- "0..1" ReturnNote : returnNote
+ReturnNote "0..*" --> "1" Customer : author >
+
+' Sale offer
+Bike "1" o-- "0..1" SaleOffer : saleOffer
+SaleOffer "0..*" --> "1" EiffelBikeCorp : seller >
+SaleOffer "0..*" --> "0..1" Customer : buyer >
+SaleOffer "1" o-- "0..*" SaleNote : notes
+
+' Basket
+Customer "1" --> "0..*" Basket : baskets >
+Basket "1" o-- "0..*" BasketItem : items
+BasketItem "0..*" --> "1" SaleOffer : offer >
+
+' Purchase
 Customer "1" --> "0..*" Purchase : purchases >
-Purchase "1" o-- "1..*" PurchaseItem : items
+Purchase "1" o-- "0..*" PurchaseItem : items
 PurchaseItem "0..*" --> "1" SaleOffer : offer >
 Purchase "1" o-- "0..*" SalePayment : payments
 
-note right of SaleOffer
-Only bikes that:
-1) are offeredBy EiffelBikeCorp
-2) have at least one Rental
-can be LISTED
+note right of BasketItem
+uk_basket_offer (basket_id, sale_offer_id)
+end note
+
+note right of PurchaseItem
+uk_purchase_offer (purchase_id, sale_offer_id)
+end note
+
+note right of Customer
+id is UUID (assigned in constructor)
+end note
+
+note right of BikeProvider
+id is UUID (assigned by subclasses' constructors)
 end note
 
 @enduml

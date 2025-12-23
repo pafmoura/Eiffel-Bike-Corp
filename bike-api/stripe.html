@@ -9,13 +9,6 @@
         #card { padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
         button { margin-top: 12px; padding: 10px 14px; border-radius: 8px; border: 0; cursor: pointer; }
         pre { margin-top: 12px; padding: 12px; border-radius: 8px; background:#111; color:#eee; overflow:auto; }
-
-        /* list UI */
-        ul { margin-top: 12px; padding-left: 18px; }
-        li { margin: 6px 0; }
-        .meta { opacity: 0.8; font-size: 12px; margin-left: 8px; }
-        .err { color: #c33; }
-        code { background: #f3f3f3; padding: 1px 4px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -25,11 +18,7 @@
 <div id="card"></div>
 <button id="btn">Generate paymentMethodId</button>
 
-<!-- last response (optional, still useful) -->
 <pre id="out">{}</pre>
-
-<h3>History</h3>
-<ul id="history"></ul>
 
 <script>
     const stripe = Stripe("pk_test_51SfS3wCaQMBvcQcb7TJTsY0Yw8tOfgyKyogkokiGGDVCiL9ChqVWgK7LT5L0PMcgstEE01laly3Lc2VC8Jgwu2u500utMMgUkK");
@@ -37,71 +26,25 @@
     const card = elements.create("card");
     card.mount("#card");
 
-    // Store all responses here
-    const results = []; // newest first
-
-    function renderHistory() {
-        const ul = document.getElementById("history");
-        ul.innerHTML = "";
-
-        for (const item of results) {
-            const li = document.createElement("li");
-
-            if (item.ok) {
-                li.innerHTML = `${item.paymentMethodId}`;
-            } else {
-                li.innerHTML = `<span class="err">Error:</span> ${escapeHtml(item.error)}<span class="meta">${item.at}</span>`;
-            }
-
-            ul.appendChild(li);
-        }
-    }
-
-    // tiny helper to avoid injecting raw error text as HTML
-    function escapeHtml(s) {
-        return String(s)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
-
     document.getElementById("btn").addEventListener("click", async () => {
-        const btn = document.getElementById("btn");
         const out = document.getElementById("out");
-
-        btn.disabled = true;
-        btn.textContent = "Generating...";
         out.textContent = "{}";
 
-        try {
-            const { paymentMethod, error } = await stripe.createPaymentMethod({
-                type: "card",
-                card
-            });
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: "card",
+            card
+        });
 
-            const at = new Date().toLocaleString();
-
-            if (error) {
-                const record = { ok: false, error: error.message, at };
-                results.unshift(record);
-                out.textContent = JSON.stringify(record, null, 2);
-                renderHistory();
-                return;
-            }
-
-            const record = { ok: true, paymentMethodId: paymentMethod.id, at };
-            results.unshift(record);
-            out.textContent = JSON.stringify(record, null, 2);
-            renderHistory();
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Generate paymentMethodId";
+        if (error) {
+            out.textContent = JSON.stringify({ error: error.message }, null, 2);
+            return;
         }
+
+        out.textContent = JSON.stringify({
+            paymentMethodId: paymentMethod.id
+        }, null, 2);
     });
 </script>
-
 <a href="https://docs.stripe.com/testing" target="_blank" rel="noopener">Stripe test cards documentation</a>
 </body>
 </html>

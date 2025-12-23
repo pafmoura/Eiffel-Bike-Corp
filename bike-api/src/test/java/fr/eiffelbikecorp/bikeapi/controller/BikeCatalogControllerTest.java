@@ -2,12 +2,13 @@ package fr.eiffelbikecorp.bikeapi.controller;
 
 import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
 import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,10 @@ class BikeCatalogControllerTest {
     @Autowired
     EiffelBikeCorpRepository repository;
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     private UUID corpId = UUID.randomUUID();
     private UUID autenticatedCustumerId = UUID.randomUUID();
     @Autowired
@@ -62,20 +67,17 @@ class BikeCatalogControllerTest {
             c.setEmail(randomEmail());
             c.setFullName("Bike Catalog Tester");
             c.setPassword("testpassword");
-
-            autenticatedCustumerId = customerRepository.saveAndFlush(c).getId();
+            c = customerRepository.saveAndFlush(c);
+            autenticatedCustumerId = c.getId();
+            accessToken = tokenService.generateToken(c);
         }
-
     }
 
     private BikeResponse createBike(BikeCreateRequest req) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(autenticatedCustumerId.toString());
         ResponseEntity<BikeResponse> r = rest.exchange(
                 "/api/bikes",
                 HttpMethod.POST,
-                new HttpEntity<>(req, headers),
+                new HttpEntity<>(req, authHeaders()),
                 BikeResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -93,10 +95,7 @@ class BikeCatalogControllerTest {
                 corpId,
                 new BigDecimal("2.50")
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(autenticatedCustumerId.toString());
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<BikeCreateRequest> entity = new HttpEntity<>(req, headers);
+        HttpEntity<BikeCreateRequest> entity = new HttpEntity<>(req, authHeaders());
         ResponseEntity<BikeResponse> r = rest.exchange(
                 "/api/bikes",
                 HttpMethod.POST,
@@ -131,13 +130,10 @@ class BikeCatalogControllerTest {
                 "MAINTENANCE",
                 new BigDecimal("4.50")
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(autenticatedCustumerId.toString());
-        headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<BikeResponse> updated = rest.exchange(
                 "/api/bikes/" + bikeId,
                 HttpMethod.PUT,
-                new HttpEntity<>(update, headers),
+                new HttpEntity<>(update, authHeaders()),
                 BikeResponse.class
         );
         assertThat(updated.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -174,20 +170,17 @@ class BikeCatalogControllerTest {
                 "MAINTENANCE",
                 null
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(autenticatedCustumerId.toString());
-        headers.setContentType(MediaType.APPLICATION_JSON);
         rest.exchange(
                 "/api/bikes/" + otherCreated.id(),
                 HttpMethod.PUT,
-                new HttpEntity<>(makeMaintenance, headers),
+                new HttpEntity<>(makeMaintenance, authHeaders()),
                 BikeResponse.class
         );
         String url = "/api/bikes?status=AVAILABLE&q=trek&offeredById=" + corpId;
         ResponseEntity<List<BikeResponse>> filteredResp = rest.exchange(
                 url,
                 HttpMethod.GET,
-                new HttpEntity<>(headers),
+                new HttpEntity<>(authHeaders()),
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -215,18 +208,22 @@ class BikeCatalogControllerTest {
                 null,                       // @NotNull
                 null                        // @NotNull
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(autenticatedCustumerId.toString());
-        headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> r = rest.exchange(
                 "/api/bikes",
                 HttpMethod.POST,
-                new HttpEntity<>(invalid, headers),
+                new HttpEntity<>(invalid, authHeaders()),
                 String.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(r.getHeaders().getContentType()).isNotNull();
         assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
         assertThat(r.getBody()).isNotBlank();
+    }
+
+    private HttpHeaders authHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+        return headers;
     }
 }

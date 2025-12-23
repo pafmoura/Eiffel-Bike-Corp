@@ -8,6 +8,7 @@ import fr.eiffelbikecorp.bikeapi.dto.request.*;
 import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,24 +49,27 @@ class PurchaseControllerTest {
     private UUID corpId;
     private UUID customerId;
 
+    @Autowired
+    private TokenService tokenService;
+    private String accessToken;
+
     @BeforeEach
     void setup() {
         EiffelBikeCorp corp = new EiffelBikeCorp();
         corpId = corpRepository.saveAndFlush(corp).getId();
-
         Customer c = new Customer();
         c.setId(UUID.randomUUID());
         c.setEmail("purchase-test-" + UUID.randomUUID() + "@test.com");
         c.setFullName("Purchase Tester");
         c.setPassword("testpassword");
-
-        customerId = customerRepository.saveAndFlush(c).getId();
+        c = customerRepository.saveAndFlush(c);
+        customerId = c.getId();
+        accessToken = tokenService.generateToken(c);
     }
 
     @Test
     void should_checkout_basket_and_return_201_with_purchase_body() {
         SaleOfferResponse offer = createEligibleSaleOffer("Bike for purchase checkout", new BigDecimal("240.00"));
-
         // add to basket
         ResponseEntity<BasketResponse> basket = rest.exchange(
                 "/api/basket/items",
@@ -76,7 +80,6 @@ class PurchaseControllerTest {
         assertThat(basket.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(basket.getBody()).isNotNull();
         assertThat(basket.getBody().items()).hasSize(1);
-
         // checkout
         ResponseEntity<PurchaseResponse> checkout = rest.exchange(
                 "/api/purchases/checkout",
@@ -84,11 +87,9 @@ class PurchaseControllerTest {
                 new HttpEntity<>(authHeaders()),
                 PurchaseResponse.class
         );
-
         assertThat(checkout.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(checkout.getHeaders().getContentType()).isNotNull();
         assertThat(checkout.getHeaders().getContentType().toString()).contains("application/json");
-
         PurchaseResponse body = checkout.getBody();
         assertThat(body).isNotNull();
         assertThat(body.id()).isNotNull();
@@ -112,14 +113,12 @@ class PurchaseControllerTest {
         assertThat(openBasket.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(openBasket.getBody()).isNotNull();
         assertThat(openBasket.getBody().items()).isEmpty();
-
         ResponseEntity<String> checkout = rest.exchange(
                 "/api/purchases/checkout",
                 HttpMethod.POST,
                 new HttpEntity<>(authHeaders()),
                 String.class
         );
-
         assertThat(checkout.getStatusCode()).isEqualTo(HttpStatus.CONFLICT); // BusinessRuleException -> 409
         assertThat(checkout.getHeaders().getContentType()).isNotNull();
         assertThat(checkout.getHeaders().getContentType().toString()).contains("application/json");
@@ -142,18 +141,16 @@ class PurchaseControllerTest {
                 new HttpEntity<>(authHeaders()),
                 PurchaseResponse.class
         );
-
         ResponseEntity<List<PurchaseResponse>> r = rest.exchange(
                 "/api/purchases",
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders()),
-                new ParameterizedTypeReference<>() {}
+                new ParameterizedTypeReference<>() {
+                }
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(r.getHeaders().getContentType()).isNotNull();
         assertThat(r.getHeaders().getContentType().toString()).contains("application/json");
-
         List<PurchaseResponse> body = r.getBody();
         assertThat(body).isNotNull();
         assertThat(body).isNotEmpty();
@@ -168,7 +165,6 @@ class PurchaseControllerTest {
                 jsonEntity(new AddToBasketRequest(offer.id())),
                 BasketResponse.class
         );
-
         PurchaseResponse created = rest.exchange(
                 "/api/purchases/checkout",
                 HttpMethod.POST,
@@ -176,14 +172,12 @@ class PurchaseControllerTest {
                 PurchaseResponse.class
         ).getBody();
         assertThat(created).isNotNull();
-
         ResponseEntity<PurchaseResponse> fetched = rest.exchange(
                 "/api/purchases/" + created.id(),
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders()),
                 PurchaseResponse.class
         );
-
         assertThat(fetched.getStatusCode()).isEqualTo(HttpStatus.OK);
         PurchaseResponse body = fetched.getBody();
         assertThat(body).isNotNull();
@@ -192,7 +186,6 @@ class PurchaseControllerTest {
         assertThat(body.items()).hasSize(1);
         assertThat(body.items().get(0).saleOfferId()).isEqualTo(offer.id());
     }
-
     // -------------------------------------------------------
     // Helpers
     // -------------------------------------------------------
@@ -204,10 +197,8 @@ class PurchaseControllerTest {
                 corpId,
                 new BigDecimal("2.50")
         ));
-
         // eligibility rule: must be rented at least once
         rentBikeOnceAndReturn(bike.id(), customerId);
-
         ResponseEntity<SaleOfferResponse> created = rest.exchange(
                 "/api/sales/offers",
                 HttpMethod.POST,
@@ -215,7 +206,6 @@ class PurchaseControllerTest {
                 SaleOfferResponse.class
         );
         assertThat(created.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         SaleOfferResponse offer = created.getBody();
         assertThat(offer).isNotNull();
         assertThat(offer.id()).isNotNull();
@@ -231,7 +221,6 @@ class PurchaseControllerTest {
                 BikeResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         BikeResponse body = r.getBody();
         assertThat(body).isNotNull();
         assertThat(body.id()).isNotNull();
@@ -246,12 +235,10 @@ class PurchaseControllerTest {
                 RentBikeResultResponse.class
         );
         assertThat(rented.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         RentBikeResultResponse rentedBody = rented.getBody();
         assertThat(rentedBody).isNotNull();
         assertThat(rentedBody.result()).isEqualTo(RentResult.RENTED);
         assertThat(rentedBody.rentalId()).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 "/api/rentals/" + rentedBody.rentalId() + "/return",
                 HttpMethod.POST,
@@ -264,7 +251,7 @@ class PurchaseControllerTest {
     private HttpHeaders authHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(customerId.toString()); // token = customer UUID
+        headers.setBearerAuth(accessToken); // token = customer UUID
         return headers;
     }
 
