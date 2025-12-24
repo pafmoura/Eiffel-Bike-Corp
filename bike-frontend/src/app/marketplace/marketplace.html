@@ -6,13 +6,22 @@
         <p class="text-slate-500">Buy premium used bikes from the corporate fleet.</p>
       </div>
 
-      <button (click)="isOpen.set(!isOpen())" class="bg-white p-3 rounded-xl border shadow-sm relative">
-        🛒
-        <span *ngIf="basketItems().length"
-              class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
-          {{ basketItems().length }}
-        </span>
-      </button>
+      <div class="flex items-center gap-4">
+        <select 
+          [ngModel]="fx.currency()" 
+          (ngModelChange)="fx.setCurrency($event)"
+          class="bg-white border rounded-xl px-3 py-2 text-sm font-bold shadow-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          <option *ngFor="let c of fx.currencies()" [value]="c">{{ c }}</option>
+        </select>
+
+        <button (click)="isOpen.set(!isOpen())" class="bg-white p-3 rounded-xl border shadow-sm relative">
+          🛒
+          <span *ngIf="basketItems().length"
+                class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+            {{ basketItems().length }}
+          </span>
+        </button>
+      </div>
     </header>
 
     <input type="text" (input)="loadOffers($any($event.target).value)" placeholder="Search sales..."
@@ -31,7 +40,9 @@
         <p class="text-xs text-slate-400 mb-4">Listing ID: {{ offer.id }}</p>
 
         <div class="mt-auto flex justify-between items-center">
-          <span class="text-2xl font-black text-indigo-600">{{ offer.askingPriceEur }}€</span>
+          <span class="text-2xl font-black text-indigo-600">
+            {{ fx.convert(offer.askingPriceEur) | currency: fx.currency() }}
+          </span>
           <div class="flex gap-2">
             <button (click)="viewDetails(offer.id)" class="px-3 py-2 bg-slate-100 rounded-lg text-xs font-bold">Details</button>
             <button (click)="addToBasket(offer.id)" class="px-4 py-2 bg-slate-900 text-white rounded-lg font-bold">Add</button>
@@ -41,7 +52,6 @@
     </div>
   </div>
 
-  <!-- Basket Drawer -->
   <div *ngIf="isOpen()" class="w-96 bg-white border-l shadow-2xl z-50 flex flex-col">
     <div class="p-6 border-b flex justify-between items-center">
       <h3 class="font-bold text-xl">{{ isPaymentStep() ? 'Secure Payment' : 'Your Basket' }}</h3>
@@ -49,84 +59,68 @@
     </div>
 
     <div class="flex-1 p-6 overflow-y-auto space-y-4">
-
       <div *ngIf="basketItems().length === 0" class="text-center text-slate-400 mt-10">
         Your basket is empty
       </div>
 
-      <!-- Basket -->
       <ng-container *ngIf="!isPaymentStep()">
         <div *ngFor="let item of basketItems()" class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border">
           <div>
             <p class="font-bold text-sm">Bike #{{ item.bikeId }}</p>
-            <p class="text-indigo-600 font-bold text-xs">{{ item.unitPriceEurSnapshot }}€</p>
+            <p class="text-indigo-600 font-bold text-xs">
+              {{ fx.convert(item.unitPriceEurSnapshot) | currency: fx.currency() }}
+            </p>
           </div>
           <button (click)="remove(item.saleOfferId || item.id)" class="text-red-500">🗑</button>
         </div>
       </ng-container>
 
-      <!-- Payment -->
       <ng-container *ngIf="isPaymentStep()">
         <div class="space-y-6">
           <div class="p-4 bg-indigo-50 rounded-xl border">
-            <label class="text-[10px] uppercase font-bold text-indigo-400">Total</label>
-            <p class="text-3xl font-black text-indigo-700">{{ total() }}€</p>
+            <label class="text-[10px] uppercase font-bold text-indigo-400">Total Due</label>
+            <p class="text-3xl font-black text-indigo-700">
+              {{ fx.convert(totalEur()) | currency: fx.currency() }}
+            </p>
           </div>
 
           <form (ngSubmit)="confirmPayment()" autocomplete="cc-number">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">CARD NUMBER</label>
+                <input name="cc-number" autocomplete="cc-number" [value]="cardNumber()"
+                  (input)="cardNumber.set($any($event.target).value)" placeholder="4242 4242 4242 4242"
+                  class="w-full p-3 border rounded-lg">
+              </div>
 
-  <div class="space-y-4">
-    <div>
-      <label class="block text-xs font-bold text-slate-500 mb-1">CARD NUMBER</label>
-      <input
-        name="cc-number"
-        autocomplete="cc-number"
-        [value]="cardNumber()"
-        (input)="cardNumber.set($any($event.target).value)"
-        placeholder="4242 4242 4242 4242"
-        class="w-full p-3 border rounded-lg">
-    </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1">EXPIRY</label>
+                  <input name="cc-exp" autocomplete="cc-exp" [value]="expiry()"
+                    (input)="expiry.set($any($event.target).value)" placeholder="MM / YY"
+                    class="w-full p-3 border rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 mb-1">CVC</label>
+                  <input name="cc-csc" autocomplete="cc-csc" [value]="cvc()"
+                    (input)="cvc.set($any($event.target).value)" placeholder="CVC"
+                    class="w-full p-3 border rounded-lg">
+                </div>
+              </div>
+            </div>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-xs font-bold text-slate-500 mb-1">EXPIRY</label>
-        <input
-          name="cc-exp"
-          autocomplete="cc-exp"
-          [value]="expiry()"
-          (input)="expiry.set($any($event.target).value)"
-          placeholder="MM / YY"
-          class="w-full p-3 border rounded-lg">
-      </div>
-
-      <div>
-        <label class="block text-xs font-bold text-slate-500 mb-1">CVC</label>
-        <input
-          name="cc-csc"
-          autocomplete="cc-csc"
-          [value]="cvc()"
-          (input)="cvc.set($any($event.target).value)"
-          placeholder="CVC"
-          class="w-full p-3 border rounded-lg">
-      </div>
-    </div>
-  </div>
-
-  <button type="submit"
-          class="w-full mt-6 py-4 bg-green-600 text-white rounded-xl font-bold">
-    Authorize & Pay {{ total() }}€
-  </button>
-</form>
-
+            <button type="submit" class="w-full mt-6 py-4 bg-green-600 text-white rounded-xl font-bold">
+              Authorize & Pay {{ fx.convert(totalEur()) | currency: fx.currency() }}
+            </button>
+          </form>
         </div>
       </ng-container>
     </div>
 
     <div class="p-6 bg-slate-50 border-t">
       <button *ngIf="!isPaymentStep()" (click)="startCheckout()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold">
-        Checkout ({{ total() }}€)
+        Checkout ({{ fx.convert(totalEur()) | currency: fx.currency() }})
       </button>
-
 
       <button *ngIf="isPaymentStep()" (click)="isPaymentStep.set(false)"
               class="w-full mt-2 text-xs text-slate-400">
@@ -135,7 +129,6 @@
     </div>
   </div>
 
-  <!-- Details Modal -->
   <div *ngIf="selectedOffer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center">
     <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden">
       <div class="p-6 border-b flex justify-between">

@@ -1,0 +1,10 @@
+{
+  "/fx-api": {
+    "target": "https://open.er-api.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/fx-api": ""
+    }
+  }
+}

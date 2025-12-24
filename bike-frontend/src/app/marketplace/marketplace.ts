@@ -1,16 +1,19 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BikeMarketplace } from '../services/bike-marketplace';
+import { FxRateService } from '../fx-rate-service';
 
 @Component({
   selector: 'app-marketplace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencyPipe],
   templateUrl: './marketplace.html'
 })
 export class MarketplaceComponent implements OnInit {
   private marketService = inject(BikeMarketplace);
+  // Injecting the FX service as public so the template can access its signals
+  public fx = inject(FxRateService);
 
   offers = signal<any[]>([]);
   basketItems = signal<any[]>([]);
@@ -25,7 +28,8 @@ export class MarketplaceComponent implements OnInit {
   expiry = signal('');
   cvc = signal('');
 
-  total = computed(() =>
+  // Total always remains in EUR for backend consistency
+  totalEur = computed(() =>
     this.basketItems().reduce((acc, i) => acc + (i.unitPriceEurSnapshot || 0), 0)
   );
 
@@ -88,9 +92,10 @@ export class MarketplaceComponent implements OnInit {
     const id = this.currentPurchaseId();
     if (!id) return;
 
+    // Payment sent in EUR as per original logic
     this.marketService.payPurchase(id, {
       purchaseId: id,
-      amount: this.total(),
+      amount: this.totalEur(),
       currency: 'EUR',
       paymentMethodId: 'pm_card_visa'
     }).subscribe({
