@@ -7,13 +7,11 @@ import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import fr.eiffelbikecorp.bikeapi.exceptions.ValidationException;
 import fr.eiffelbikecorp.bikeapi.mapper.BikeMapper;
-import fr.eiffelbikecorp.bikeapi.persistence.BikeRepository;
-import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
-import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;
-import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.*;
 import fr.eiffelbikecorp.bikeapi.service.BikeCatalogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +28,25 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
     private final EiffelBikeCorpRepository eiffelBikeCorpRepository;
     private final StudentRepository studentRepository;
     private final EmployeeRepository employeeRepository;
+    private final ReturnNoteRepository returnNoteRepository;
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReturnNoteResponse> getReturnNotesForBike(Long bikeId) {
+        // Fetch notes using the new repository method
+        return returnNoteRepository.findAllByRental_Bike_IdOrderByCreatedAtDesc(bikeId)
+                .stream()
+                .map(note -> new ReturnNoteResponse(
+                        note.getId(),
+                        note.getCondition(),
+                        note.getComment(),
+                        note.getCreatedAt(),
+                        note.getAuthor().getId()
+                ))
+                .toList();
+    }
+
 
     @Override
     @Transactional
@@ -65,6 +82,9 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
         }
         return BikeMapper.toResponse(bikeRepository.save(bike));
     }
+
+
+
 
     @Override
     @Transactional(readOnly = true)

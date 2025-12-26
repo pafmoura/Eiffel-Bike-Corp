@@ -178,4 +178,18 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
         }
       });
   }
+selectedBikeNotes = signal<any[]>([]);
+showNotesModal = signal(false);
+viewBikeHistory(bikeId: number) {
+  this.http.get<any[]>(`http://localhost:8080/api/bikes/${bikeId}/return-notes`, { 
+    headers: new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`) 
+  }).subscribe({
+    next: (notes) => {
+      this.selectedBikeNotes.set(notes);
+      this.showNotesModal.set(true);
+    },
+    error: (err) => this.showAlert('Could not load history', 'error')
+  });
+}
+
 }

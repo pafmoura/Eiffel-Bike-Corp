@@ -3,6 +3,7 @@ package fr.eiffelbikecorp.bikeapi.controller;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.BikeCatalogService;
 import jakarta.validation.Valid;
@@ -63,5 +64,13 @@ public class BikeCatalogController {
     public Response findAllBikes() {
         List<BikeResponse> results = bikeCatalogService.findAll();
         return Response.ok(results).build();
+    }
+
+
+    @GET
+    @Path("/{bikeId}/return-notes")
+    public Response getBikeReturnHistory(@PathParam("bikeId") Long bikeId) {
+        List<ReturnNoteResponse> history = bikeCatalogService.getReturnNotesForBike(bikeId);
+        return Response.ok(history).build();
     }
 }
