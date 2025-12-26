@@ -6,10 +6,7 @@ import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentalStatus;
 import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.ActiveBikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import fr.eiffelbikecorp.bikeapi.mapper.NotificationMapper;
@@ -64,9 +61,7 @@ public class RentalServiceImpl implements RentalService {
             bike.setStatus(BikeStatus.RENTED);
             Rental saved = rentalRepository.save(rental);
             bikeRepository.save(bike);
-
             // a pending payment could be created here, but out of scope for now
-
             return new RentBikeResultResponse(
                     RentResult.RENTED,
                     saved.getId(),
@@ -125,8 +120,6 @@ public class RentalServiceImpl implements RentalService {
                 .build();
         returnNoteRepository.save(note);
         // Mark bike available first
-
-
         waitingListRepository.findByBike_Id(bike.getId()).ifPresent(wl -> {
             waitingListEntryRepository.findByWaitingList_IdAndCustomer_Id(wl.getId(), rental.getCustomer().getId())
                     .ifPresent(entry -> {
@@ -136,7 +129,6 @@ public class RentalServiceImpl implements RentalService {
                         }
                     });
         });
-
         bike.setStatus(BikeStatus.AVAILABLE);
         bikeRepository.save(bike);
         // FIFO waiting list: assign next automatically + notify
@@ -223,7 +215,6 @@ public class RentalServiceImpl implements RentalService {
                 .toList();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<NotificationResponse> findWaitlistByCustomer(UUID customerId) {
@@ -236,6 +227,22 @@ public class RentalServiceImpl implements RentalService {
                         entry.getWaitingList().getBike().getId(),          // Long bikeId
                         "Waiting for " + entry.getWaitingList().getBike().getDescription(), // String message
                         entry.getCreatedAt()                               // LocalDateTime (using createdAt as sentAt)
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<RentalResponse> listMyRentals(UUID customerId) {
+        return rentalRepository.findByCustomer_IdOrderByStartAtDesc(customerId).stream()
+                .map(r -> new RentalResponse(
+                        r.getId(),
+                        r.getBike().getId(),
+                        customerId,
+                        r.getStatus().name(),
+                        r.getStartAt(),
+                        r.getEndAt(),
+                        r.getTotalAmountEur()
                 ))
                 .toList();
     }

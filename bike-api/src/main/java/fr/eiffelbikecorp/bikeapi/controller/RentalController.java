@@ -5,11 +5,14 @@ import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentalResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.RentalService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -29,17 +32,17 @@ import java.util.UUID;
 public class RentalController {
 
     private final RentalService rentalService;
+    @Context
+    ContainerRequestContext requestContext;
 
     @POST
     public Response rentBikeOrJoinWaitingList(@Valid RentBikeRequest request) {
         RentBikeResultResponse result = rentalService.rentBikeOrJoinWaitingList(request);
-
         if (result.result() == RentResult.RENTED) {
             return Response.status(Response.Status.CREATED).entity(result).build();
         }
         return Response.status(Response.Status.ACCEPTED).entity(result).build();
     }
-
 
     @POST
     @Path("/{rentalId}/return")
@@ -51,56 +54,47 @@ public class RentalController {
         return Response.ok(response).build();
     }
 
-
-
     @GET
     @Path("/active")
-    public Response getActiveRentals(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
-        // You'll need to implement this in your RentalService
+    public Response getActiveRentals() {
+        UUID customerId = customerId();
         List<RentBikeResultResponse> activeRentals = rentalService.findActiveRentalsByCustomer(customerId);
         return Response.ok(activeRentals).build();
     }
 
     @GET
     @Path("/active/bikes")
-    public Response getMyActiveBikeIds(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("customerId is required")
-                    .build();
-        }
-
+    public Response getMyActiveBikeIds() {
+        UUID customerId = customerId();
         return Response.ok(rentalService.findMyActiveBikeIds(customerId)).build();
     }
 
-
     @GET
     @Path("/waitlist")
-    public Response getCustomerWaitlist(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
+    public Response getCustomerWaitlist() {
+        UUID customerId = customerId();
         List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
         return Response.ok(waitlist).build();
     }
 
     @GET
     @Path("/notifications")
-    public Response listNotifications(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
-
+    public Response listNotifications() {
+        UUID customerId = customerId();
         List<NotificationResponse> notifications = rentalService.listMyNotifications(customerId);
         return Response.ok(notifications).build();
+    }
+
+    @GET
+    public Response listMyRentals() {
+        UUID customerId = customerId();
+        List<RentalResponse> rentals = rentalService.listMyRentals(customerId);
+        return Response.ok(rentals).build();
+    }
+
+    private UUID customerId() {
+        Object v = requestContext.getProperty("userId");
+        if (v instanceof UUID id) return id;
+        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
     }
 }

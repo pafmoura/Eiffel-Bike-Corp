@@ -31,6 +31,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static fr.eiffelbikecorp.bikeapi.Utils.randomEmail;
@@ -51,9 +52,6 @@ class RentalControllerTest {
     EiffelBikeCorpRepository corpRepository;
 
     @Autowired
-    StudentRepository studentRepository;
-
-    @Autowired
     CustomerRepository customerRepository;
 
     private UUID corpId = UUID.randomUUID();
@@ -62,7 +60,7 @@ class RentalControllerTest {
 
     @Autowired
     private TokenService tokenService;
-    private String accessToken;
+
 
     @BeforeEach
     void setup() {
@@ -80,7 +78,6 @@ class RentalControllerTest {
             c1.setPassword("testpassword");
             c1 = customerRepository.saveAndFlush(c1);
             customerId1 = c1.getId();
-            accessToken = tokenService.generateToken(c1);
         }
         if (customer2 == null) {
             Customer c2 = new Customer();
@@ -103,7 +100,9 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> r = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(rentReq, authHeaders()),
+                new HttpEntity<>(rentReq, authHeaders(tokenService.generateToken(
+                        Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                ))),
                 RentBikeResultResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -128,7 +127,11 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         );
         assertThat(firstRent.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -136,7 +139,11 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> secondRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 2), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 2), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId2).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         );
         assertThat(secondRent.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -159,7 +166,11 @@ class RentalControllerTest {
         RentBikeResultResponse firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 2), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         ).getBody();
         assertThat(firstRent).isNotNull();
@@ -170,7 +181,11 @@ class RentalControllerTest {
         ResponseEntity<RentBikeResultResponse> secondRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId2).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         );
         assertThat(secondRent.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
@@ -183,7 +198,11 @@ class RentalControllerTest {
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 "/api/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
-                new HttpEntity<>(returnReq, authHeaders()),
+                new HttpEntity<>(returnReq, authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -219,7 +238,11 @@ class RentalControllerTest {
         RentBikeResultResponse firstRent = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 1), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId1, 1), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         ).getBody();
         assertThat(firstRent).isNotNull();
@@ -227,19 +250,31 @@ class RentalControllerTest {
         rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders()),
+                new HttpEntity<>(new RentBikeRequest(bike.id(), customerId2, 1), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId2).orElse(null))
+                        )
+                )),
                 RentBikeResultResponse.class
         );
         rest.exchange(
                 "/api/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
-                new HttpEntity<>(new ReturnBikeRequest(customerId1, "Ok", "Good"), authHeaders()),
+                new HttpEntity<>(new ReturnBikeRequest(customerId1, "Ok", "Good"), authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 ReturnBikeResponse.class
         );
         ResponseEntity<List<NotificationResponse>> r = rest.exchange(
                 "/api/rentals/notifications?customerId=" + customerId2,
                 HttpMethod.GET,
-                new HttpEntity<>(authHeaders()),
+                new HttpEntity<>(authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId2).orElse(null))
+                        )
+                )),
                 new ParameterizedTypeReference<>() {
                 }
         );
@@ -261,7 +296,11 @@ class RentalControllerTest {
         ResponseEntity<String> r = rest.exchange(
                 "/api/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(invalid, authHeaders()),
+                new HttpEntity<>(invalid, authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 String.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -274,7 +313,11 @@ class RentalControllerTest {
         ResponseEntity<BikeResponse> r = rest.exchange(
                 "/api/bikes",
                 HttpMethod.POST,
-                new HttpEntity<>(req, authHeaders()),
+                new HttpEntity<>(req, authHeaders(
+                        tokenService.generateToken(
+                                Objects.requireNonNull(customerRepository.findById(customerId1).orElse(null))
+                        )
+                )),
                 BikeResponse.class
         );
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -284,7 +327,7 @@ class RentalControllerTest {
         return body;
     }
 
-    private HttpHeaders authHeaders() {
+    private HttpHeaders authHeaders(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(accessToken); // token = customer UUID

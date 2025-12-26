@@ -30,3 +30,5 @@
 * **US_19:** As a Customer, I want to pay for my purchase through a payment gateway so that the system can verify funds and complete the payment.
 
 ## OTHER
+* **US_20:** As a Customer, I want to view my purchase history so that I can track what I bought and when.
+* **US_21:** As a Customer, I want to view my rent history so that I can track what I rent and when.
