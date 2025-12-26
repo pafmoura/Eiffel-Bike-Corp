@@ -3,10 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-/* ===== DTO TYPES (MATCH BACKEND) ===== */
+/* ===== DTO TYPES (MATCHING YOUR BACKEND RECORDS) ===== */
 interface ActiveRentalDto {
   rentalId: number;
-  message: string;          // Bike name
+  message: string;      // Bike name/description
   result: 'RENTED' | 'ACTIVE';
   waitingListEntryId: number | null;
 }
@@ -18,6 +18,17 @@ interface WaitlistDto {
   message: string;     
   sentAt: string;      
   servedAt?: string | null;
+}
+
+/** Matches fr.eiffelbikecorp.bikeapi.dto.response.RentalResponse */
+interface RentalResponse {
+  id: number;
+  bikeId: number;
+  customerId: string;
+  status: string;
+  startAt: string;
+  endAt: string | null;
+  totalAmountEur: number;
 }
 
 interface AlertState {
@@ -37,32 +48,41 @@ export class Myrentals implements OnInit {
   private http = inject(HttpClient);
   private baseUrl = 'http://localhost:8080/api';
 
-  /* ===== STATE ===== */
+  /* ===== STATE SIGNALS ===== */
   allRentalsRaw = signal<ActiveRentalDto[]>([]);
   allWaitlistRaw = signal<WaitlistDto[]>([]);
+  allHistoryRaw = signal<RentalResponse[]>([]); 
   searchQuery = signal('');
-  
-  // Custom Alert Signal
   alert = signal<AlertState>({ show: false, message: '', type: 'info' });
+  
+  // Controls the History Dialog visibility
+  isHistoryOpen = signal(false);
 
-  /* ===== COMPUTED ===== */
+  /* ===== COMPUTED PROPERTIES ===== */
   myActiveRentals = computed(() => {
     const query = this.searchQuery().toLowerCase();
     return this.allRentalsRaw().filter(r =>
-      r.result === 'RENTED' &&
-      (
-        r.rentalId.toString().includes(query) ||
-        r.message.toLowerCase().includes(query)
-      )
+      (r.result === 'RENTED' || r.result === 'ACTIVE') &&
+      (r.rentalId.toString().includes(query) || r.message.toLowerCase().includes(query))
     );
   });
 
   myWaitlist = computed(() => {
-    console.log(this.allWaitlistRaw().filter(w => !w.servedAt));
     return this.allWaitlistRaw().filter(w => !w.servedAt);
   });
 
-  /* ===== FORM ===== */
+  /** US_21: Computed history filtered by search and sorted by newest first */
+  myHistory = computed(() => {
+    const query = this.searchQuery().toLowerCase();
+    return this.allHistoryRaw()
+      .filter(h => 
+        h.id.toString().includes(query) || 
+        h.status.toLowerCase().includes(query)
+      )
+      .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  });
+
+  /* ===== FORM STATE ===== */
   returnForm = {
     rentalId: null as number | null,
     condition: 'GOOD',
@@ -71,17 +91,14 @@ export class Myrentals implements OnInit {
 
   /* ===== LIFECYCLE ===== */
   ngOnInit() {
-    this.refreshData();
-  }
-
-  /* ===== UI HELPERS ===== */
-  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
-    this.alert.set({ show: true, message, type });
-    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
+    this.refreshDashboard();
+    this.loadRentalHistory(); 
   }
 
   /* ===== DATA LOADING ===== */
-  refreshData() {
+  
+  /** Refreshes active components (Rentals and Waitlists) */
+  refreshDashboard() {
     const userId = this.getUserId();
     if (!userId) return;
 
@@ -91,7 +108,7 @@ export class Myrentals implements OnInit {
       .get<ActiveRentalDto[]>(`${this.baseUrl}/rentals/active?customerId=${userId}`, { headers })
       .subscribe({
         next: (data) => this.allRentalsRaw.set(data),
-        error: (err) => console.error('[MyRentals] Active rentals error:', err),
+        error: (err) => console.error('[MyRentals] Active error:', err),
       });
 
     this.http
@@ -102,17 +119,22 @@ export class Myrentals implements OnInit {
       });
   }
 
+  /** US_21: Fetch full rental history from GET /api/rentals */
+  loadRentalHistory() {
+    const headers = this.getHeaders();
+    this.http
+      .get<RentalResponse[]>(`${this.baseUrl}/rentals`, { headers })
+      .subscribe({
+        next: (data) => this.allHistoryRaw.set(data),
+        error: (err) => console.error('[MyRentals] History error:', err),
+      });
+  }
+
   /* ===== ACTIONS ===== */
   returnBike() {
     const userId = this.getUserId();
-    
-    if (!this.returnForm.rentalId) {
-      this.showAlert('Please select a rental from the list first.', 'info');
-      return;
-    }
-
-    if (!userId) {
-      this.showAlert('User session expired. Please log in again.', 'error');
+    if (!this.returnForm.rentalId || !userId) {
+      this.showAlert('Validation failed. Please select a rental.', 'error');
       return;
     }
 
@@ -126,12 +148,14 @@ export class Myrentals implements OnInit {
       .post(`${this.baseUrl}/rentals/${this.returnForm.rentalId}/return`, body, { headers: this.getHeaders() })
       .subscribe({
         next: () => {
-          this.showAlert('Bike returned successfully! The next user has been notified.', 'success');
+          this.showAlert('Bike returned successfully!', 'success');
           this.returnForm = { rentalId: null, condition: 'GOOD', comment: '' };
-          this.refreshData(); 
+          // Refresh everything
+          this.refreshDashboard(); 
+          this.loadRentalHistory();
         },
         error: (err) => {
-          this.showAlert('Return failed. Please check your comments and try again.', 'error');
+          this.showAlert('Return failed. Please try again.', 'error');
           console.error('Return error:', err);
         },
       });
@@ -139,11 +163,19 @@ export class Myrentals implements OnInit {
 
   prefillReturn(rentalId: number) {
     this.returnForm.rentalId = rentalId;
-    const formElement = document.querySelector('form');
-    formElement?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
   }
 
   /* ===== HELPERS ===== */
+  calculateTotalSpent(): number {
+    return this.allHistoryRaw().reduce((sum, item) => sum + (item.totalAmountEur || 0), 0);
+  }
+
   private getHeaders() {
     const token = localStorage.getItem('token');
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
@@ -154,7 +186,7 @@ export class Myrentals implements OnInit {
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub;
+      return payload.sub; 
     } catch {
       return null;
     }
