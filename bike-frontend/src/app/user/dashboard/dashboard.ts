@@ -45,6 +45,21 @@ export class Dashboard implements OnInit {
     }
 
     this.loadMyRentalsAndBikes();
+    this.loadNotifications();
+  }
+
+  notifications = signal<any[]>([]); 
+
+loadNotifications() {
+    const id = this.userId();
+    if (!id) return;
+
+    this.http.get<any[]>(`${this.baseUrl}/rentals/notifications?customerId=${id}`, { 
+      headers: this.getHeaders() 
+    }).subscribe({
+      next: (data) => this.notifications.set(data),
+      error: (err) => console.error('Could not load notifications', err)
+    });
   }
 
   private getHeaders() {

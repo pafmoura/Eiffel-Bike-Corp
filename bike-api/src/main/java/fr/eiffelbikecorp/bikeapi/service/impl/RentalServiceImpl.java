@@ -79,7 +79,8 @@ public class RentalServiceImpl implements RentalService {
                 .orElseGet(() -> waitingListRepository.save(
                         WaitingList.builder().bike(bike).build()
                 ));
-        if (waitingListEntryRepository.existsByWaitingList_IdAndCustomer_IdAndServedAtIsNull(waitingList.getId(), customer.getId())) {            throw new BusinessRuleException("Customer is already in the waiting list for this bike.");
+        if (waitingListEntryRepository.existsByWaitingList_IdAndCustomer_IdAndServedAtIsNull(waitingList.getId(), customer.getId())) {
+            throw new BusinessRuleException("Customer is already in the waiting list for this bike.");
         }
         WaitingListEntry entry = WaitingListEntry.builder()
                 .waitingList(waitingList)
