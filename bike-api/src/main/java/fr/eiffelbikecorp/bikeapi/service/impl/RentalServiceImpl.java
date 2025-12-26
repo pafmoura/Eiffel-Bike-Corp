@@ -6,6 +6,7 @@ import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentalStatus;
 import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.ActiveBikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
@@ -201,6 +202,16 @@ public class RentalServiceImpl implements RentalService {
                 ))
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActiveBikeResponse> findMyActiveBikeIds(UUID customerId) {
+        return rentalRepository.findByCustomer_IdAndStatusIn(customerId, List.of(RentalStatus.ACTIVE))
+                .stream()
+                .map(r -> new ActiveBikeResponse(r.getBike().getId()))
+                .toList();
+    }
+
 
     @Override
     @Transactional(readOnly = true)

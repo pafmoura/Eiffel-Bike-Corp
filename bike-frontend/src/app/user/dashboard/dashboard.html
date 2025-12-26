@@ -46,20 +46,29 @@
 
           <button
   (click)="handleRentClick(bike)"
-  [disabled]="bike.offeredBy.id === userId()"
+  [disabled]="bike.offeredBy.id === userId() || bike.isRentedByMe"
   class="px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all"
-  [ngClass]="bike.offeredBy.id === userId()
-      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-      : bike.status === 'AVAILABLE'
+  [ngClass]="
+    bike.isRentedByMe
+      ? 'bg-emerald-100 text-emerald-600 cursor-not-allowed'
+      : bike.offeredBy.id === userId()
+        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+        : bike.status === 'AVAILABLE'
           ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
-          : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'">
+          : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'
+  ">
 
-  {{ bike.offeredBy.id === userId()
-      ? 'Your Bike'
-      : bike.status === 'AVAILABLE'
+  {{
+    bike.isRentedByMe
+      ? 'Rented by you'
+      : bike.offeredBy.id === userId()
+        ? 'Your Bike'
+        : bike.status === 'AVAILABLE'
           ? 'Rent Now'
-          : 'Join Waitlist' }}
+          : 'Join Waitlist'
+  }}
 </button>
+
 
 
         </div>

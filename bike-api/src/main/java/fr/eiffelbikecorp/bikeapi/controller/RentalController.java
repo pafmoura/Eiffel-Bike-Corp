@@ -66,6 +66,18 @@ public class RentalController {
         return Response.ok(activeRentals).build();
     }
 
+    @GET
+    @Path("/active/bikes")
+    public Response getMyActiveBikeIds(@QueryParam("customerId") UUID customerId) {
+        if (customerId == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("customerId is required")
+                    .build();
+        }
+
+        return Response.ok(rentalService.findMyActiveBikeIds(customerId)).build();
+    }
+
 
     @GET
     @Path("/waitlist")

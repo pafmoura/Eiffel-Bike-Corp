@@ -19,11 +19,13 @@ export class Dashboard implements OnInit {
   private baseUrl = 'http://localhost:8080/api';
 
   bikes = signal<any[]>([]);
+  myActiveRentals = signal<any[]>([]);
+
   isPaymentStep = signal(false);
   selectedBike = signal<any>(null);
   rentalDays = signal(3);
 
-  userId = signal<number | null>(null);
+  userId = signal<string | null>(null);
 
   cardNumber = signal('');
   expiry = signal('');
@@ -38,43 +40,59 @@ export class Dashboard implements OnInit {
   ngOnInit() {
     const token = localStorage.getItem('token');
     if (token) {
-  const payload = JSON.parse(atob(token.split('.')[1]));
-    this.userId.set(payload.sub);    }
-    this.loadBikes();
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.userId.set(payload.sub);
+    }
+
+    this.loadMyRentalsAndBikes();
   }
 
   private getHeaders() {
     return new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`);
   }
 
-  loadBikes() {
-  this.http.get<any[]>(`${this.baseUrl}/bikes/all`, { headers: this.getHeaders() })
-    .subscribe(data => {
-      const mapped = data.map(b => ({
-        ...b,
-        imageUrl: this.bikeImages[Math.floor(Math.random() * this.bikeImages.length)]
-      }));
+  // 🚀 Load rentals FIRST, then bikes
+  loadMyRentalsAndBikes() {
+      this.http.get<any[]>(
+    `${this.baseUrl}/rentals/active/bikes?customerId=${this.userId()}`,
+    { headers: this.getHeaders() }
+  ).subscribe(rentals => {
 
-      this.bikes.set(mapped);
+      this.myActiveRentals.set(rentals);
+      const myBikeIds = new Set(rentals.map(r => r.bikeId));
 
-      console.log('Bikes loaded:', this.bikes());
+      this.http.get<any[]>(
+        `${this.baseUrl}/bikes/all`,
+        { headers: this.getHeaders() }
+      ).subscribe(bikes => {
+
+        const mapped = bikes.map(b => ({
+          ...b,
+          imageUrl: this.bikeImages[Math.floor(Math.random() * this.bikeImages.length)],
+          isRentedByMe: myBikeIds.has(b.id)
+        }));
+
+        this.bikes.set(mapped);
+      });
     });
-}
-
-handleRentClick(bike: any) {
-  if (bike.offeredBy.id === this.userId()) {
-    alert("You can't rent your own bike.");
-    return;
   }
 
-  if (bike.status !== 'AVAILABLE') {
-    this.createRental(bike, false);
-    return;
-  }
+  handleRentClick(bike: any) {
+    if (bike.isRentedByMe) return;
 
-  this.selectedBike.set(bike);
-  this.isPaymentStep.set(true);
-}
+    if (bike.offeredBy.id === this.userId()) {
+      alert("You can't rent your own bike.");
+      return;
+    }
+
+    if (bike.status !== 'AVAILABLE') {
+      this.createRental(bike, false);
+      return;
+    }
+
+    this.selectedBike.set(bike);
+    this.isPaymentStep.set(true);
+  }
 
   confirmPaymentAndRent() {
     this.createRental(this.selectedBike(), true);
@@ -87,9 +105,14 @@ handleRentClick(bike: any) {
       days: this.rentalDays()
     };
 
-    this.http.post<any>(`${this.baseUrl}/rentals`, rentalRequest, { headers: this.getHeaders() }).subscribe(res => {
+    this.http.post<any>(
+      `${this.baseUrl}/rentals`,
+      rentalRequest,
+      { headers: this.getHeaders() }
+    ).subscribe(res => {
       if (pay && res.rentalId) this.processPayment(res.rentalId, bike);
       else alert(res.message || 'Added to Waiting List.');
+
       this.closeModal();
     });
   }
@@ -105,7 +128,11 @@ handleRentClick(bike: any) {
       paymentMethodId: 'pm_card_visa'
     };
 
-    this.http.post(`${this.baseUrl}/payments/rentals`, paymentData, { headers: this.getHeaders() }).subscribe(() => {
+    this.http.post(
+      `${this.baseUrl}/payments/rentals`,
+      paymentData,
+      { headers: this.getHeaders() }
+    ).subscribe(() => {
       alert('Payment successful!');
       this.closeModal();
     });
@@ -115,6 +142,6 @@ handleRentClick(bike: any) {
     this.isPaymentStep.set(false);
     this.selectedBike.set(null);
     this.rentalDays.set(3);
-    this.loadBikes();
+    this.loadMyRentalsAndBikes();   // refresh correctly
   }
 }

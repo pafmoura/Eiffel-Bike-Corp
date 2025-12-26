@@ -2,6 +2,7 @@ package fr.eiffelbikecorp.bikeapi.service;
 
 import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.ActiveBikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
@@ -22,4 +23,7 @@ public interface RentalService {
 
 
     List<NotificationResponse> findWaitlistByCustomer(UUID customerId);
-}
+
+    List<ActiveBikeResponse> findMyActiveBikeIds(UUID customerId);
+
+    }
