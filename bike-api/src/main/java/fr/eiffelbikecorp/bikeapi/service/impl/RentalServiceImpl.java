@@ -79,8 +79,7 @@ public class RentalServiceImpl implements RentalService {
                 .orElseGet(() -> waitingListRepository.save(
                         WaitingList.builder().bike(bike).build()
                 ));
-        if (waitingListEntryRepository.existsByWaitingList_IdAndCustomer_Id(waitingList.getId(), customer.getId())) {
-            throw new BusinessRuleException("Customer is already in the waiting list for this bike.");
+        if (waitingListEntryRepository.existsByWaitingList_IdAndCustomer_IdAndServedAtIsNull(waitingList.getId(), customer.getId())) {            throw new BusinessRuleException("Customer is already in the waiting list for this bike.");
         }
         WaitingListEntry entry = WaitingListEntry.builder()
                 .waitingList(waitingList)
@@ -125,6 +124,18 @@ public class RentalServiceImpl implements RentalService {
                 .build();
         returnNoteRepository.save(note);
         // Mark bike available first
+
+
+        waitingListRepository.findByBike_Id(bike.getId()).ifPresent(wl -> {
+            waitingListEntryRepository.findByWaitingList_IdAndCustomer_Id(wl.getId(), rental.getCustomer().getId())
+                    .ifPresent(entry -> {
+                        if (entry.getServedAt() == null) {
+                            entry.setServedAt(LocalDateTime.now());
+                            waitingListEntryRepository.save(entry);
+                        }
+                    });
+        });
+
         bike.setStatus(BikeStatus.AVAILABLE);
         bikeRepository.save(bike);
         // FIFO waiting list: assign next automatically + notify
@@ -137,8 +148,7 @@ public class RentalServiceImpl implements RentalService {
             );
         }
         WaitingList wl = maybeWaitingList.get();
-        var nextEntryOpt = waitingListEntryRepository.findFirstByWaitingList_IdOrderByCreatedAtAsc(wl.getId());
-        if (nextEntryOpt.isEmpty()) {
+        var nextEntryOpt = waitingListEntryRepository.findFirstByWaitingList_IdAndServedAtIsNullOrderByCreatedAtAsc(wl.getId());        if (nextEntryOpt.isEmpty()) {
             return new ReturnBikeResponse(
                     RentalMapper.toResponse(closed),
                     null,

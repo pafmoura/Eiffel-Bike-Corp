@@ -22,4 +22,12 @@ public interface WaitingListEntryRepository extends JpaRepository<WaitingListEnt
     long countByWaitingList_Id(Long waitingListId);
 
     List<WaitingListEntry> findByCustomer_IdAndServedAtIsNull(UUID customerId);
+
+    Optional<WaitingListEntry> findByWaitingList_IdAndCustomer_Id(Long waitingListId, UUID customerId);
+
+    Optional<WaitingListEntry> findFirstByWaitingList_IdAndServedAtIsNullOrderByCreatedAtAsc(Long waitingListId);
+
+    boolean existsByWaitingList_IdAndCustomer_IdAndServedAtIsNull(Long waitingListId, UUID customerId);
+
+
 }
