@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-/* ===== DTO TYPES (MATCHING YOUR BACKEND RECORDS) ===== */
 interface ActiveRentalDto {
   rentalId: number;
   message: string;      // Bike name/description
@@ -20,7 +19,6 @@ interface WaitlistDto {
   servedAt?: string | null;
 }
 
-/** Matches fr.eiffelbikecorp.bikeapi.dto.response.RentalResponse */
 interface RentalResponse {
   id: number;
   bikeId: number;

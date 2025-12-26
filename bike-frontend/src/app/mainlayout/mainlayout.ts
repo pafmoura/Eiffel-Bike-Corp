@@ -1,7 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
+
+/**
+ * Main layout component that includes the navigation bar and router outlet.
+ * Displays the username extracted from the JWT token stored in localStorage.
+ * Provides a logout function to clear the token and reload the app.
+ * Uses Angular signals for reactive state management.
+ */
 @Component({
   selector: 'app-mainlayout',
 imports: [CommonModule, RouterModule],
@@ -11,7 +18,7 @@ imports: [CommonModule, RouterModule],
 export class Mainlayout {
 username = signal<string>('Guest');
 
-  constructor() {
+  constructor(private router: Router) {
     this.getUserFromToken();
   }
 
@@ -28,7 +35,8 @@ username = signal<string>('Guest');
   }
 
   logout() {
-    localStorage.removeItem('token');
-    window.location.reload();
-  }
+  localStorage.removeItem('token');
+  this.username.set('Guest');
+  this.router.navigate(['/login']);
+}
 }
