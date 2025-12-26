@@ -4,6 +4,7 @@ import fr.eiffelbikecorp.bikeapi.dto.request.AddToBasketRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.BasketResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.BasketService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Secured
+@SecurityRequirement(name = "BearerAuth")
 public class BasketController {
 
     private final BasketService basketService;

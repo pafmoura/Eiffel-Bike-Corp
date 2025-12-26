@@ -6,6 +6,14 @@ import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.SalePaymentResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -25,7 +33,12 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Secured
-@CrossOrigin(origins = "http://localhost:4200") // Add this line
+@CrossOrigin(origins = "http://localhost:4200")
+@Tag(
+        name = "Payments",
+        description = "Payments through gateway + currency conversion (US_08 rental payment, US_19 purchase payment)"
+)
+@SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -34,15 +47,35 @@ public class PaymentController {
     @Context
     private ContainerRequestContext requestContext;
 
-    /**
-     * Pay a rental in any currency, stored with conversion to EUR.
-     * <p>
-     * POST /api/payments
-     * Body: { "rentalId": 123, "amount": 50.00, "currency": "USD" }
-     */
     @POST
     @Path("/rentals")
-    public Response payRental(@Valid PayRentalRequest request) {
+    @Operation(
+            summary = "Pay a rental",
+            description = """
+                    Pays a rental fee through the payment gateway (e.g., Stripe) (US_08).
+                    Supports paying in any currency; the backend converts and stores the amount in EUR for consistency.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Rental payment created and paid",
+                    content = @Content(schema = @Schema(implementation = RentalPaymentResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Validation error (amount/currency/paymentMethodId)"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Rental not found"),
+            @ApiResponse(responseCode = "409", description = "Rental already paid / invalid state")
+    })
+    public Response payRental(
+            @Valid
+            @RequestBody(
+                    required = true,
+                    description = "Pay rental payload",
+                    content = @Content(schema = @Schema(implementation = PayRentalRequest.class))
+            )
+            PayRentalRequest request
+    ) {
         RentalPaymentResponse created = paymentService.payRental(request);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
@@ -62,7 +95,33 @@ public class PaymentController {
 
     @POST
     @Path("/purchases")
-    public Response payPurchases(@Valid PayPurchaseRequest request) {
+    @Operation(
+            summary = "Pay a purchase",
+            description = """
+                    Pays a purchase through the payment gateway so the system can verify funds and complete payment (US_19).
+                    The backend records the payment and updates the purchase status accordingly.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Purchase payment created and paid",
+                    content = @Content(schema = @Schema(implementation = SalePaymentResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Validation error (amount/currency/paymentMethodId)"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Purchase not found"),
+            @ApiResponse(responseCode = "409", description = "Purchase already paid / invalid state")
+    })
+    public Response payPurchase(
+            @Valid
+            @RequestBody(
+                    required = true,
+                    description = "Pay purchase payload",
+                    content = @Content(schema = @Schema(implementation = PayPurchaseRequest.class))
+            )
+            PayPurchaseRequest request
+    ) {
         UUID customerId = customerId();
         SalePaymentResponse paid = salePaymentService.payPurchase(customerId, request);
         return Response.status(Response.Status.CREATED).entity(paid).build();

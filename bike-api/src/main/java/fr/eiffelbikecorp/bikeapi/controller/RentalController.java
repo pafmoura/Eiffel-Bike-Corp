@@ -5,11 +5,24 @@ import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.NotificationResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
+import fr.eiffelbikecorp.bikeapi.dto.response.RentalResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.RentalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -25,82 +38,190 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Secured
-@CrossOrigin(origins = "http://localhost:4200") // Add this line
+@CrossOrigin(origins = "http://localhost:4200")
+@Tag(
+        name = "Rentals",
+        description = "Renting flow: rent/waitlist/notifications/return/history"
+)
+@SecurityRequirement(name = "bearerAuth")
 public class RentalController {
 
     private final RentalService rentalService;
+    @Context
+    ContainerRequestContext requestContext;
 
     @POST
-    public Response rentBikeOrJoinWaitingList(@Valid RentBikeRequest request) {
+    @Operation(
+            summary = "Rent a bike (or join waiting list)",
+            description = """
+                    Customer rents a bike (US_05). If the bike is unavailable, the customer is added to the waiting list (US_06).
+                    Response is:
+                    - 201 when result = RENTED
+                    - 202 when result = WAITLISTED
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Bike rented successfully (result=RENTED)",
+                    content = @Content(schema = @Schema(implementation = RentBikeResultResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "202",
+                    description = "Customer joined waiting list (result=WAITLISTED)",
+                    content = @Content(schema = @Schema(implementation = RentBikeResultResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response rentBikeOrJoinWaitingList(@Valid
+                                              @RequestBody(
+                                                      required = true,
+                                                      description = "Rent request payload",
+                                                      content = @Content(schema = @Schema(implementation = RentBikeRequest.class))
+                                              ) RentBikeRequest request) {
         RentBikeResultResponse result = rentalService.rentBikeOrJoinWaitingList(request);
-
         if (result.result() == RentResult.RENTED) {
             return Response.status(Response.Status.CREATED).entity(result).build();
         }
         return Response.status(Response.Status.ACCEPTED).entity(result).build();
     }
 
-
     @POST
     @Path("/{rentalId}/return")
+    @Operation(
+            summary = "Return a rented bike",
+            description = "Customer returns a bike and may attach return notes/condition information (US_09)."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Bike returned",
+                    content = @Content(schema = @Schema(implementation = ReturnBikeResponse.class))
+            ),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Rental not found")
+    })
     public Response returnBike(
+            @Parameter(description = "Rental id", required = true, example = "100")
             @PathParam("rentalId") Long rentalId,
-            @Valid ReturnBikeRequest request
+            @Valid
+            @RequestBody(
+                    required = true,
+                    description = "Return request payload (may contain notes/condition)",
+                    content = @Content(schema = @Schema(implementation = ReturnBikeRequest.class))
+            )
+            ReturnBikeRequest request
     ) {
         ReturnBikeResponse response = rentalService.returnBike(rentalId, request);
         return Response.ok(response).build();
     }
 
-
-
     @GET
     @Path("/active")
-    public Response getActiveRentals(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
-        // You'll need to implement this in your RentalService
+    @Operation(
+            summary = "Get active rentals for a customer",
+            description = "Returns current active rentals for the given customer."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "List of active rentals",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = RentBikeResultResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response getActiveRentals(
+    ) {
+        UUID customerId = customerId();
         List<RentBikeResultResponse> activeRentals = rentalService.findActiveRentalsByCustomer(customerId);
         return Response.ok(activeRentals).build();
     }
 
     @GET
     @Path("/active/bikes")
-    public Response getMyActiveBikeIds(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("customerId is required")
-                    .build();
-        }
-
+    @Operation(
+            summary = "Get active bikes for a customer",
+            description = "Returns current active bikes for the given customer."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "List of active rentals",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = RentBikeResultResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response getMyActiveBikeIds() {
+        UUID customerId = customerId();
         return Response.ok(rentalService.findMyActiveBikeIds(customerId)).build();
     }
 
-
     @GET
     @Path("/waitlist")
-    public Response getCustomerWaitlist(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
+    @Operation(
+            summary = "Get waiting list for a customer",
+            description = "Returns the waiting list entries for the given customer (US_06)."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Waiting list entries",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = NotificationResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response getCustomerWaitlist(
+    ) {
+        UUID customerId = customerId();
         List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
         return Response.ok(waitlist).build();
     }
 
     @GET
     @Path("/notifications")
-    public Response listNotifications(@QueryParam("customerId") UUID customerId) {
-        if (customerId == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Query param 'customerId' is required.")
-                    .build();
-        }
-
+    @Operation(
+            summary = "List notifications for a customer",
+            description = "Returns notifications when a bike becomes available (US_07)."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Notifications list",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = NotificationResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response listNotifications(
+    ) {
+        UUID customerId = customerId();
         List<NotificationResponse> notifications = rentalService.listMyNotifications(customerId);
         return Response.ok(notifications).build();
+    }
+
+    @GET
+    @Operation(
+            summary = "Get rent history for the authenticated customer",
+            description = "Returns the rental history (what was rented and when) for the authenticated customer (US_21)."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Rental history list",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = RentalResponse.class)))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public Response listMyRentals() {
+        UUID customerId = customerId();
+        List<RentalResponse> rentals = rentalService.listMyRentals(customerId);
+        return Response.ok(rentals).build();
+    }
+
+    private UUID customerId() {
+        Object v = requestContext.getProperty("userId");
+        if (v instanceof UUID id) return id;
+        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
     }
 }
