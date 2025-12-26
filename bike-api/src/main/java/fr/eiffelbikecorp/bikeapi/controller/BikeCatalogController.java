@@ -2,6 +2,7 @@ package fr.eiffelbikecorp.bikeapi.controller;
 
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.BikeCatalogService;
