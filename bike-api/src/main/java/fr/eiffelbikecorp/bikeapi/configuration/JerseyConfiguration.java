@@ -2,6 +2,8 @@ package fr.eiffelbikecorp.bikeapi.configuration;
 
 import fr.eiffelbikecorp.bikeapi.mapper.*;
 import fr.eiffelbikecorp.bikeapi.security.AuthFilter;
+import io.swagger.v3.jaxrs2.SwaggerSerializers;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.ApplicationPath;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -27,5 +29,8 @@ public class JerseyConfiguration extends ResourceConfig {
         // filter
         register(AuthFilter.class);
         register(CorsFilter.class);
+        // Swagger OpenAPI endpoints
+        register(OpenApiResource.class);
+        register(SwaggerSerializers.class);
     }
 }

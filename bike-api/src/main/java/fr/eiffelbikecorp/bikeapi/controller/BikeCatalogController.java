@@ -5,6 +5,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.BikeCatalogService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,7 +23,8 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Secured
-@CrossOrigin(origins = "http://localhost:4200") // Add this line
+@CrossOrigin(origins = "http://localhost:4200")
+@SecurityRequirement(name = "BearerAuth")
 public class BikeCatalogController {
 
     private final BikeCatalogService bikeCatalogService;

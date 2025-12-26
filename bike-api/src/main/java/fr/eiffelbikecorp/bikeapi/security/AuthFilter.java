@@ -2,6 +2,7 @@ package fr.eiffelbikecorp.bikeapi.security;
 
 import fr.eiffelbikecorp.bikeapi.dto.ApiError;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Secured
 @Priority(Priorities.AUTHENTICATION)
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class AuthFilter implements ContainerRequestFilter {
 
     Logger logger = Logger.getLogger(AuthFilter.class);

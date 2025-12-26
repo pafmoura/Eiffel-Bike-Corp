@@ -9,6 +9,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.RentalResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.RentalService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -28,7 +29,8 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Secured
-@CrossOrigin(origins = "http://localhost:4200") // Add this line
+@CrossOrigin(origins = "http://localhost:4200")
+@SecurityRequirement(name = "BearerAuth")
 public class RentalController {
 
     private final RentalService rentalService;

@@ -7,6 +7,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferDetailsResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
 import fr.eiffelbikecorp.bikeapi.security.Secured;
 import fr.eiffelbikecorp.bikeapi.service.SaleOfferService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,7 +23,8 @@ import java.util.List;
 @Path("/sales" )
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@CrossOrigin(origins = "http://localhost:4200") // Add this line
+@CrossOrigin(origins = "http://localhost:4200")
+@SecurityRequirement(name = "BearerAuth")
 public class SaleOfferController {
 
     private final SaleOfferService saleOfferService;
