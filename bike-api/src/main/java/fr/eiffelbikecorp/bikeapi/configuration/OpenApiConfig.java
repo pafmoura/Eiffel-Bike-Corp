@@ -8,15 +8,16 @@ import io.swagger.v3.oas.annotations.servers.Server;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "EiffelBike API",
-                version = "v1"
+                title = "EiffelBikeCorp Bike API",
+                version = "1.0.0",
+                description = "Bike rental + sales API"
         ),
         servers = {
-                @Server(url = "/")
+                @Server(url = "http://localhost:8080", description = "Local")
         }
 )
 @SecurityScheme(
-        name = "BearerAuth",
+        name = "bearerAuth",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT"
