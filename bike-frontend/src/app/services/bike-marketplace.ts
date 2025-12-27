@@ -15,11 +15,11 @@ export class BikeMarketplace {
 
   // Sales & Offers (US_12, US_13, US_14, US_15)
   getOffers(query: string = ''): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/sales/offers?q=${query}`);
+    return this.http.get<any[]>(`${this.baseUrl}/sale-offers?q=${query}`);
   }
 
   getOfferDetails(offerId: number): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/sales/offers/${offerId}`);
+    return this.http.get<any>(`${this.baseUrl}/sale-offers/${offerId}`);
   }
 
   // Basket Management (US_16, US_17)
@@ -32,8 +32,8 @@ export class BikeMarketplace {
   }
 
 removeFromBasket(saleOfferId: number): Observable<any> {
-  const url = `${this.baseUrl}/basket/items/${saleOfferId}`; 
-  
+  const url = `${this.baseUrl}/basket/items/${saleOfferId}`;
+
   return this.http.delete(url, { headers: this.getHeaders() });
 }
   // Checkout & Payment (US_18, US_19)

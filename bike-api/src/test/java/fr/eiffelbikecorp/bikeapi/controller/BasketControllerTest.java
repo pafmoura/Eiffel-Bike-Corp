@@ -239,7 +239,7 @@ class BasketControllerTest {
         // eligibility rule: must be rented at least once
         rentBikeOnceAndReturn(bike.id(), customerId);
         ResponseEntity<SaleOfferResponse> created = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleOfferRequest(bike.id(), corpId, askingPriceEur)),
                 SaleOfferResponse.class

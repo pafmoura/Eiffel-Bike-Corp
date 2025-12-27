@@ -113,7 +113,7 @@ class UserStory20Test {
 
         // Create sale offer
         ResponseEntity<SaleOfferResponse> offerResp = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,

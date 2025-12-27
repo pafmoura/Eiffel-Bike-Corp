@@ -95,7 +95,7 @@ class SaleOfferControllerTest {
         );
 
         ResponseEntity<SaleOfferResponse> r = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(req),
                 SaleOfferResponse.class
@@ -134,7 +134,7 @@ class SaleOfferControllerTest {
         );
 
         ResponseEntity<SaleNoteResponse> r = rest.exchange(
-                "/api/sales/offers/notes",
+                "/api/sale-offers/notes",
                 HttpMethod.POST,
                 jsonEntity(req),
                 SaleNoteResponse.class
@@ -176,7 +176,7 @@ class SaleOfferControllerTest {
         createSaleOffer(bike2.id(), corpId, new BigDecimal("150.00"));
 
         ResponseEntity<List<SaleOfferResponse>> r = rest.exchange(
-                "/api/sales/offers?q=trek",
+                "/api/sale-offers?q=trek",
                 HttpMethod.GET,
                 null, // public endpoint
                 new ParameterizedTypeReference<>() {}
@@ -206,20 +206,20 @@ class SaleOfferControllerTest {
 
         // add notes
         rest.exchange(
-                "/api/sales/offers/notes",
+                "/api/sale-offers/notes",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleNoteRequest(offer.id(), "Note 1", "Content 1", "Bob")),
                 SaleNoteResponse.class
         );
         rest.exchange(
-                "/api/sales/offers/notes",
+                "/api/sale-offers/notes",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleNoteRequest(offer.id(), "Note 2", "Content 2", "Bob")),
                 SaleNoteResponse.class
         );
 
         ResponseEntity<SaleOfferDetailsResponse> r = rest.exchange(
-                "/api/sales/offers/" + offer.id(),
+                "/api/sale-offers/" + offer.id(),
                 HttpMethod.GET,
                 null, // public endpoint
                 SaleOfferDetailsResponse.class
@@ -251,7 +251,7 @@ class SaleOfferControllerTest {
         SaleOfferResponse offer = createSaleOffer(bike.id(), corpId, new BigDecimal("210.00"));
 
         ResponseEntity<SaleOfferDetailsResponse> r = rest.exchange(
-                "/api/sales/offers/by-bike/" + bike.id(),
+                "/api/sale-offers/by-bike/" + bike.id(),
                 HttpMethod.GET,
                 null, // public endpoint
                 SaleOfferDetailsResponse.class
@@ -281,7 +281,7 @@ class SaleOfferControllerTest {
         );
 
         ResponseEntity<String> r = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(req),
                 String.class
@@ -313,7 +313,7 @@ class SaleOfferControllerTest {
         );
 
         ResponseEntity<String> r = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(req),
                 String.class
@@ -328,7 +328,7 @@ class SaleOfferControllerTest {
         CreateSaleOfferRequest invalid = new CreateSaleOfferRequest(null, null, null);
 
         ResponseEntity<String> r = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(invalid),
                 String.class
@@ -358,7 +358,7 @@ class SaleOfferControllerTest {
 
     private SaleOfferResponse createSaleOffer(Long bikeId, UUID sellerCorpId, BigDecimal askingPriceEur) {
         ResponseEntity<SaleOfferResponse> r = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleOfferRequest(bikeId, sellerCorpId, askingPriceEur)),
                 SaleOfferResponse.class

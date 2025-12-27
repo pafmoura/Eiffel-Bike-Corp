@@ -303,9 +303,9 @@ The project requirements are expressed as user stories covering two phases: **re
 | US_07 Notifications                                        | `GET /api/rentals/notifications`                                                 | `WaitingListEntry.notifications` (notifications attached to waitlist entries)           |
 | US_08 Pay rental (any currency → EUR)                      | `POST /api/payments/rentals`                                                     | `Rental` + `RentalPayment` (recorded per rental)                                        |
 | US_09 Return bike + notes                                  | `POST /api/rentals/{rentalId}/return` and `GET /api/bikes/{bikeId}/return-notes` | `Rental.returnNote` (1 per rental)                                                      |
-| US_10 Create sale offer (corp + rented at least once)      | `POST /api/sales/offers`                                                         | `SaleOffer` (seller=EiffelBikeCorp, bike, status) + uniqueness per bike                 |
-| US_11 Add detailed sale notes                              | `POST /api/sales/offers/notes`                                                   | `SaleOffer.notes`                                                                       |
-| US_12–US_15 Search + view details/availability/price/notes | `GET /api/sales/offers?q=...` and `GET /api/sales/offers/{saleOfferId}`          | `SaleOffer` (askingPriceEur, status, notes, buyer)                                      |
+| US_10 Create sale offer (corp + rented at least once)      | `POST /api/sale-offers`                                                         | `SaleOffer` (seller=EiffelBikeCorp, bike, status) + uniqueness per bike                 |
+| US_11 Add detailed sale notes                              | `POST /api/sale-offers/notes`                                                   | `SaleOffer.notes`                                                                       |
+| US_12–US_15 Search + view details/availability/price/notes | `GET /api/sale-offers?q=...` and `GET /api/sale-offers/{saleOfferId}`          | `SaleOffer` (askingPriceEur, status, notes, buyer)                                      |
 | US_16 Add to basket                                        | `GET /api/basket` and `POST /api/basket/items`                                   | `Basket` + `BasketItem(offer, priceSnapshot)`                                           |
 | US_17 Remove from basket                                   | `DELETE /api/basket/items/{saleOfferId}`                                         | `BasketItem` unique per (basket, offer)                                                 |
 | US_18 Checkout                                             | `POST /api/purchases/checkout`                                                   | `Purchase` + `PurchaseItem` created from basket                                         |
@@ -355,9 +355,9 @@ These scenarios are the baseline flows used later in the user manual and test st
 
 **Scenario S5 — Offer for sale, shop, check out, and pay (US_10–US_19)**
 
-1. Corp lists bike: `POST /api/sales/offers` (rule documented in endpoint description).
-2. Corp adds notes: `POST /api/sales/offers/notes`.
-3. Customer searches: `GET /api/sales/offers?q=...` and opens details: `GET /api/sales/offers/{id}`.
+1. Corp lists bike: `POST /api/sale-offers` (rule documented in endpoint description).
+2. Corp adds notes: `POST /api/sale-offers/notes`.
+3. Customer searches: `GET /api/sale-offers?q=...` and opens details: `GET /api/sale-offers/{id}`.
 4. Customer adds/removes from basket: `POST /api/basket/items`, `DELETE /api/basket/items/{saleOfferId}`.
 5. Check out: `POST /api/purchases/checkout`.
 6. Pay purchase: `POST /api/payments/purchases`.
@@ -691,7 +691,7 @@ curl -X POST http://localhost:8080/api/users/login \
 **Actor:** Bob (Customer)
 
 **Step S4.1 — Browse sales**
-`GET /api/sales/offers`
+`GET /api/sale-offers`
 
 * Returns the “Vintage Road Bike” seeded by the corporation.
 
@@ -792,11 +792,11 @@ All endpoints in this controller rely on the authenticated user’s identity ext
 
 #### 6.3.4 Sales (`/sales`)
 
-* `POST /sales/offers` — create a sale offer (US_10)
-* `POST /sales/offers/notes` — add a sale note (US_11)
-* `GET /sales/offers?q=` — search sale offers (US_12)
-* `GET /sales/offers/{saleOfferId}` — sale offer details: price, notes, availability (US_13–US_15)
-* `GET /sales/offers/by-bike/{bikeId}` — resolve offer details by bike ID
+* `POST /sale-offers` — create a sale offer (US_10)
+* `POST /sale-offers/notes` — add a sale note (US_11)
+* `GET /sale-offers?q=` — search sale offers (US_12)
+* `GET /sale-offers/{saleOfferId}` — sale offer details: price, notes, availability (US_13–US_15)
+* `GET /sale-offers/by-bike/{bikeId}` — resolve offer details by bike ID
 
 #### 6.3.5 Basket (`/basket`)
 
@@ -1236,8 +1236,8 @@ User registration and login are tested directly through `/api/users/register` an
 | US_07       | Notifications when bike becomes available            | `RentalControllerTest`                                         | `GET /api/rentals/notifications?...`                                         |
 | US_08       | Pay rental (currency + payment method)               | `RentalPaymentControllerTest`                                  | `POST /api/payments/rentals`                                                 |
 | US_09       | Return bike + attach return notes                    | `RentalControllerTest`, `SaleOfferControllerTest`              | `POST /api/rentals/{id}/return`                                              |
-| US_10/11    | Sale offer eligibility + notes                       | `SaleOfferControllerTest`                                      | `POST /api/sales/offers`, `POST /api/sales/offers/notes`                     |
-| US_12–15    | Search sale offers + view details/notes/availability | `SaleOfferControllerTest`                                      | `GET /api/sales/offers`, `GET /api/sales/offers/{id}`                        |
+| US_10/11    | Sale offer eligibility + notes                       | `SaleOfferControllerTest`                                      | `POST /api/sale-offers`, `POST /api/sale-offers/notes`                     |
+| US_12–15    | Search sale offers + view details/notes/availability | `SaleOfferControllerTest`                                      | `GET /api/sale-offers`, `GET /api/sale-offers/{id}`                        |
 | US_16/17    | Basket add/remove/clear                              | `BasketControllerTest`                                         | `GET /api/basket`, `POST /api/basket/items`, `DELETE /api/basket/items/{id}` |
 | US_18       | Checkout basket into a purchase                      | `PurchaseControllerTest`                                       | `POST /api/purchases/checkout`                                               |
 | US_19       | Pay purchase through gateway (Stripe-like)           | `SalePaymentControllerTest`                                    | `POST /api/payments/purchases`                                               |

@@ -109,7 +109,7 @@ class UserStory14Test {
 
         // Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,
@@ -125,7 +125,7 @@ class UserStory14Test {
 
         // Add a note to the sale offer
         ResponseEntity<SaleNoteResponse> note = rest.exchange(
-                API + "/sales/offers/notes",
+                API + "/sale-offers/notes",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleNoteRequest(
                         saleOfferId,
@@ -144,7 +144,7 @@ class UserStory14Test {
     void should_view_sale_offer_notes_in_details() {
         // When: customer opens the offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
-                API + "/sales/offers/" + saleOfferId,
+                API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class

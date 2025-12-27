@@ -110,7 +110,7 @@ class UserStory13Test {
 
         // Create sale offer with a known price
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,
@@ -130,7 +130,7 @@ class UserStory13Test {
         // When: customer lists sale offers (public endpoint)
         ParameterizedTypeReference<List<SaleOfferResponse>> type = new ParameterizedTypeReference<>() {};
         ResponseEntity<List<SaleOfferResponse>> listResp = rest.exchange(
-                API + "/sales/offers?q=Sale",
+                API + "/sale-offers?q=Sale",
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 type
@@ -149,7 +149,7 @@ class UserStory13Test {
 
         // And: details endpoint also shows the same price
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
-                API + "/sales/offers/" + saleOfferId,
+                API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class

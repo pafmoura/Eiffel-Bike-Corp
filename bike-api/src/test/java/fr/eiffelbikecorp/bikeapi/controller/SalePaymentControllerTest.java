@@ -113,7 +113,7 @@ class SalePaymentControllerTest {
         assertThat(body.paidAt()).isNotNull();
         // Optional: confirm offer is now SOLD (if your service sets it on successful payment)
         ResponseEntity<SaleOfferDetailsResponse> offerDetails = rest.exchange(
-                "/api/sales/offers/" + offer.id(),
+                "/api/sale-offers/" + offer.id(),
                 HttpMethod.GET,
                 null,
                 SaleOfferDetailsResponse.class
@@ -223,7 +223,7 @@ class SalePaymentControllerTest {
         // Eligibility rule: must be rented at least once
         rentBikeOnceAndReturn(bike.id(), customerId);
         ResponseEntity<SaleOfferResponse> created = rest.exchange(
-                "/api/sales/offers",
+                "/api/sale-offers",
                 HttpMethod.POST,
                 jsonEntity(new CreateSaleOfferRequest(bike.id(), corpId, askingPriceEur)),
                 SaleOfferResponse.class

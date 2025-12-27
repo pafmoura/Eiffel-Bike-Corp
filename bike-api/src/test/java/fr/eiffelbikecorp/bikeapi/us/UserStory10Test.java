@@ -72,7 +72,7 @@ class UserStory10Test {
         this.corpProviderId = corp.getId();
         assertThat(corpProviderId).isNotNull();
 
-        // 1) Create an authenticated "operator" (any secured user can call /bikes and /sales/offers)
+        // 1) Create an authenticated "operator" (any secured user can call /bikes and /sale-offers)
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
         registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
@@ -139,7 +139,7 @@ class UserStory10Test {
         );
 
         ResponseEntity<SaleOfferResponse> saleResp = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(req, authJsonHeaders(operatorToken)),
                 SaleOfferResponse.class
@@ -157,7 +157,7 @@ class UserStory10Test {
 
         // And: details endpoint by bike returns the same offer
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
-                API + "/sales/offers/by-bike/" + corpBikeId,
+                API + "/sale-offers/by-bike/" + corpBikeId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class

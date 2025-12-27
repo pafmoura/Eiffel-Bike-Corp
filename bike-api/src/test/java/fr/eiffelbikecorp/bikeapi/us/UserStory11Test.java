@@ -46,7 +46,7 @@ class UserStory11Test {
 
     private UUID corpProviderId;
 
-    private String operatorToken;     // used for secured endpoints (/bikes, /sales/offers, /sales/offers/notes)
+    private String operatorToken;     // used for secured endpoints (/bikes, /sale-offers, /sale-offers/notes)
     private String renterToken;       // used for rental flow
     private UUID renterCustomerId;
 
@@ -119,7 +119,7 @@ class UserStory11Test {
 
         // 5) Create sale offer
         ResponseEntity<SaleOfferResponse> saleResp = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         corpBikeId,
@@ -145,7 +145,7 @@ class UserStory11Test {
         );
 
         ResponseEntity<SaleNoteResponse> noteResp = rest.exchange(
-                API + "/sales/offers/notes",
+                API + "/sale-offers/notes",
                 HttpMethod.POST,
                 new HttpEntity<>(noteReq, authJsonHeaders(operatorToken)),
                 SaleNoteResponse.class
@@ -158,7 +158,7 @@ class UserStory11Test {
 
         // When: buyer views offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
-                API + "/sales/offers/" + saleOfferId,
+                API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class

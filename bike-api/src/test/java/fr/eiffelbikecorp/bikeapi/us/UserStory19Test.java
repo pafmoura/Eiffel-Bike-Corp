@@ -103,7 +103,7 @@ class UserStory19Test {
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
         // Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,

@@ -29,7 +29,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Path("/sales")
+@Path("/sale-offers")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @CrossOrigin(origins = "http://localhost:4200")
@@ -43,7 +43,6 @@ public class SaleOfferController {
     private final SaleOfferService saleOfferService;
 
     @POST
-    @Path("/offers")
     @Secured
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
@@ -78,7 +77,7 @@ public class SaleOfferController {
     }
 
     @POST
-    @Path("/offers/notes")
+    @Path("/notes")
     @Secured
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
@@ -110,7 +109,6 @@ public class SaleOfferController {
     }
 
     @GET
-    @Path("/offers")
     @Operation(
             summary = "Search bikes available to buy",
             description = """
@@ -138,7 +136,7 @@ public class SaleOfferController {
     }
 
     @GET
-    @Path("/offers/{saleOfferId}")
+    @Path("/{saleOfferId}")
     @Operation(
             summary = "Get sale offer details",
             description = """
@@ -165,7 +163,7 @@ public class SaleOfferController {
     }
 
     @GET
-    @Path("/offers/by-bike/{bikeId}")
+    @Path("/by-bike/{bikeId}")
     @Operation(
             summary = "Get sale offer details by bike id",
             description = "Convenience endpoint to find the sale offer for a bike and return its details."

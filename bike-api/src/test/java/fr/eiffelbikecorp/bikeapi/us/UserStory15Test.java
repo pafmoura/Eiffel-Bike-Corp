@@ -120,7 +120,7 @@ class UserStory15Test {
 
         // 5) Create sale offer (LISTED = available to buy)
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,
@@ -139,7 +139,7 @@ class UserStory15Test {
     void should_check_sale_offer_availability_and_return_200() {
         // When: customer checks offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
-                API + "/sales/offers/" + saleOfferId,
+                API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class

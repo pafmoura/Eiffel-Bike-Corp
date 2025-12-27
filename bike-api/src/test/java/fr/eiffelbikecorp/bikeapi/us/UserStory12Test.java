@@ -104,7 +104,7 @@ class UserStory12Test {
         assertThat(returnResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         // 5) Create sale offer
         ResponseEntity<SaleOfferResponse> offerResp = rest.exchange(
-                API + "/sales/offers",
+                API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new CreateSaleOfferRequest(
                         bikeId,
@@ -126,11 +126,11 @@ class UserStory12Test {
     @Test
     void should_search_sale_offers_and_return_200() {
         // When: customer searches for bikes available to buy
-        // Controller: GET /sales/offers?q=
+        // Controller: GET /sale-offers?q=
         ParameterizedTypeReference<List<SaleOfferResponse>> type = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<SaleOfferResponse>> resp = rest.exchange(
-                API + "/sales/offers?q=Used",
+                API + "/sale-offers?q=Used",
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()), // public endpoint
                 type
