@@ -31,7 +31,7 @@ import java.util.UUID;
 @Secured
 @Tag(
         name = "Purchases",
-        description = "Checkout and purchase history (US_18 checkout, US_20 purchase history)"
+        description = "Checkout and purchase history"
 )
 @SecurityRequirement(name = "bearerAuth")
 public class PurchaseController {
