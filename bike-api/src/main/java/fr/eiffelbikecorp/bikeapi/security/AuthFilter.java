@@ -38,17 +38,15 @@ public class AuthFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) {
-            return;
-        }
+        if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) return;
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth == null || auth.isBlank() || !auth.startsWith("Bearer ")) {
             abort401(requestContext, "Missing or invalid Authorization header.");
             return;
         }
         String token = auth.substring("Bearer ".length()).trim();
-        var user = tokenService.validateAndGetUser(token);
-        if (user == null) {
+        var user = tokenService.validateAndGetUser(token); // <-- (UUID + type)
+        if (user == null || user.userId() == null) {
             abort401(requestContext, "Invalid or expired token.");
             return;
         }
@@ -56,15 +54,13 @@ public class AuthFilter implements ContainerRequestFilter {
             abort404(requestContext, "User not found.");
             return;
         }
-        /** TODO: url permissions check
-         String path = requestContext.getUriInfo().getPath();
-         if (path.equals("sale-offers") && !eiffelBikeCorpRepository.existsById(user.userId())) {
-         abort403(requestContext, "Only EIFFEL BIKE CORP users can submit sale offers.");
-         return;
-         }
-         */
         requestContext.setProperty("userId", user.userId());
-        logger.info("Authenticated user " + user.userId());
+        requestContext.setProperty("userType", user.type());
+        requestContext.setSecurityContext(
+                new JwtSecurityContext(new JwtPrincipal(user.userId(), user.type()),
+                        requestContext.getSecurityContext().isSecure())
+        );
+        logger.info("Authenticated user " + user.userId() + " type=" + user.type());
     }
 
     private void abort401(ContainerRequestContext ctx, String message) {
@@ -74,16 +70,6 @@ public class AuthFilter implements ContainerRequestFilter {
                 OffsetDateTime.now(), List.of()
         );
         ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED)
-                .type(MediaType.APPLICATION_JSON).entity(body).build());
-    }
-
-    private void abort403(ContainerRequestContext ctx, String message) {
-        ApiError body = new ApiError(
-                403, "Forbidden", message,
-                uriInfo != null ? uriInfo.getPath() : null,
-                OffsetDateTime.now(), List.of()
-        );
-        ctx.abortWith(Response.status(Response.Status.FORBIDDEN)
                 .type(MediaType.APPLICATION_JSON).entity(body).build());
     }
 
