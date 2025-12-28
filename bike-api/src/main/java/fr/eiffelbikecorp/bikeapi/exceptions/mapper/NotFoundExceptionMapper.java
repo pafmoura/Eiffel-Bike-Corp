@@ -1,4 +1,4 @@
-package fr.eiffelbikecorp.bikeapi.mapper;
+package fr.eiffelbikecorp.bikeapi.exceptions.mapper;
 
 import fr.eiffelbikecorp.bikeapi.dto.ApiError;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
