@@ -2,6 +2,7 @@ package fr.eiffelbikecorp.bikeapi.security;
 
 import fr.eiffelbikecorp.bikeapi.dto.ApiError;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 @Provider
@@ -29,8 +29,9 @@ public class AuthFilter implements ContainerRequestFilter {
 
     private final CustomerRepository customerRepository;
 
-    // 1. INJETAR O TOKEN SERVICE AQUI
     private final TokenService tokenService;
+
+    private final EiffelBikeCorpRepository eiffelBikeCorpRepository;
 
     @Context
     private UriInfo uriInfo;
@@ -40,32 +41,30 @@ public class AuthFilter implements ContainerRequestFilter {
         if (requestContext.getMethod().equalsIgnoreCase("OPTIONS")) {
             return;
         }
-
         String auth = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (auth == null || auth.isBlank() || !auth.startsWith("Bearer ")) {
             abort401(requestContext, "Missing or invalid Authorization header.");
             return;
         }
-
         String token = auth.substring("Bearer ".length()).trim();
-
-        // 2. CORREÇÃO: Usar o TokenService para validar o JWT e obter o UUID
-        UUID userId = tokenService.validateAndGetUserId(token);
-
-        // Se o token for inválido ou expirado, o método acima retorna null (conforme o teu TokenService)
-        if (userId == null) {
+        var user = tokenService.validateAndGetUser(token);
+        if (user == null) {
             abort401(requestContext, "Invalid or expired token.");
             return;
         }
-
-        // check if the user exists
-        if (!customerRepository.existsById(userId)) {
+        if (!customerRepository.existsById(user.userId())) {
             abort404(requestContext, "User not found.");
             return;
         }
-
-        requestContext.setProperty("userId", userId);
-        logger.info("Authenticated user " + userId);
+        /** TODO: url permissions check
+         String path = requestContext.getUriInfo().getPath();
+         if (path.equals("sale-offers") && !eiffelBikeCorpRepository.existsById(user.userId())) {
+         abort403(requestContext, "Only EIFFEL BIKE CORP users can submit sale offers.");
+         return;
+         }
+         */
+        requestContext.setProperty("userId", user.userId());
+        logger.info("Authenticated user " + user.userId());
     }
 
     private void abort401(ContainerRequestContext ctx, String message) {
@@ -75,6 +74,16 @@ public class AuthFilter implements ContainerRequestFilter {
                 OffsetDateTime.now(), List.of()
         );
         ctx.abortWith(Response.status(Response.Status.UNAUTHORIZED)
+                .type(MediaType.APPLICATION_JSON).entity(body).build());
+    }
+
+    private void abort403(ContainerRequestContext ctx, String message) {
+        ApiError body = new ApiError(
+                403, "Forbidden", message,
+                uriInfo != null ? uriInfo.getPath() : null,
+                OffsetDateTime.now(), List.of()
+        );
+        ctx.abortWith(Response.status(Response.Status.FORBIDDEN)
                 .type(MediaType.APPLICATION_JSON).entity(body).build());
     }
 

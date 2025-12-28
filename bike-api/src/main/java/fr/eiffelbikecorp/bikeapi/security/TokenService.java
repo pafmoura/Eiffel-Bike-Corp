@@ -2,6 +2,7 @@ package fr.eiffelbikecorp.bikeapi.security;
 
 import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
 import fr.eiffelbikecorp.bikeapi.domain.enums.CustomerType;
+import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
@@ -31,6 +32,13 @@ public class TokenService {
 
     public String generateToken(Customer user) {
         String userType = CustomerType.ORDINARY.name();
+        if (studentRepository.existsById(user.getId())) {
+            userType = ProviderType.STUDENT.name();
+        } else if (employeeRepository.existsById(user.getId())) {
+            userType = ProviderType.EMPLOYEE.name();
+        } else if (eiffelBikeCorpRepository.existsById(user.getId())) {
+            userType = ProviderType.EIFFEL_BIKE_CORP.name();
+        }
         if (studentRepository.existsById(user.getId())
                 || employeeRepository.existsById(user.getId())
                 || eiffelBikeCorpRepository.existsById(user.getId())) {
@@ -51,15 +59,23 @@ public class TokenService {
     }
 
     public UUID validateAndGetUserId(String token) {
+        AuthenticatedUser u = validateAndGetUser(token);
+        return (u == null) ? null : u.userId();
+    }
+
+    public AuthenticatedUser validateAndGetUser(String token) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes(StandardCharsets.UTF_8));
         try {
-            String userIdString = Jwts.parser()
+            var claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
-                    .getPayload()
-                    .getSubject();
-            return UUID.fromString(userIdString);
+                    .getPayload();
+            String userIdString = claims.getSubject();
+            String type = claims.get("type", String.class);
+            if (userIdString == null || userIdString.isBlank()) return null;
+            if (type == null || type.isBlank()) return null;
+            return new AuthenticatedUser(UUID.fromString(userIdString), type);
         } catch (Exception e) {
             return null;
         }
