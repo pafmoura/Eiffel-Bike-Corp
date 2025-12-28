@@ -93,7 +93,7 @@ class UserStory07Test {
         assertThat(studentToken).isNotBlank();
 
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
                         "Bike that will trigger notification",

@@ -254,7 +254,7 @@ class BasketControllerTest {
 
     private BikeResponse createBike(BikeCreateRequest req) {
         ResponseEntity<BikeResponse> r = rest.exchange(
-                "/api/bikes",
+                "/api/rental-offers",
                 HttpMethod.POST,
                 jsonEntity(req),
                 BikeResponse.class

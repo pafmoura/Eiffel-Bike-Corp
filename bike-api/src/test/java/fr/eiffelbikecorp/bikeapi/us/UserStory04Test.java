@@ -156,7 +156,7 @@ class UserStory04Test {
 
     private Long createBike(String token, BikeCreateRequest req) {
         ResponseEntity<BikeResponse> resp = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(req, authJsonHeaders(token)),
                 BikeResponse.class

@@ -3,7 +3,7 @@ package fr.eiffelbikecorp.bikeapi.dto;
 import java.util.UUID;
 
 public record ProviderRef(
-        String type, // "CUSTOMER" or "CORP"
+        String type,
         UUID id
 ) {
 }

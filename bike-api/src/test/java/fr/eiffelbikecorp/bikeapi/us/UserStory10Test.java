@@ -85,7 +85,7 @@ class UserStory10Test {
 
         // 3) EiffelBikeCorp offers a company bike for rent
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
                         "Corp bike - eligible after first rental",

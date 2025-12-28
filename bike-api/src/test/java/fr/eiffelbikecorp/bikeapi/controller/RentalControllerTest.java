@@ -311,7 +311,7 @@ class RentalControllerTest {
 
     private BikeResponse createBike(BikeCreateRequest req) {
         ResponseEntity<BikeResponse> r = rest.exchange(
-                "/api/bikes",
+                "/api/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(req, authHeaders(
                         tokenService.generateToken(

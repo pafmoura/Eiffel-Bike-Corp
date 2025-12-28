@@ -96,7 +96,7 @@ class UserStory03Test {
         );
         // When: company offers a bike for rent
         ResponseEntity<BikeResponse> createResp = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(bikeReq, authJsonHeaders(accessToken)),
                 BikeResponse.class

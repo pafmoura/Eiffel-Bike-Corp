@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.controller;
 
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
@@ -42,31 +41,6 @@ import java.util.UUID;
 public class BikeCatalogController {
 
     private final BikeCatalogService bikeCatalogService;
-
-    @POST
-    @Operation(
-            summary = "Offer a bike for rent",
-            description = "Creates a bike available for rent. Used by Student/Employee/Corp providers."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Bike created",
-                    content = @Content(schema = @Schema(implementation = BikeResponse.class))
-            ),
-            @ApiResponse(responseCode = "400", description = "Validation error"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
-    public Response offerBikeForRent(
-            @Valid
-            @RequestBody(
-                    required = true,
-                    description = "Bike creation payload",
-                    content = @Content(schema = @Schema(implementation = BikeCreateRequest.class))
-            ) BikeCreateRequest request) {
-        BikeResponse created = bikeCatalogService.offerBikeForRent(request);
-        return Response.status(Response.Status.CREATED).entity(created).build();
-    }
 
     @PUT
     @Path("/{bikeId}")
@@ -157,7 +131,6 @@ public class BikeCatalogController {
         List<BikeResponse> results = bikeCatalogService.findAll();
         return Response.ok(results).build();
     }
-
 
     @GET
     @Path("/{bikeId}/return-notes")

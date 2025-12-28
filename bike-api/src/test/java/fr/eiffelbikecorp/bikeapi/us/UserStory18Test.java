@@ -72,7 +72,7 @@ class UserStory18Test {
 
         // Create corporate bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
                         "Corp bike to purchase",

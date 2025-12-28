@@ -69,7 +69,7 @@ class UserStory12Test {
         String renterToken = login(renterEmail, password);
         // 3) Create a corp bike
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
-                API + "/bikes",
+                API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
                         "Used corp bike for sale - black",

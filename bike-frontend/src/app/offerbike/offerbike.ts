@@ -45,7 +45,7 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
   alert = signal<AlertState>({ show: false, message: '', type: 'info' });
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -150,7 +150,7 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
       type: this.bike.type
     };
 
-    this.http.post('http://localhost:8080/api/bikes', payload, { headers })
+    this.http.post('http://localhost:8080/api/rental-offers', payload, { headers })
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -181,8 +181,8 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
 selectedBikeNotes = signal<any[]>([]);
 showNotesModal = signal(false);
 viewBikeHistory(bikeId: number) {
-  this.http.get<any[]>(`http://localhost:8080/api/bikes/${bikeId}/return-notes`, { 
-    headers: new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`) 
+  this.http.get<any[]>(`http://localhost:8080/api/bikes/${bikeId}/return-notes`, {
+    headers: new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`)
   }).subscribe({
     next: (notes) => {
       this.selectedBikeNotes.set(notes);

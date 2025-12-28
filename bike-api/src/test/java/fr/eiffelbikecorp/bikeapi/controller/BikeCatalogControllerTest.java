@@ -75,7 +75,7 @@ class BikeCatalogControllerTest {
 
     private BikeResponse createBike(BikeCreateRequest req) {
         ResponseEntity<BikeResponse> r = rest.exchange(
-                "/api/bikes",
+                "/api/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(req, authHeaders()),
                 BikeResponse.class
@@ -97,7 +97,7 @@ class BikeCatalogControllerTest {
         );
         HttpEntity<BikeCreateRequest> entity = new HttpEntity<>(req, authHeaders());
         ResponseEntity<BikeResponse> r = rest.exchange(
-                "/api/bikes",
+                "/api/rental-offers",
                 HttpMethod.POST,
                 entity,
                 BikeResponse.class
@@ -209,7 +209,7 @@ class BikeCatalogControllerTest {
                 null                        // @NotNull
         );
         ResponseEntity<String> r = rest.exchange(
-                "/api/bikes",
+                "/api/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(invalid, authHeaders()),
                 String.class
