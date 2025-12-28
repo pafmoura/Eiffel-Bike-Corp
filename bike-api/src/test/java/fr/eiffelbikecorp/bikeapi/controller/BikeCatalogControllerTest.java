@@ -110,7 +110,7 @@ class BikeCatalogControllerTest {
         assertThat(body.id()).isNotNull();
         assertThat(body.description()).isEqualTo(req.description());
         assertThat(body.rentalDailyRateEur()).isEqualByComparingTo(req.rentalDailyRateEur());
-        assertThat(body.offeredBy().type()).isEqualTo("CORP");
+        assertThat(body.offeredBy().type()).isEqualTo(ProviderType.EIFFEL_BIKE_CORP.name());
         assertThat(body.offeredBy().id()).isEqualTo(req.offeredById());
     }
 
