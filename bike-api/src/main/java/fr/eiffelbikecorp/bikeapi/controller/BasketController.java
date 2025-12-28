@@ -35,7 +35,7 @@ import java.util.UUID;
         description = "Basket management for purchases (US_16 add items, US_17 remove items)"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class BasketController {
+public class BasketController extends BaseController {
 
     private final BasketService basketService;
 
@@ -135,9 +135,4 @@ public class BasketController {
         return Response.ok(basket).build();
     }
 
-    private UUID customerId() {
-        Object v = requestContext.getProperty("userId");
-        if (v instanceof UUID id) return id;
-        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
-    }
 }

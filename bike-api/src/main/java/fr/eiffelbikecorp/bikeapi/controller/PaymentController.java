@@ -39,7 +39,7 @@ import java.util.UUID;
         description = "Payments through gateway + currency conversion (US_08 rental payment, US_19 purchase payment)"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class PaymentController {
+public class PaymentController extends BaseController {
 
     private final PaymentService paymentService;
     private final PaymentService salePaymentService;
@@ -127,9 +127,5 @@ public class PaymentController {
         return Response.status(Response.Status.CREATED).entity(paid).build();
     }
 
-    private UUID customerId() {
-        Object v = requestContext.getProperty("userId");
-        if (v instanceof UUID id) return id;
-        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
-    }
+
 }

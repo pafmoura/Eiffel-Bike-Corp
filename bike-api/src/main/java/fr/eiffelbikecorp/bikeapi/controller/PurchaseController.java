@@ -34,7 +34,7 @@ import java.util.UUID;
         description = "Checkout and purchase history"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class PurchaseController {
+public class PurchaseController extends BaseController{
 
     private final PurchaseService purchaseService;
 
@@ -109,9 +109,4 @@ public class PurchaseController {
         return Response.ok(p).build();
     }
 
-    private UUID customerId() {
-        Object v = requestContext.getProperty("userId");
-        if (v instanceof UUID id) return id;
-        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
-    }
 }

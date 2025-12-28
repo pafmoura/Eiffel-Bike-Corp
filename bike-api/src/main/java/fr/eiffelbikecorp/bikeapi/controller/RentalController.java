@@ -44,7 +44,7 @@ import java.util.UUID;
         description = "Renting flow: rent/waitlist/notifications/return/history"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class RentalController {
+public class RentalController extends BaseController {
 
     private final RentalService rentalService;
     @Context
@@ -219,9 +219,4 @@ public class RentalController {
         return Response.ok(rentals).build();
     }
 
-    private UUID customerId() {
-        Object v = requestContext.getProperty("userId");
-        if (v instanceof UUID id) return id;
-        throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);
-    }
 }
