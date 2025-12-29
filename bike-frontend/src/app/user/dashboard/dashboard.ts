@@ -1,9 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FxRateService } from '../../fx-rate-service';
+import { UserService } from '../../services/user-service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,6 +18,7 @@ export class Dashboard implements OnInit {
   public fx = inject(FxRateService);
 
   private baseUrl = 'http://localhost:8080/api';
+  private userService = inject(UserService);
 
   bikes = signal<any[]>([]);
   myActiveRentals = signal<any[]>([]);
@@ -37,20 +39,25 @@ export class Dashboard implements OnInit {
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuqnSeZPqSaCHmM8Wj8fqD8bPkHKd1HODlCw&s'
   ];
 
+
+  constructor() {
+    effect(() => {
+      const user = this.userService.currentUser();
+      if (!user) return;
+
+      this.userId.set(user.id); 
+      this.loadMyRentalsAndBikes();
+      this.loadNotifications();
+    });
+  }
   ngOnInit() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      this.userId.set(payload.sub);
-      console.log(payload)
-
-    }
-
-    this.loadMyRentalsAndBikes();
-    this.loadNotifications();
   }
 
+
   notifications = signal<any[]>([]); 
+
+
+  
 
 loadNotifications() {
     const id = this.userId();

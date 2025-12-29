@@ -18,6 +18,7 @@ export class MarketplaceComponent implements OnInit {
   offers = signal<any[]>([]);
   basketItems = signal<any[]>([]);
   selectedOffer = signal<any | null>(null);
+allBikes = signal<any[]>([]);
 
   isOpen = signal(false);
   isPaymentStep = signal(false);
@@ -36,11 +37,31 @@ export class MarketplaceComponent implements OnInit {
   ngOnInit() {
     this.loadOffers();
     this.loadBasket();
+    this.loadAllBikes();
+
   }
+
+  loadAllBikes() {
+  this.marketService.getAllBikes().subscribe({
+    next: bikes => this.allBikes.set(bikes),
+    error: err => console.error(err)
+  });
+}
+
+getBikeDescription(bikeId: number) {
+  const bike = this.allBikes().find(b => b.id === bikeId);
+  return bike ? bike.description : `Bike #${bikeId}`;
+}
+
+
 
   loadOffers(q = '') {
     this.marketService.getOffers(q).subscribe({
-      next: data => this.offers.set(data),
+      next: data => {this.offers.set(data)
+
+            console.log(this.offers())
+
+      },
       error: err => console.error(err)
     });
   }

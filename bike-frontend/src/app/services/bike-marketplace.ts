@@ -36,6 +36,12 @@ removeFromBasket(saleOfferId: number): Observable<any> {
 
   return this.http.delete(url, { headers: this.getHeaders() });
 }
+
+
+  getAllBikes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/bikes/all`);
+  }
+
   // Checkout & Payment (US_18, US_19)
   checkout(): Observable<any> {
     return this.http.post(`${this.baseUrl}/purchases/checkout`, {}, { headers: this.getHeaders() });
