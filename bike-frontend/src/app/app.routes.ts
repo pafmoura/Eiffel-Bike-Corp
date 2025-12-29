@@ -7,37 +7,46 @@ import { Myrentals } from './myrentals/myrentals';
 import { OfferBikeComponent } from './offerbike/offerbike';
 import { Mainlayout } from './mainlayout/mainlayout';
 import { MarketplaceComponent } from './marketplace/marketplace';
-
+import { roleGuard } from './auth/role-guard';
 
 export const routes: Routes = [
-  // --------------------------------------------------------
-  // 1. PUBLIC PAGES (No Sidebar, No Header)
-  // --------------------------------------------------------
-  { 
-    path: '', 
-    component: LandingComponent, 
-    pathMatch: 'full' // Important: Only match exact empty path
-  },
+  // 1. PUBLIC PAGES
+  { path: '', component: LandingComponent },
   { path: 'login', component: Loginpage },
   { path: 'register', component: Register },
 
-  // --------------------------------------------------------
-  // 2. APP PAGES (Wrapped inside MainLayout with Sidebar)
-  // --------------------------------------------------------
+  // 2. PROTECTED APP PAGES
   {
     path: '', 
-    component: Mainlayout, // This component holds the Sidebar
+    component: Mainlayout, 
     children: [
-      // When user goes to /dashboard, load Dashboard inside MainLayout
-      { path: 'dashboard', component: Dashboard }, 
-      { path: 'rentals', component: Myrentals },
-      { path: 'sales', component: MarketplaceComponent },
-      { path: 'offer', component: OfferBikeComponent }
+      { 
+        path: 'dashboard', 
+        component: Dashboard,
+        canActivate: [roleGuard],
+        data: { roles: ['STUDENT', 'EMPLOYEE'] } 
+      }, 
+      { 
+        path: 'rentals', 
+        component: Myrentals,
+        canActivate: [roleGuard],
+        data: { roles: ['STUDENT', 'EMPLOYEE'] } 
+      },
+      { 
+        path: 'sales', 
+        component: MarketplaceComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['STUDENT', 'EMPLOYEE', 'ORDINARY'] } 
+      },
+      { 
+        path: 'offer', 
+        component: OfferBikeComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['STUDENT', 'EMPLOYEE', 'EIFFEL_BIKE_CORP'] } 
+      }
     ]
   },
 
-  // --------------------------------------------------------
-  // 3. FALLBACK (Redirect unknown routes to Landing or Login)
-  // --------------------------------------------------------
+  // 3. FALLBACK
   { path: '**', redirectTo: '' }
 ];

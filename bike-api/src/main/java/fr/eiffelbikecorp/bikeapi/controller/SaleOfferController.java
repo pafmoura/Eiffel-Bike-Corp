@@ -114,6 +114,7 @@ public class SaleOfferController {
     }
 
     @GET
+    @Secured
     @Operation(
             summary = "Search bikes available to buy",
             description = """
@@ -146,6 +147,7 @@ public class SaleOfferController {
 
     @GET
     @Path("/{saleOfferId}")
+    @Secured
     @Operation(
             summary = "Get sale offer details",
             description = """

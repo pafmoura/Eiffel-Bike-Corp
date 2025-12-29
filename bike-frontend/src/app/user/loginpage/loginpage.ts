@@ -16,22 +16,38 @@ export class Loginpage {
 
   credentials = { email: '', password: '' };
 
-  onLogin() {
-    this.userService.login(this.credentials).subscribe({
-      next: (res: any) => { // Ensure res is typed or use any to access properties
-        console.log('Login successful!', res);
-        
-        // --- FIX START ---
-        // Store the token so other components/interceptors can use it
-        localStorage.setItem('token', res.accessToken); 
-        // --- FIX END ---
-
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        console.error(err);
-        alert('Login failed: Invalid email or password');
+  // loginpage.ts
+onLogin() {
+  this.userService.login(this.credentials).subscribe({
+    next: (res: any) => {
+      const token = res.token || res.accessToken; 
+      
+      if (!token) {
+        console.error('No token found in response!', res);
+        return;
       }
-    });
-  }
+      localStorage.setItem('token', token);
+
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userType = payload.type;
+
+        if (userType === 'ORDINARY') {
+          this.router.navigate(['/sales']);
+        } else if (userType === 'EIFFEL_BIKE_CORP') {
+          this.router.navigate(['/offer']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+      } catch (e) {
+        console.error('Error decoding token on login', e);
+        this.router.navigate(['/dashboard']);
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      alert('Login failed: Invalid email or password');
+    }
+  });
+}
 }

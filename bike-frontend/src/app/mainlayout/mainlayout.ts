@@ -17,26 +17,31 @@ imports: [CommonModule, RouterModule],
 })
 export class Mainlayout {
 username = signal<string>('Guest');
-
+userType = signal<string>(''); 
   constructor(private router: Router) {
     this.getUserFromToken();
   }
 
-  getUserFromToken() {
+getUserFromToken() {
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         this.username.set(payload.fullName || payload.sub);
+        this.userType.set(payload.type); // Store the role
       } catch (e) {
         console.error('Error parsing token', e);
       }
     }
   }
 
+  // Helper method for the template
+  hasAccess(roles: string[]): boolean {
+    return roles.includes(this.userType());
+  }
+
   logout() {
-  localStorage.removeItem('token');
-  this.username.set('Guest');
-  this.router.navigate(['/login']);
-}
+    localStorage.removeItem('token');
+    this.router.navigate(['/login']);
+  }
 }

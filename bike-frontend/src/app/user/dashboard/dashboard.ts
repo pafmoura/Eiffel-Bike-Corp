@@ -42,6 +42,8 @@ export class Dashboard implements OnInit {
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
       this.userId.set(payload.sub);
+      console.log(payload)
+
     }
 
     this.loadMyRentalsAndBikes();
@@ -66,7 +68,6 @@ loadNotifications() {
     return new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`);
   }
 
-  // 🚀 Load rentals FIRST, then bikes
   loadMyRentalsAndBikes() {
       this.http.get<any[]>(
     `${this.baseUrl}/rentals/active/bikes?customerId=${this.userId()}`,
