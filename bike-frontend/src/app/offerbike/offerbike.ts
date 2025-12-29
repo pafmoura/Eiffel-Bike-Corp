@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { UserService } from '../services/user-service';
 
 /* ===== UI ALERT TYPE ===== */
 interface AlertState {
@@ -20,14 +21,15 @@ interface AlertState {
   styleUrls: ['./offerbike.scss'],
 })
 export class OfferBikeComponent implements OnInit, OnDestroy {
+
+  private userService = inject(UserService); 
   // --- UI State Signals ---
   showSaleModal = signal(false);
   showNotesModal = signal(false);
   selectedBikeForSale = signal<any>(null);
   selectedBikeNotes = signal<any[]>([]);
   alert = signal<AlertState>({ show: false, message: '', type: 'info' });
-
-  // --- Form Variables (Standard variables work best with ngModel) ---
+existingSaleBikeIds = signal<number[]>([]);
   salePrice: number = 0;
   saleNote: string = '';
   
@@ -60,13 +62,9 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* =========================================================
-     SALE OFFERS LOGIC (The part causing the 404/401)
-     ========================================================= */
 
   openSaleModal(bike: any) {
     this.selectedBikeForSale.set(bike);
-    // Suggest a default price (e.g., 10x the daily rental rate)
     this.salePrice = bike.rentalDailyRateEur * 10;
     this.saleNote = '';
     this.showSaleModal.set(true);
@@ -123,7 +121,7 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
       });
   }
 
-  private finalizeSaleSuccess() {
+private finalizeSaleSuccess() {
     this.isLoading = false;
     this.showSaleModal.set(false);
     this.showAlert('Bike is now listed for sale!', 'success');
@@ -138,7 +136,7 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
       description: this.bike.description,
       rentalDailyRateEur: this.bike.rentalDailyRateEur,
       offeredById: this.bike.offeredBy,
-      offeredByType: 'STUDENT',
+      offeredByType: this.userService.userType(),
       type: this.bike.type
     };
 
@@ -206,8 +204,26 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }))
       .subscribe({
-        next: (data) => this.myOffers = data || [],
-        error: (err) => console.error('Error loading offers:', err)
+next: (bikes) => {
+          this.myOffers = bikes || [];
+          this.fetchExistingSaleOffers(); // Load sale status after getting bikes
+        },        error: (err) => console.error('Error loading offers:', err)
+      });
+  }
+
+  private fetchExistingSaleOffers() {
+    this.http.get<any[]>('http://localhost:8080/api/sale-offers')
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (sales) => {
+          // Map to an array of bike IDs that are currently listed for sale
+          const ids = sales.map(s => s.bikeId);
+          this.existingSaleBikeIds.set(ids);
+        },
+        error: (err) => console.error('Error loading sale status:', err)
       });
   }
 
