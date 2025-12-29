@@ -65,7 +65,7 @@ public class SaleOfferController {
             @ApiResponse(responseCode = "404", description = "Bike not found"),
             @ApiResponse(responseCode = "409", description = "Rule violated")
     })
-    @RolesAllowed(value = {"EIFFEL_BIKE_CORP"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response createSaleOffer(
             @Valid
             @RequestBody(
@@ -99,7 +99,7 @@ public class SaleOfferController {
             @ApiResponse(responseCode = "404", description = "Sale offer not found"),
             @ApiResponse(responseCode = "409", description = "Offer not in a state that accepts notes")
     })
-    @RolesAllowed(value = {"EIFFEL_BIKE_CORP"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response addSaleNote(
             @Valid
             @RequestBody(

@@ -32,6 +32,7 @@ public class SaleOfferServiceImpl implements SaleOfferService {
     private final SaleOfferRepository saleOfferRepository;
     private final SaleNoteRepository saleNoteRepository;
     private final EiffelBikeCorpRepository eiffelBikeCorpRepository;
+    private final CustomerRepository customerRepository;
 
     @Override
     @Transactional
@@ -40,31 +41,23 @@ public class SaleOfferServiceImpl implements SaleOfferService {
         Bike bike = bikeRepository.findById(request.bikeId())
                 .orElseThrow(() -> new NotFoundException("Bike not found: " + request.bikeId()));
 
-        EiffelBikeCorp seller = eiffelBikeCorpRepository.findById(request.sellerCorpId())
-                .orElseThrow(() -> new NotFoundException("EiffelBikeCorp not found: " + request.sellerCorpId()));
+        long rentalCount = rentalRepository.countByBike_Id(bike.getId());
+        if (rentalCount <= 0) {
+            throw new BusinessRuleException("Bike must have been rented at least once to be sold.");
+        }
 
-        // Rule: one sale offer per bike
         if (saleOfferRepository.findByBike_Id(bike.getId()).isPresent()) {
             throw new BusinessRuleException("This bike already has a sale offer.");
         }
 
-        // NEW RULE (US_19): only corp bikes that have been rented at least once
-        if (!(bike.getOfferedBy() instanceof EiffelBikeCorp)) {
-            throw new BusinessRuleException("Only EiffelBikeCorp bikes can be listed for sale.");
+        if (!bike.getOfferedBy().getId().equals(request.sellerId())) {
+            throw new BusinessRuleException("You can only list your own bikes for sale.");
         }
 
-        EiffelBikeCorp offeredByCorp = (EiffelBikeCorp) bike.getOfferedBy();
-        if (offeredByCorp.getId() == null || !offeredByCorp.getId().equals(seller.getId())) {
-            throw new BusinessRuleException("Bike is not owned/offered by the given EiffelBikeCorp seller.");
-        }
-
-        if (!rentalRepository.existsByBike_Id(bike.getId())) {
-            throw new BusinessRuleException("Bike must have been rented at least once to be listed for sale.");
-        }
 
         SaleOffer offer = SaleOffer.builder()
                 .bike(bike)
-                .seller(seller)
+                .sellerId(request.sellerId()) 
                 .askingPriceEur(request.askingPriceEur())
                 .status(SaleOfferStatus.LISTED)
                 .listedAt(LocalDateTime.now())
@@ -72,9 +65,7 @@ public class SaleOfferServiceImpl implements SaleOfferService {
 
         SaleOffer saved = saleOfferRepository.save(offer);
         return SaleOfferMapper.toResponse(saved);
-    }
-
-    @Override
+    }    @Override
     @Transactional
     public SaleNoteResponse addSaleNote(CreateSaleNoteRequest request) {
 

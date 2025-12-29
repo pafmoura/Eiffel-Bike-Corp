@@ -142,6 +142,14 @@
               </svg>
               View History
             </button>
+
+            <button (click)="openSaleModal(offer)" 
+        class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-[10px] font-black uppercase tracking-tight text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  Place for Sale
+</button>
           </div>
 
         </div>
@@ -197,6 +205,60 @@
     <div class="p-8 bg-slate-50/50 border-t border-slate-100">
       <button (click)="showNotesModal.set(false)" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-indigo-600 transition-all active:scale-95">
         Acknowledge & Close
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+<div *ngIf="showSaleModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+  <div class="bg-white rounded-[2.5rem] max-w-lg w-full shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+    
+    <div class="p-8 border-b flex justify-between items-center bg-emerald-50/50">
+      <div>
+        <h3 class="font-bold text-2xl text-slate-900">List for Sale</h3>
+        <p class="text-xs text-slate-500 mt-1">Convert this rental bike into a permanent sale</p>
+      </div>
+      <button (click)="showSaleModal.set(false)" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-400 text-2xl">×</button>
+    </div>
+
+    <div class="p-8 space-y-6">
+      <div>
+        <label class="block text-sm font-bold text-slate-700 mb-2">Asking Price (€)</label>
+        <div class="relative">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">€</span>
+          <input type="number" 
+                 [(ngModel)]="salePrice" 
+                 class="w-full pl-10 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold text-lg"
+                 placeholder="0.00">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-bold text-slate-700 mb-2">Condition Note (Public)</label>
+        <textarea [(ngModel)]="saleNote" 
+                  rows="3"
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none"
+                  placeholder="Describe the current condition for potential buyers..."></textarea>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-100 p-4 rounded-2xl">
+        <p class="text-[11px] text-amber-700 leading-relaxed">
+          <strong>Note:</strong> Only corporate bikes that have been rented at least once can be placed for sale. This action is permanent.
+        </p>
+      </div>
+    </div>
+    
+    <div class="p-8 bg-slate-50/50 border-t border-slate-100 flex gap-3">
+      <button (click)="showSaleModal.set(false)" 
+              class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition-all">
+        Cancel
+      </button>
+      <button (click)="submitSaleOffer()" 
+              [disabled]="isLoading || salePrice <= 0"
+              class="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all disabled:opacity-50">
+        {{ isLoading ? 'Processing...' : 'Confirm Sale' }}
       </button>
     </div>
   </div>

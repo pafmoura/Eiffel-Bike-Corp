@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record CreateSaleOfferRequest(
         @NotNull Long bikeId,
-        @NotNull UUID sellerCorpId,
+        @NotNull UUID sellerId,
 
         @NotNull
         @DecimalMin(value = "0.00", inclusive = false)

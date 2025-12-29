@@ -18,17 +18,32 @@ export class UserService {
     this.initializeAuth();
   }
 
-  private initializeAuth() {
+    register(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/register`, userData);
+  }
+
+ private initializeAuth() {
     const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
+    if (token) {
       try {
-        this.currentUserSignal.set(JSON.parse(user));
+        // Extract the payload from the token directly
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        
+        // Set the signal using the payload data
+        this.currentUserSignal.set({
+          fullName: payload.fullName,
+          email: payload.email,
+          type: payload.type // This ensures 'type' is ALWAYS present
+        });
       } catch (e) {
+        console.error("Failed to parse token", e);
         this.logout();
       }
     }
   }
+
+  
+
 
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
@@ -46,6 +61,8 @@ export class UserService {
     );
   }
 
+
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -54,6 +71,8 @@ export class UserService {
   }
 
   hasRole(roles: string[]): boolean {
-    return roles.includes(this.userType());
+    const userType = this.userType();
+    if (!userType) return false;
+    return roles.includes(userType.toUpperCase());
   }
 }

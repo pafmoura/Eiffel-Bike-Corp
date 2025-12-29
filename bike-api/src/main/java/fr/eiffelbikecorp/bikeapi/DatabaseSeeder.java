@@ -156,11 +156,10 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         SaleOffer offer = SaleOffer.builder()
                 .bike(bikeForSale)
-                .seller(corp)
+                .sellerId(bobUser.getId())
                 .askingPriceEur(new BigDecimal("150.00"))
                 .status(SaleOfferStatus.LISTED)
                 .listedAt(LocalDateTime.now().minusHours(4))
-                .notes(new ArrayList<>())
                 .build();
 
         SaleNote saleNote = new SaleNote();

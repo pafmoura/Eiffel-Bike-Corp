@@ -16,4 +16,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     List<Rental> findByCustomer_IdAndStatusIn(UUID customerId, List<RentalStatus> statuses);
 
     List<Rental> findByCustomer_IdOrderByStartAtDesc(UUID customerId);
+
+    long countByBike_Id(Long bikeId);
 }

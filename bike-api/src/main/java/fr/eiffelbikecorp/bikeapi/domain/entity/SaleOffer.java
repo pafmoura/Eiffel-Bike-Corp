@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -30,9 +31,8 @@ public class SaleOffer {
     @JoinColumn(name = "bike_id", nullable = false)
     private Bike bike;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "seller_corp_id", nullable = false)
-    private EiffelBikeCorp seller;
+    @Column(name = "seller_id", nullable = false)
+    private UUID sellerId;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal askingPriceEur;
@@ -50,6 +50,7 @@ public class SaleOffer {
     @JoinColumn(name = "buyer_customer_id")
     private Customer buyer;
 
+    @Builder.Default
     @OneToMany(mappedBy = "saleOffer", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt DESC")
     private List<SaleNote> notes = new ArrayList<>();
