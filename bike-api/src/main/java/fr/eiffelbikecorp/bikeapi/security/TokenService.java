@@ -39,11 +39,6 @@ public class TokenService {
         } else if (eiffelBikeCorpRepository.existsById(user.getId())) {
             userType = ProviderType.EIFFEL_BIKE_CORP.name();
         }
-        if (studentRepository.existsById(user.getId())
-                || employeeRepository.existsById(user.getId())
-                || eiffelBikeCorpRepository.existsById(user.getId())) {
-            userType = CustomerType.PROVIDER.name();
-        }
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes(StandardCharsets.UTF_8));
         Instant now = Instant.now();
         Instant expiration = now.plus(4, ChronoUnit.HOURS);
