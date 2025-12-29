@@ -97,7 +97,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY","EIFFEL_BIKE_CORP"})
     public Response searchBikesToRent(
             @Parameter(description = "Bike status filter", example = "AVAILABLE")
             @QueryParam("status") String status,
@@ -125,7 +125,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response findAllBikes() {
         List<BikeResponse> results = bikeCatalogService.findAll();
         return Response.ok(results).build();
@@ -146,7 +146,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getBikeReturnHistory(@PathParam("bikeId") Long bikeId) {
         List<ReturnNoteResponse> history = bikeCatalogService.getReturnNotesForBike(bikeId);
         return Response.ok(history).build();
