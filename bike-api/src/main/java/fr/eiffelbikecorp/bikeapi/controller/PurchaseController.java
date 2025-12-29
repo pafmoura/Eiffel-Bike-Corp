@@ -12,9 +12,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +33,9 @@ import java.util.UUID;
         description = "Checkout and purchase history"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class PurchaseController extends BaseController{
+public class PurchaseController extends BaseController {
 
     private final PurchaseService purchaseService;
-
-    @Context
-    private ContainerRequestContext requestContext;
 
     @POST
     @Path("/checkout")
@@ -58,8 +54,10 @@ public class PurchaseController extends BaseController{
             ),
             @ApiResponse(responseCode = "400", description = "Basket is empty / invalid request"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "409", description = "Basket not in OPEN state / some offer is no longer available")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response checkout() {
         UUID customerId = customerId();
         PurchaseResponse created = purchaseService.checkout(customerId);
@@ -77,8 +75,10 @@ public class PurchaseController extends BaseController{
                     description = "List of purchases",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = PurchaseResponse.class)))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response listMyPurchases() {
         UUID customerId = customerId();
         List<PurchaseResponse> purchases = purchaseService.listPurchases(customerId);
@@ -98,8 +98,10 @@ public class PurchaseController extends BaseController{
                     content = @Content(schema = @Schema(implementation = PurchaseResponse.class))
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Purchase not found")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response getPurchase(
             @Parameter(description = "Purchase id", required = true, example = "10")
             @PathParam("purchaseId") Long purchaseId
@@ -108,5 +110,4 @@ public class PurchaseController extends BaseController{
         PurchaseResponse p = purchaseService.getPurchase(customerId, purchaseId);
         return Response.ok(p).build();
     }
-
 }

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -56,8 +57,10 @@ public class BikeCatalogController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Bike not found")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response updateBike(
             @Parameter(description = "Bike id", required = true, example = "10")
             @PathParam("bikeId") Long bikeId,
@@ -73,14 +76,6 @@ public class BikeCatalogController {
         return Response.ok(updated).build();
     }
 
-    /**
-     * Customer searches bikes to rent.
-     * <p>
-     * Examples:
-     * - /api/bikes?status=AVAILABLE
-     * - /api/bikes?q=mountain
-     * - /api/bikes?status=AVAILABLE&q=trek&offeredById=12
-     */
     @GET
     @Operation(
             summary = "Search bikes available to rent",
@@ -99,8 +94,10 @@ public class BikeCatalogController {
                     description = "List of bikes matching filters",
                     content = @Content(schema = @Schema(implementation = BikeResponse.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response searchBikesToRent(
             @Parameter(description = "Bike status filter", example = "AVAILABLE")
             @QueryParam("status") String status,
@@ -125,8 +122,10 @@ public class BikeCatalogController {
                     description = "List of all bikes",
                     content = @Content(schema = @Schema(implementation = BikeResponse.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP", "ORDINARY"})
     public Response findAllBikes() {
         List<BikeResponse> results = bikeCatalogService.findAll();
         return Response.ok(results).build();
@@ -134,6 +133,20 @@ public class BikeCatalogController {
 
     @GET
     @Path("/{bikeId}/return-notes")
+    @Operation(
+            summary = "List all return notes for a bike",
+            description = "Returns all return notes for a given bike."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "List of all bikes",
+                    content = @Content(schema = @Schema(implementation = BikeResponse.class))
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response getBikeReturnHistory(@PathParam("bikeId") Long bikeId) {
         List<ReturnNoteResponse> history = bikeCatalogService.getReturnNotesForBike(bikeId);
         return Response.ok(history).build();

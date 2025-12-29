@@ -13,10 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +38,6 @@ public class BasketController extends BaseController {
 
     private final BasketService basketService;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
     @GET
     @Operation(
             summary = "Get my open basket",
@@ -53,8 +49,10 @@ public class BasketController extends BaseController {
                     description = "Open basket",
                     content = @Content(schema = @Schema(implementation = BasketResponse.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response getOpenBasket() {
         UUID customerId = customerId();
         BasketResponse basket = basketService.getOrCreateOpenBasket(customerId);
@@ -75,9 +73,11 @@ public class BasketController extends BaseController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Sale offer not found"),
             @ApiResponse(responseCode = "409", description = "Sale offer not available / already in basket / invalid basket state")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response addToBasket(
             @Valid
             @RequestBody(
@@ -105,8 +105,10 @@ public class BasketController extends BaseController {
                     content = @Content(schema = @Schema(implementation = BasketResponse.class))
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Basket item not found")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response removeFromBasket(
             @Parameter(description = "Sale offer id", required = true, example = "10")
             @PathParam("saleOfferId") Long saleOfferId
@@ -127,12 +129,13 @@ public class BasketController extends BaseController {
                     description = "Updated (cleared) basket",
                     content = @Content(schema = @Schema(implementation = BasketResponse.class))
             ),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response clearBasket() {
         UUID customerId = customerId();
         BasketResponse basket = basketService.clear(customerId);
         return Response.ok(basket).build();
     }
-
 }

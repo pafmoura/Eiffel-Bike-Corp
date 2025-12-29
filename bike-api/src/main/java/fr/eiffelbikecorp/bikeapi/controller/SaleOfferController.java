@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -60,9 +61,11 @@ public class SaleOfferController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Bike not found"),
             @ApiResponse(responseCode = "409", description = "Rule violated")
     })
+    @RolesAllowed(value = {"EIFFEL_BIKE_CORP"})
     public Response createSaleOffer(
             @Valid
             @RequestBody(
@@ -92,9 +95,11 @@ public class SaleOfferController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Sale offer not found"),
             @ApiResponse(responseCode = "409", description = "Offer not in a state that accepts notes")
     })
+    @RolesAllowed(value = {"EIFFEL_BIKE_CORP"})
     public Response addSaleNote(
             @Valid
             @RequestBody(
@@ -121,8 +126,12 @@ public class SaleOfferController {
                     responseCode = "200",
                     description = "List of matching sale offers",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = SaleOfferResponse.class)))
-            )
+            ),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response searchSaleOffers(
             @Parameter(
                     description = "Search by keyword",
@@ -152,8 +161,11 @@ public class SaleOfferController {
                     description = "Sale offer details",
                     content = @Content(schema = @Schema(implementation = SaleOfferDetailsResponse.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Sale offer not found")
+            @ApiResponse(responseCode = "404", description = "Sale offer not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getSaleOfferDetails(
             @Parameter(description = "Sale offer id", required = true, example = "10")
             @PathParam("saleOfferId") Long saleOfferId
@@ -174,8 +186,11 @@ public class SaleOfferController {
                     description = "Sale offer details",
                     content = @Content(schema = @Schema(implementation = SaleOfferDetailsResponse.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Sale offer not found for this bike")
+            @ApiResponse(responseCode = "404", description = "Sale offer not found for this bike"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getSaleOfferDetailsByBike(
             @Parameter(description = "Bike id", required = true, example = "100")
             @PathParam("bikeId") Long bikeId

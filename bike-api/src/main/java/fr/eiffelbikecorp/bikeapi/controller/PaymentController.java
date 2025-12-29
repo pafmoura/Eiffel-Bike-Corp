@@ -14,10 +14,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -44,9 +43,6 @@ public class PaymentController extends BaseController {
     private final PaymentService paymentService;
     private final PaymentService salePaymentService;
 
-    @Context
-    private ContainerRequestContext requestContext;
-
     @POST
     @Path("/rentals")
     @Operation(
@@ -64,9 +60,11 @@ public class PaymentController extends BaseController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error (amount/currency/paymentMethodId)"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Rental not found"),
             @ApiResponse(responseCode = "409", description = "Rental already paid / invalid state")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response payRental(
             @Valid
             @RequestBody(
@@ -88,6 +86,7 @@ public class PaymentController extends BaseController {
      */
     @GET
     @Path("/rentals/{rentalId}")
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response listPayments(@PathParam("rentalId") Long rentalId) {
         List<RentalPaymentResponse> payments = paymentService.listPayments(rentalId);
         return Response.ok(payments).build();
@@ -110,9 +109,11 @@ public class PaymentController extends BaseController {
             ),
             @ApiResponse(responseCode = "400", description = "Validation error (amount/currency/paymentMethodId)"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Purchase not found"),
             @ApiResponse(responseCode = "409", description = "Purchase already paid / invalid state")
     })
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response payPurchase(
             @Valid
             @RequestBody(
@@ -126,6 +127,4 @@ public class PaymentController extends BaseController {
         SalePaymentResponse paid = salePaymentService.payPurchase(customerId, request);
         return Response.status(Response.Status.CREATED).entity(paid).build();
     }
-
-
 }
