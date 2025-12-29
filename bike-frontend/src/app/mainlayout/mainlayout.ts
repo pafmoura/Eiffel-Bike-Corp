@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { UserService } from '../services/user-service';
 
 
 /**
@@ -16,32 +17,15 @@ imports: [CommonModule, RouterModule],
   styleUrl: './mainlayout.scss',
 })
 export class Mainlayout {
-username = signal<string>('Guest');
-userType = signal<string>(''); 
-  constructor(private router: Router) {
-    this.getUserFromToken();
-  }
+  userService = inject(UserService);
 
-getUserFromToken() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.username.set(payload.fullName || payload.sub);
-        this.userType.set(payload.type); // Store the role
-      } catch (e) {
-        console.error('Error parsing token', e);
-      }
-    }
-  }
+  username = computed(() => this.userService.currentUser()?.fullName || 'Guest');
 
-  // Helper method for the template
   hasAccess(roles: string[]): boolean {
-    return roles.includes(this.userType());
+    return this.userService.hasRole(roles);
   }
 
   logout() {
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
+    this.userService.logout();
   }
 }

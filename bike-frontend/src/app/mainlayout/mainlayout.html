@@ -15,25 +15,25 @@
   
   <a *ngIf="hasAccess(['STUDENT', 'EMPLOYEE'])" 
      routerLink="/dashboard" routerLinkActive="bg-indigo-600/10 text-indigo-400"
-     class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800">
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
      <span>Rent a Bike</span>
   </a>
 
   <a *ngIf="hasAccess(['STUDENT', 'EMPLOYEE', 'ORDINARY'])" 
      routerLink="/sales" routerLinkActive="bg-indigo-600/10 text-indigo-400"
-     class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800">
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
      <span>Buy a Bike</span>
   </a>
 
   <a *ngIf="hasAccess(['STUDENT', 'EMPLOYEE'])" 
      routerLink="/rentals" routerLinkActive="bg-indigo-600/10 text-indigo-400"
-     class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800">
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
      <span>My Rentals</span>
   </a>
 
   <a *ngIf="hasAccess(['STUDENT', 'EMPLOYEE', 'EIFFEL_BIKE_CORP'])" 
      routerLink="/offer" routerLinkActive="bg-indigo-600/10 text-indigo-400"
-     class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800">
+         class="flex items-center gap-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 hover:text-white transition-all cursor-pointer group">
      <span>Offer a Bike</span>
   </a>
 </nav>
