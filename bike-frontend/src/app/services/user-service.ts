@@ -16,6 +16,9 @@ export class UserService {
   currentUser = computed(() => this.currentUserSignal());
   userType = computed(() => this.currentUserSignal()?.type || '');
 
+  userReady = computed(() => !!this.currentUserSignal() && !!this.getToken());
+
+
   constructor() {
     // Initialize user from token/localStorage if in browser
     if (isPlatformBrowser(this.platformId)) {

@@ -42,12 +42,16 @@ export class Dashboard implements OnInit {
 
   constructor() {
     effect(() => {
+      
+
       const user = this.userService.currentUser();
       if (!user) return;
-
+      
+if (this.userService.userReady()){
       this.userId.set(user.id); 
       this.loadMyRentalsAndBikes();
       this.loadNotifications();
+}
     });
   }
   ngOnInit() {
