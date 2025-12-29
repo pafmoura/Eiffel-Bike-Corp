@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BikeMarketplace } from '../services/bike-marketplace';
 import { FxRateService } from '../fx-rate-service';
+import { UserService } from '../services/user-service';
 
 @Component({
   selector: 'app-marketplace',
@@ -14,6 +15,11 @@ export class MarketplaceComponent implements OnInit {
   private marketService = inject(BikeMarketplace);
   // Injecting the FX service as public so the template can access its signals
   public fx = inject(FxRateService);
+
+    private userService = inject(UserService);
+
+currentUserId = signal<string | null>(null);
+
 
   offers = signal<any[]>([]);
   basketItems = signal<any[]>([]);
@@ -35,9 +41,17 @@ allBikes = signal<any[]>([]);
   );
 
   ngOnInit() {
+
+        const user = this.userService.currentUser();
+    if (user) {
+      this.currentUserId.set(user.id);
+    }
+
     this.loadOffers();
     this.loadBasket();
     this.loadAllBikes();
+
+    
 
   }
 
@@ -79,14 +93,36 @@ getBikeDescription(bikeId: number) {
     });
   }
 
-  addToBasket(id: number) {
-    this.marketService.addToBasket(id).subscribe({
-      next: res => {
-        this.basketItems.set(res.items);
-        this.isOpen.set(true);
-      }
-    });
+  
+isAddable(offer: any): boolean {
+  const bike = this.allBikes().find(b => b.id === offer.bikeId);
+  return bike ? bike.offeredBy.id !== this.currentUserId() : false;
+}
+
+addToBasket(offerId: number) {
+  const offer = this.offers().find(o => o.id === offerId);
+  if (!offer) return;
+
+  const bike = this.allBikes().find(b => b.id === offer.bikeId);
+  if (!bike) return;
+
+  console.log("bike found:", bike);
+  console.log("current user id:", this.currentUserId());
+
+  if (bike.offeredBy.id === this.currentUserId()) {
+    return alert("You cannot add your own bike to the basket.");
   }
+
+  this.marketService.addToBasket(offerId).subscribe({
+    next: res => {
+      this.basketItems.set(res.items);
+      this.isOpen.set(true);
+    },
+    error: err => console.error(err)
+  });
+}
+
+
 
   remove(id?: number) {
     if (!id) return;
