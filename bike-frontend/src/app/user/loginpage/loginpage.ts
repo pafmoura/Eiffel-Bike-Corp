@@ -19,6 +19,8 @@ export class Loginpage {
   onLogin() {
     this.userService.login(this.credentials).subscribe({
       next: () => {
+
+        console.log(this.userService.currentUser());
         const userType = this.userService.userType();
         if (userType === 'ORDINARY') this.router.navigate(['/sales']);
         else if (userType === 'EIFFEL_BIKE_CORP') this.router.navigate(['/offer']);

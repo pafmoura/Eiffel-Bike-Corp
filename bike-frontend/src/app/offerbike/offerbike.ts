@@ -81,7 +81,6 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    // Payload matches what your backend expects
     const salePayload = {
       bikeId: bike.id,
       sellerId: this.bike.offeredBy, 
@@ -90,11 +89,9 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
 
     console.log('Submitting sale offer:', salePayload);
 
-    // Note: Interceptor handles the 'Authorization' header automatically
     this.http.post('http://localhost:8080/api/sale-offers', salePayload)
       .subscribe({
         next: (saleResponse: any) => {
-          // If a note was provided, send it to the notes endpoint
           if (this.saleNote.trim()) {
             this.addInitialSaleNote(saleResponse.id);
           } else {
@@ -130,12 +127,8 @@ export class OfferBikeComponent implements OnInit, OnDestroy {
     this.isLoading = false;
     this.showSaleModal.set(false);
     this.showAlert('Bike is now listed for sale!', 'success');
-    this.loadMyOffers(); // Refresh the list to reflect status changes
+    this.loadMyOffers(); 
   }
-
-  /* =========================================================
-     RENTAL OFFERS & HISTORY
-     ========================================================= */
 
   submitOffer() {
     if (!this.bike.offeredBy) return;

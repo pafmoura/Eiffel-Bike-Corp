@@ -30,6 +30,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final BasketRepository basketRepository;
     private final BasketItemRepository basketItemRepository;
 
+
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -44,10 +45,6 @@ public class DatabaseSeeder implements CommandLineRunner {
         // 1. CREATE PROVIDERS & USERS
         // ==========================================
 
-        // --- 1a. Eiffel Bike Corp (The Company Provider) ---
-        EiffelBikeCorp corp = new EiffelBikeCorp();
-        if (corp.getId() == null) corp.setId(UUID.randomUUID());
-        corpRepository.save(corp);
 
 
         // --- 1b. Alice (The Student Provider) ---
@@ -79,6 +76,20 @@ public class DatabaseSeeder implements CommandLineRunner {
         bobUser.setEmail("bob@bike.com");
         bobUser.setPassword(SecurityUtils.hashSHA256("123456"));
         customerRepository.save(bobUser);
+
+
+        UUID adminId = UUID.randomUUID();
+        Customer adminUser = new Customer();
+        adminUser.setId(adminId);
+        adminUser.setFullName("Admin User");
+        adminUser.setEmail("admin@bike.com");
+        adminUser.setPassword(SecurityUtils.hashSHA256("123456"));
+        customerRepository.save(adminUser);
+
+        EiffelBikeCorp corp = new EiffelBikeCorp();
+        corp.setId(adminId);
+        corpRepository.save(corp);
+
 
 
         // ==========================================
