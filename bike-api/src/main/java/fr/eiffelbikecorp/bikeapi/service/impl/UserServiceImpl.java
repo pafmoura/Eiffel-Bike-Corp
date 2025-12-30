@@ -1,9 +1,6 @@
 package fr.eiffelbikecorp.bikeapi.service.impl;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.BikeProvider;
-import fr.eiffelbikecorp.bikeapi.domain.entity.Customer;
-import fr.eiffelbikecorp.bikeapi.domain.entity.Employee;
-import fr.eiffelbikecorp.bikeapi.domain.entity.Student;
+import fr.eiffelbikecorp.bikeapi.domain.entity.*;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
 import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
 import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
@@ -13,6 +10,7 @@ import fr.eiffelbikecorp.bikeapi.exceptions.AuthenticationException;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import fr.eiffelbikecorp.bikeapi.mapper.UserMapper;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.StudentRepository;
 import fr.eiffelbikecorp.bikeapi.security.SecurityUtils;
@@ -32,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final StudentRepository studentRepository;
     private final EmployeeRepository employeeRepository;
     private final TokenService tokenService;
+    private final EiffelBikeCorpRepository eiffelBikeCorpRepository;
 
     @Override
     @Transactional
@@ -46,6 +45,9 @@ public class UserServiceImpl implements UserService {
         } else if (request.type() == UserType.EMPLOYEE) {
             Employee e = new Employee();
             provider = employeeRepository.save(e);
+        } else if (request.type() == UserType.EIFFEL_BIKE_CORP) {
+            EiffelBikeCorp e = new EiffelBikeCorp();
+            provider = eiffelBikeCorpRepository.save(e);
         }
         Customer customer = new Customer();
         //for simplicity, the provider is always a customer

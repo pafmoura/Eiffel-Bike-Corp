@@ -10,6 +10,7 @@ import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
+import fr.eiffelbikecorp.bikeapi.security.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class UserStory03Test {
 
     private String accessToken;
     private UUID corpProviderId;
+    @Autowired
+    private TokenService tokenService;
 
     @BeforeEach
     void setup() {
@@ -60,7 +63,7 @@ class UserStory03Test {
         String email = "corp-operator+" + UUID.randomUUID() + "@example.com";
         String password = "secret123";
         var registerReq = new UserRegisterRequest(
-                UserType.CUSTOMER,
+                UserType.EIFFEL_BIKE_CORP,
                 "Corp Operator",
                 email,
                 password
@@ -94,6 +97,7 @@ class UserStory03Test {
                 corpProviderId,
                 new BigDecimal("1.75")
         );
+        //acess token
         // When: company offers a bike for rent
         ResponseEntity<BikeResponse> createResp = rest.exchange(
                 API + "/rental-offers",
