@@ -72,7 +72,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response rentBikeOrJoinWaitingList(@Valid
                                               @RequestBody(
                                                       required = true,
@@ -103,7 +103,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Rental not found")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response returnBike(
             @Parameter(description = "Rental id", required = true, example = "100")
             @PathParam("rentalId") Long rentalId,
@@ -134,7 +134,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response getActiveRentals(
     ) {
         UUID customerId = customerId();
@@ -157,7 +157,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response getMyActiveBikeIds() {
         UUID customerId = customerId();
         return Response.ok(rentalService.findMyActiveBikeIds(customerId)).build();
@@ -178,8 +178,8 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
-    public Response getCustomerWaitlist(
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
+    public Response geWaitlist(
     ) {
         UUID customerId = customerId();
         List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
@@ -201,7 +201,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response listNotifications(
     ) {
         UUID customerId = customerId();
@@ -223,7 +223,7 @@ public class RentalController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response listMyRentals() {
         UUID customerId = customerId();
         List<RentalResponse> rentals = rentalService.listMyRentals(customerId);
