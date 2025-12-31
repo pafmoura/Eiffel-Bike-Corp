@@ -114,7 +114,6 @@ public class SaleOfferController {
     }
 
     @GET
-    @Secured
     @Operation(
             summary = "Search bikes available to buy",
             description = """
@@ -132,7 +131,6 @@ public class SaleOfferController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response searchSaleOffers(
             @Parameter(
                     description = "Search by keyword",
@@ -147,7 +145,6 @@ public class SaleOfferController {
 
     @GET
     @Path("/{saleOfferId}")
-    @Secured
     @Operation(
             summary = "Get sale offer details",
             description = """
@@ -167,7 +164,6 @@ public class SaleOfferController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getSaleOfferDetails(
             @Parameter(description = "Sale offer id", required = true, example = "10")
             @PathParam("saleOfferId") Long saleOfferId
@@ -192,6 +188,7 @@ public class SaleOfferController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getSaleOfferDetailsByBike(
             @Parameter(description = "Bike id", required = true, example = "100")

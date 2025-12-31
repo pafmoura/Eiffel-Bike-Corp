@@ -59,7 +59,7 @@ public class PurchaseController extends BaseController {
     })
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response checkout() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         PurchaseResponse created = purchaseService.checkout(customerId);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
@@ -80,7 +80,7 @@ public class PurchaseController extends BaseController {
     })
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response listMyPurchases() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         List<PurchaseResponse> purchases = purchaseService.listPurchases(customerId);
         return Response.ok(purchases).build();
     }
@@ -106,7 +106,7 @@ public class PurchaseController extends BaseController {
             @Parameter(description = "Purchase id", required = true, example = "10")
             @PathParam("purchaseId") Long purchaseId
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         PurchaseResponse p = purchaseService.getPurchase(customerId, purchaseId);
         return Response.ok(p).build();
     }

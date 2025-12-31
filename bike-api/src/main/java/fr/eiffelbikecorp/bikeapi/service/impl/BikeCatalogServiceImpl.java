@@ -50,8 +50,9 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
 
     @Override
     @Transactional
-    public BikeResponse offerBikeForRent(BikeCreateRequest request) {
-        BikeProvider offeredBy = resolveProvider(request.offeredByType(), request.offeredById());
+    public BikeResponse offerBikeForRent(BikeCreateRequest request, UUID offeredById) {
+
+        BikeProvider offeredBy = resolveProvider(request.offeredByType(), offeredById);
         Bike bike = Bike.builder()
                 .description(request.description())
                 .status(BikeStatus.AVAILABLE)

@@ -2,8 +2,8 @@ package fr.eiffelbikecorp.bikeapi.controller;
 
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
 import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
 import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
 import fr.eiffelbikecorp.bikeapi.persistence.EmployeeRepository;
@@ -122,9 +122,7 @@ class UserControllerTest {
         // Added 4th argument to both
         UserRegisterRequest req1 = new UserRegisterRequest(UserType.CUSTOMER, "First", email, "pass1333");
         UserRegisterRequest req2 = new UserRegisterRequest(UserType.STUDENT, "Second", email, "pass2333");
-
         rest.exchange("/api/users/register", HttpMethod.POST, jsonEntity(req1), UserResponse.class);
-
         ResponseEntity<String> second = rest.exchange(
                 "/api/users/register",
                 HttpMethod.POST,
@@ -151,7 +149,6 @@ class UserControllerTest {
     void should_login_and_return_200_with_token_equal_customer_uuid() {
         String email = "login_" + UUID.randomUUID() + "@test.com";
         String pass = "password123";
-
         // Register first with password
         rest.exchange(
                 "/api/users/register",
@@ -159,7 +156,6 @@ class UserControllerTest {
                 jsonEntity(new UserRegisterRequest(UserType.CUSTOMER, "Login User", email, pass)),
                 UserResponse.class
         );
-
         // Login with email and password (assuming UserLoginRequest now has both)
         ResponseEntity<UserLoginResponse> r = rest.exchange(
                 "/api/users/login",
@@ -167,7 +163,6 @@ class UserControllerTest {
                 jsonEntity(new UserLoginRequest(email, pass)),
                 UserLoginResponse.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         UserLoginResponse body = r.getBody();
         assertThat(body).isNotNull();
@@ -178,14 +173,12 @@ class UserControllerTest {
     @Test
     void should_return_401_when_email_not_found() {
         String email = "missing_" + UUID.randomUUID() + "@test.com";
-
         ResponseEntity<String> r = rest.exchange(
                 "/api/users/login",
                 HttpMethod.POST,
                 jsonEntity(new UserLoginRequest(email, "wrongpass")),
                 String.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
@@ -195,10 +188,9 @@ class UserControllerTest {
         ResponseEntity<String> r = rest.exchange(
                 "/api/users/login",
                 HttpMethod.POST,
-                jsonEntity(new UserLoginRequest("","")),
+                jsonEntity(new UserLoginRequest("", "")),
                 String.class
         );
-
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 

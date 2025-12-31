@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -33,8 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory14Test {
-    // US_14: As a Customer, I want to view the notes associated with bikes offered for sale
-    //        so that I can make an informed buying decision.
+    // US_14: As a Customer, 
+    // I want to view the notes associated with bikes offered for sale
+    // so that I can make an informed buying decision.
 
     private static final String API = "/api";
 
@@ -45,7 +45,7 @@ class UserStory14Test {
     EiffelBikeCorpRepository corpRepository;
 
     private UUID corpProviderId;
-    private String operatorToken;
+    private String providerToken;
 
     private Long bikeId;
     private Long saleOfferId;
@@ -53,23 +53,13 @@ class UserStory14Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // Operator to create bike + offer + notes
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
-        this.operatorToken = login(operatorEmail, password);
-
-        // Renter to rent once + return (compat with US_10 rule)
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
+        this.providerToken = login(operatorEmail, password);
+        this.corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.EMPLOYEE, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // Create corp bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -78,15 +68,13 @@ class UserStory14Test {
                         ProviderType.EIFFEL_BIKE_CORP,
                         corpProviderId,
                         new BigDecimal("1.50")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreate.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreate.getBody()).isNotNull();
         this.bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -98,7 +86,6 @@ class UserStory14Test {
         assertThat(rent.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rent.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -106,8 +93,6 @@ class UserStory14Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -115,15 +100,13 @@ class UserStory14Test {
                         bikeId,
                         corpProviderId,
                         new BigDecimal("175.00")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 SaleOfferResponse.class
         );
         assertThat(offer.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(offer.getBody()).isNotNull();
         this.saleOfferId = offer.getBody().id();
         assertThat(saleOfferId).isNotNull();
-
-        // Add a note to the sale offer
         ResponseEntity<SaleNoteResponse> note = rest.exchange(
                 API + "/sale-offers/notes",
                 HttpMethod.POST,
@@ -132,7 +115,7 @@ class UserStory14Test {
                         "Maintenance history",
                         "New chain installed; brakes pads replaced last month.",
                         "Workshop"
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 SaleNoteResponse.class
         );
         assertThat(note.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -142,23 +125,19 @@ class UserStory14Test {
 
     @Test
     void should_view_sale_offer_notes_in_details() {
-        // When: customer opens the offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
                 API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class
         );
-
         // Then: notes are present and readable
         assertThat(detailsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(detailsResp.getBody()).isNotNull();
         assertThat(detailsResp.getBody().offer()).isNotNull();
         assertThat(detailsResp.getBody().offer().id()).isEqualTo(saleOfferId);
-
         assertThat(detailsResp.getBody().notes()).isNotNull();
         assertThat(detailsResp.getBody().notes()).isNotEmpty();
-
         assertThat(detailsResp.getBody().notes())
                 .anySatisfy(n -> {
                     assertThat(n.title()).isEqualTo("Maintenance history");
@@ -166,7 +145,6 @@ class UserStory14Test {
                     assertThat(n.createdBy()).isEqualTo("Workshop");
                     assertThat(n.createdAt()).isNotNull();
                 });
-
         log.info("US_14 OK - saleOfferId={}, bikeId={}, notesCount={}",
                 saleOfferId, bikeId, detailsResp.getBody().notes().size());
     }

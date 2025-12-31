@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -33,7 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory17Test {
-    // US_17: As a Customer, I want to remove bikes from my basket so that I can adjust my selection.
+    // US_17: As a Customer, 
+    // I want to remove bikes from my basket 
+    // so that I can adjust my selection.
 
     private static final String API = "/api";
 
@@ -54,23 +55,13 @@ class UserStory17Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Operator creates a sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provide = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
-
-        // 2) Renter rents once + returns (compat with US_10 rule)
+        this.corpProviderId = provide.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.EMPLOYEE, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // Create corporate bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -86,8 +77,6 @@ class UserStory17Test {
         assertThat(bikeCreate.getBody()).isNotNull();
         this.bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -99,7 +88,6 @@ class UserStory17Test {
         assertThat(rent.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rent.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -107,8 +95,6 @@ class UserStory17Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -123,12 +109,9 @@ class UserStory17Test {
         assertThat(offer.getBody()).isNotNull();
         this.saleOfferId = offer.getBody().id();
         assertThat(saleOfferId).isNotNull();
-
-        // 3) Customer registers + logs in, then adds the offer to basket
         String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
         registerUser(UserType.CUSTOMER, "Buyer Customer", customerEmail, password);
         this.customerToken = login(customerEmail, password);
-
         ResponseEntity<BasketResponse> addResp = rest.exchange(
                 API + "/basket/items",
                 HttpMethod.POST,
@@ -144,37 +127,29 @@ class UserStory17Test {
 
     @Test
     void should_remove_item_from_basket_and_return_200() {
-        // When: customer removes the sale offer from the basket
         ResponseEntity<BasketResponse> removeResp = rest.exchange(
                 API + "/basket/items/" + saleOfferId,
                 HttpMethod.DELETE,
                 new HttpEntity<>(authJsonHeaders(customerToken)),
                 BasketResponse.class
         );
-
-        // Then: basket returned without that item
         assertThat(removeResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(removeResp.getBody()).isNotNull();
         assertThat(removeResp.getBody().items()).isNotNull();
-
         assertThat(removeResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .doesNotContain(saleOfferId);
-
-        // And: GET /basket also shows it is removed
         ResponseEntity<BasketResponse> getResp = rest.exchange(
                 API + "/basket",
                 HttpMethod.GET,
                 new HttpEntity<>(authJsonHeaders(customerToken)),
                 BasketResponse.class
         );
-
         assertThat(getResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResp.getBody()).isNotNull();
         assertThat(getResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .doesNotContain(saleOfferId);
-
         log.info("US_17 OK - removed saleOfferId={} from basketId={}", saleOfferId, removeResp.getBody().id());
     }
 

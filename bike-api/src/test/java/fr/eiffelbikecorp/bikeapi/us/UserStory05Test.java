@@ -12,7 +12,6 @@ import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,32 +37,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory05Test {
-    // US_05: As a Customer, I want to rent a bike so that I can use it for my commute or daily needs.
+    // US_05: As Student or Employee,
+    // I want to rent a bike
+    // so that I can use it for my commute or daily needs.
 
     private static final String API = "/api";
 
     @Autowired
     TestRestTemplate rest;
 
-    private String studentToken;
-    private UUID studentProviderId;
-    private Long bikeId;
-
-    private String customerToken;
+    private UUID providerId;
     private UUID customerId;
 
-    @BeforeEach
-    void setup() {
+    private Long bikeId;
+
+    private String accessToken;
+
+    void createProviderAndOfferBikeForRent(UserType userType) {
+        String studentEmail = UUID.randomUUID() + "@example.com";
         String password = "secret123";
-
-        // 1) Create a Student provider + login (to offer a bike)
-        String studentEmail = "student+" + UUID.randomUUID() + "@example.com";
-
         ResponseEntity<UserResponse> studentRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.STUDENT,
+                        userType,
                         "Student Provider",
                         studentEmail,
                         password
@@ -73,8 +70,7 @@ class UserStory05Test {
         assertThat(studentRegisterResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(studentRegisterResp.getBody()).isNotNull();
         assertThat(studentRegisterResp.getBody().providerId()).isNotNull();
-        this.studentProviderId = studentRegisterResp.getBody().providerId();
-
+        this.providerId = studentRegisterResp.getBody().providerId();
         ResponseEntity<UserLoginResponse> studentLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -83,35 +79,34 @@ class UserStory05Test {
         );
         assertThat(studentLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(studentLoginResp.getBody()).isNotNull();
-        this.studentToken = studentLoginResp.getBody().accessToken();
-        assertThat(studentToken).isNotBlank();
-
-        // Offer one AVAILABLE bike
+        accessToken = studentLoginResp.getBody().accessToken();
+        assertThat(accessToken).isNotBlank();
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
                         "Commute bike - available",
                         ProviderType.STUDENT,
-                        studentProviderId,
+                        providerId,
                         new BigDecimal("2.25")
-                ), authJsonHeaders(studentToken)),
+                ), authJsonHeaders(accessToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreateResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.bikeId = bikeCreateResp.getBody().id();
         assertThat(bikeId).isNotNull();
+    }
 
-        // 2) Create a Customer + login (actor of US_05)
-        String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
-
+    void createCustomerForRent(UserType userType) {
+        String customerEmail = UUID.randomUUID() + "@example.com";
+        String password = "secret123";
         ResponseEntity<UserResponse> customerRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.CUSTOMER,
-                        "Customer One",
+                        userType,
+                        "Renter " + userType.name(),
                         customerEmail,
                         password
                 ), jsonHeaders()),
@@ -121,7 +116,6 @@ class UserStory05Test {
         assertThat(customerRegisterResp.getBody()).isNotNull();
         this.customerId = customerRegisterResp.getBody().customerId();
         assertThat(customerId).isNotNull();
-
         ResponseEntity<UserLoginResponse> customerLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -130,49 +124,42 @@ class UserStory05Test {
         );
         assertThat(customerLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(customerLoginResp.getBody()).isNotNull();
-        this.customerToken = customerLoginResp.getBody().accessToken();
-        assertThat(customerToken).isNotBlank();
+        this.accessToken = customerLoginResp.getBody().accessToken();
+        assertThat(accessToken).isNotBlank();
     }
 
     @Test
     void should_rent_a_bike_and_return_201() {
-        // When: customer rents the bike for 3 days
+        createProviderAndOfferBikeForRent(UserType.STUDENT);
+        createCustomerForRent(UserType.STUDENT);
         RentBikeRequest rentReq = new RentBikeRequest(bikeId, customerId, 3);
-
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(rentReq, authJsonHeaders(customerToken)),
+                new HttpEntity<>(rentReq, authJsonHeaders(accessToken)),
                 RentBikeResultResponse.class
         );
-
-        // Then: RENTED with 201 Created and a rentalId
         assertThat(rentResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(rentResp.getBody()).isNotNull();
         assertThat(rentResp.getBody().result()).isNotNull();
         assertThat(BikeStatus.valueOf(rentResp.getBody().result().toString())).isEqualTo(BikeStatus.RENTED);
         assertThat(rentResp.getBody().rentalId()).as("rentalId should be present when RENTED").isNotNull();
         assertThat(rentResp.getBody().waitingListEntryId()).as("waitingListEntryId should be null when RENTED").isNull();
-
-        // And: bike should now appear as RENTED in catalog
-        ParameterizedTypeReference<List<BikeResponse>> listType = new ParameterizedTypeReference<>() {};
+        ParameterizedTypeReference<List<BikeResponse>> listType = new ParameterizedTypeReference<>() {
+        };
         ResponseEntity<List<BikeResponse>> listResp = rest.exchange(
-                API + "/bikes?offeredById=" + studentProviderId,
+                API + "/bikes?offeredById=" + providerId,
                 HttpMethod.GET,
-                new HttpEntity<>(authJsonHeaders(customerToken)),
+                new HttpEntity<>(authJsonHeaders(accessToken)),
                 listType
         );
-
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(listResp.getBody()).isNotNull();
-
         BikeResponse rentedBike = listResp.getBody().stream()
                 .filter(b -> b.id().equals(bikeId))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected to find bike " + bikeId + " in provider bikes"));
-
         assertThat(rentedBike.status()).isEqualTo("RENTED");
-
         log.info("US_05 OK - customerId={}, bikeId={}, rentalId={}",
                 customerId, bikeId, rentResp.getBody().rentalId());
     }

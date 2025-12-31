@@ -34,8 +34,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory21Test {
-    // US_21: As a Customer, I want to view my rent history so that I can track what I rent and when.
-    // Maps to: GET /api/rentals  (secured, returns rentals for the authenticated customer)
+    // US_21: As a Customer,
+    // I want to view my rent history
+    // so that I can track what I rent and when.
 
     private static final String API = "/api";
 
@@ -59,15 +60,11 @@ class UserStory21Test {
     void setup() {
         String password = "secret123";
 
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
         // 1) Operator user (secured) to create the bike
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
+        this.corpProviderId = provider.providerId();
 
         // 2) Create a corporate bike available for rent
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
@@ -88,7 +85,7 @@ class UserStory21Test {
 
         // 3) Customer registers + logs in (actor of US_21)
         String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
-        UserResponse customer = registerUser(UserType.CUSTOMER, "History Customer", customerEmail, password);
+        UserResponse customer = registerUser(UserType.STUDENT, "History Customer", customerEmail, password);
         this.customerId = customer.customerId();
         assertThat(customerId).isNotNull();
         this.customerToken = login(customerEmail, password);

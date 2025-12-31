@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -55,23 +54,13 @@ class UserStory16Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Operator (secured) to create bike + sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
-
-        // 2) Renter (to rent once + return, keeping compatibility with US_10 rule)
+        this.corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // 3) Create corporate bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -87,8 +76,6 @@ class UserStory16Test {
         assertThat(bikeCreate.getBody()).isNotNull();
         this.bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // 4) Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -100,7 +87,6 @@ class UserStory16Test {
         assertThat(rent.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rent.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -108,8 +94,6 @@ class UserStory16Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // 5) Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -124,7 +108,6 @@ class UserStory16Test {
         assertThat(offer.getBody()).isNotNull();
         this.saleOfferId = offer.getBody().id();
         assertThat(saleOfferId).isNotNull();
-
         // 6) Customer (actor of US_16) registers + logs in
         String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
         registerUser(UserType.CUSTOMER, "Buyer Customer", customerEmail, password);
@@ -134,27 +117,20 @@ class UserStory16Test {
 
     @Test
     void should_add_sale_offer_to_basket_and_return_200() {
-        // When: customer adds the sale offer to their basket
         AddToBasketRequest addReq = new AddToBasketRequest(saleOfferId);
-
         ResponseEntity<BasketResponse> addResp = rest.exchange(
                 API + "/basket/items",
                 HttpMethod.POST,
                 new HttpEntity<>(addReq, authJsonHeaders(customerToken)),
                 BasketResponse.class
         );
-
-        // Then: basket is returned with the item inside
         assertThat(addResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(addResp.getBody()).isNotNull();
         assertThat(addResp.getBody().items()).isNotNull();
         assertThat(addResp.getBody().items()).isNotEmpty();
-
         assertThat(addResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .contains(saleOfferId);
-
-        // And: item should point to the right bike and price snapshot
         assertThat(addResp.getBody().items())
                 .filteredOn(i -> i.saleOfferId().equals(saleOfferId))
                 .allSatisfy(i -> {
@@ -162,21 +138,17 @@ class UserStory16Test {
                     assertThat(i.unitPriceEurSnapshot()).isEqualByComparingTo("129.00");
                     assertThat(i.addedAt()).isNotNull();
                 });
-
-        // And: GET /basket returns the same basket with the item (prepare purchase before paying)
         ResponseEntity<BasketResponse> getResp = rest.exchange(
                 API + "/basket",
                 HttpMethod.GET,
                 new HttpEntity<>(authJsonHeaders(customerToken)),
                 BasketResponse.class
         );
-
         assertThat(getResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResp.getBody()).isNotNull();
         assertThat(getResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .contains(saleOfferId);
-
         log.info("US_16 OK - saleOfferId={} added to basketId={}", saleOfferId, addResp.getBody().id());
     }
 

@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -34,7 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory12Test {
-    // US_12: As a Customer, I want to search for bikes available to buy so that I can find a bike to purchase.
+    // US_12: As a Customer,
+    // I want to search for bikes available to buy
+    // so that I can find a bike to purchase.
 
     private static final String API = "/api";
 
@@ -45,8 +46,7 @@ class UserStory12Test {
     EiffelBikeCorpRepository corpRepository;
 
     private UUID corpProviderId;
-    private String operatorToken;
-
+    private String providerToken;
     private String customerToken;
 
     private Long saleOfferId;
@@ -55,19 +55,13 @@ class UserStory12Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-        // 1) Operator (secured) to create bike + sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
-        this.operatorToken = login(operatorEmail, password);
-        // 2) Renter customer to rent once (if your business rule requires "rented at least once" before resale)
+        UserResponse operator = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
+        this.providerToken = login(operatorEmail, password);
+        this.corpProviderId = operator.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-        // 3) Create a corp bike
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -76,14 +70,13 @@ class UserStory12Test {
                         ProviderType.EIFFEL_BIKE_CORP,
                         corpProviderId,
                         new BigDecimal("1.50")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreateResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.bikeId = bikeCreateResp.getBody().id();
         assertThat(bikeId).isNotNull();
-        // 4) Rent once + return (keeps this test compatible with US_10)
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -102,7 +95,6 @@ class UserStory12Test {
                 ReturnBikeResponse.class
         );
         assertThat(returnResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        // 5) Create sale offer
         ResponseEntity<SaleOfferResponse> offerResp = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -110,14 +102,14 @@ class UserStory12Test {
                         bikeId,
                         corpProviderId,
                         new BigDecimal("99.00")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 SaleOfferResponse.class
         );
         assertThat(offerResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(offerResp.getBody()).isNotNull();
         this.saleOfferId = offerResp.getBody().id();
         assertThat(saleOfferId).isNotNull();
-        // 6) Customer actor (search is public, but we can still login to keep consistency across suites)
+        // Customer actor
         String customerEmail = "buyer+" + UUID.randomUUID() + "@example.com";
         registerUser(UserType.CUSTOMER, "Buyer", customerEmail, password);
         this.customerToken = login(customerEmail, password);
@@ -125,8 +117,6 @@ class UserStory12Test {
 
     @Test
     void should_search_sale_offers_and_return_200() {
-        // When: customer searches for bikes available to buy
-        // Controller: GET /sale-offers?q=
         ParameterizedTypeReference<List<SaleOfferResponse>> type = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<SaleOfferResponse>> resp = rest.exchange(
@@ -135,13 +125,11 @@ class UserStory12Test {
                 new HttpEntity<>(jsonHeaders()), // public endpoint
                 type
         );
-        // Then
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody()).isNotNull();
         assertThat(resp.getBody())
                 .extracting(SaleOfferResponse::id)
                 .contains(saleOfferId);
-        // And sanity-check returned offer content
         SaleOfferResponse found = resp.getBody().stream()
                 .filter(o -> o.id().equals(saleOfferId))
                 .findFirst()

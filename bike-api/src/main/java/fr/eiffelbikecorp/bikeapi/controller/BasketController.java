@@ -28,7 +28,6 @@ import java.util.UUID;
 @Path("/basket")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Secured
 @Tag(
         name = "Basket",
         description = "Basket management for purchases (US_16 add items, US_17 remove items)"
@@ -52,9 +51,10 @@ public class BasketController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response getOpenBasket() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         BasketResponse basket = basketService.getOrCreateOpenBasket(customerId);
         return Response.ok(basket).build();
     }
@@ -77,6 +77,7 @@ public class BasketController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Sale offer not found"),
             @ApiResponse(responseCode = "409", description = "Sale offer not available / already in basket / invalid basket state")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response addToBasket(
             @Valid
@@ -87,7 +88,7 @@ public class BasketController extends BaseController {
             )
             AddToBasketRequest request
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         BasketResponse basket = basketService.addItem(customerId, request);
         return Response.ok(basket).build();
     }
@@ -108,12 +109,13 @@ public class BasketController extends BaseController {
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Basket item not found")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
+    @Secured
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response removeFromBasket(
             @Parameter(description = "Sale offer id", required = true, example = "10")
             @PathParam("saleOfferId") Long saleOfferId
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         BasketResponse basket = basketService.removeItem(customerId, saleOfferId);
         return Response.ok(basket).build();
     }
@@ -132,9 +134,10 @@ public class BasketController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY"})
     public Response clearBasket() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         BasketResponse basket = basketService.clear(customerId);
         return Response.ok(basket).build();
     }

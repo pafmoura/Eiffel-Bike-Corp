@@ -1,20 +1,11 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
+import fr.eiffelbikecorp.bikeapi.domain.enums.BikeStatus;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
-import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.PayRentalRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentalPaymentResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.*;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -39,33 +31,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory08Test {
-    // US_08: As a Customer, I want to pay the rental fee in any currency and have it converted to euros.
-
+    // US_08: As Student or Employee,
+    // I want to pay the rental fee in any currency and have it converted to euros.
     private static final String API = "/api";
-
     @Autowired
     TestRestTemplate rest;
 
-    private String studentToken;
-    private UUID studentProviderId;
-    private Long bikeId;
-
-    private String customerToken;
+    private UUID providerId;
     private UUID customerId;
+
+    private Long bikeId;
     private Long rentalId;
+    private BigDecimal price = new BigDecimal("10.00");
 
-    @BeforeEach
-    void setup() {
+    private String accessToken;
+
+    void createProviderAndOfferBikeForRent(UserType userType) {
+        String studentEmail = UUID.randomUUID() + "@example.com";
         String password = "secret123";
-
-        // 1) Student offers one bike
-        String studentEmail = "student+" + UUID.randomUUID() + "@example.com";
-
         ResponseEntity<UserResponse> studentRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.STUDENT,
+                        userType,
                         "Student Provider",
                         studentEmail,
                         password
@@ -74,9 +62,8 @@ class UserStory08Test {
         );
         assertThat(studentRegisterResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(studentRegisterResp.getBody()).isNotNull();
-        this.studentProviderId = studentRegisterResp.getBody().providerId();
-        assertThat(studentProviderId).isNotNull();
-
+        assertThat(studentRegisterResp.getBody().providerId()).isNotNull();
+        this.providerId = studentRegisterResp.getBody().providerId();
         ResponseEntity<UserLoginResponse> studentLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -85,34 +72,34 @@ class UserStory08Test {
         );
         assertThat(studentLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(studentLoginResp.getBody()).isNotNull();
-        this.studentToken = studentLoginResp.getBody().accessToken();
-        assertThat(studentToken).isNotBlank();
-
+        accessToken = studentLoginResp.getBody().accessToken();
+        assertThat(accessToken).isNotBlank();
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(new BikeCreateRequest(
-                        "Bike for paid rental",
+                        "Commute bike - available",
                         ProviderType.STUDENT,
-                        studentProviderId,
-                        new BigDecimal("2.50")
-                ), authJsonHeaders(studentToken)),
+                        providerId,
+                        price
+                ), authJsonHeaders(accessToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreateResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.bikeId = bikeCreateResp.getBody().id();
         assertThat(bikeId).isNotNull();
+    }
 
-        // 2) Customer registers + logs in
-        String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
-
+    void createCustomer_1_ForRent(UserType userType) {
+        String customerEmail = UUID.randomUUID() + "@example.com";
+        String password = "secret123";
         ResponseEntity<UserResponse> customerRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.CUSTOMER,
-                        "Customer One",
+                        userType,
+                        "Renter 1 " + userType.name(),
                         customerEmail,
                         password
                 ), jsonHeaders()),
@@ -122,7 +109,6 @@ class UserStory08Test {
         assertThat(customerRegisterResp.getBody()).isNotNull();
         this.customerId = customerRegisterResp.getBody().customerId();
         assertThat(customerId).isNotNull();
-
         ResponseEntity<UserLoginResponse> customerLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -131,70 +117,76 @@ class UserStory08Test {
         );
         assertThat(customerLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(customerLoginResp.getBody()).isNotNull();
-        this.customerToken = customerLoginResp.getBody().accessToken();
-        assertThat(customerToken).isNotBlank();
+        this.accessToken = customerLoginResp.getBody().accessToken();
+        assertThat(accessToken).isNotBlank();
+    }
 
-        // 3) Customer rents the bike
+    void rent_a_bike() {
+        RentBikeRequest rentReq = new RentBikeRequest(bikeId, customerId, 3);
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(bikeId, customerId, 2), authJsonHeaders(customerToken)),
+                new HttpEntity<>(rentReq, authJsonHeaders(accessToken)),
                 RentBikeResultResponse.class
         );
-
         assertThat(rentResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(rentResp.getBody()).isNotNull();
-        assertThat(rentResp.getBody().result()).isEqualTo(RentResult.RENTED);
-        assertThat(rentResp.getBody().rentalId()).isNotNull();
-        this.rentalId = rentResp.getBody().rentalId();
+        assertThat(rentResp.getBody().result()).isNotNull();
+        assertThat(BikeStatus.valueOf(rentResp.getBody().result().toString())).isEqualTo(BikeStatus.RENTED);
+        assertThat(rentResp.getBody().rentalId()).as("rentalId should be present when RENTED").isNotNull();
+        assertThat(rentResp.getBody().waitingListEntryId()).as("waitingListEntryId should be null when RENTED").isNull();
+        ParameterizedTypeReference<List<BikeResponse>> listType = new ParameterizedTypeReference<>() {
+        };
+        ResponseEntity<List<BikeResponse>> listResp = rest.exchange(
+                API + "/bikes?offeredById=" + providerId,
+                HttpMethod.GET,
+                new HttpEntity<>(authJsonHeaders(accessToken)),
+                listType
+        );
+        assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(listResp.getBody()).isNotNull();
+        BikeResponse rentedBike = listResp.getBody().stream()
+                .filter(b -> b.id().equals(bikeId))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected to find bike " + bikeId + " in provider bikes"));
+        assertThat(rentedBike.status()).isEqualTo("RENTED");
+        rentalId = rentResp.getBody().rentalId();
     }
 
     @Test
     void should_pay_rental_in_foreign_currency_and_receive_eur_converted_amount() {
-        // Given: Pay rental with USD
+        createProviderAndOfferBikeForRent(UserType.STUDENT);
+        createCustomer_1_ForRent(UserType.STUDENT);
+        rent_a_bike();
         PayRentalRequest payReq = new PayRentalRequest(
                 rentalId,
-                new BigDecimal("10.00"),
+                price,
                 "USD",
                 "pm_card_visa"
         );
-
-        // When
         ResponseEntity<RentalPaymentResponse> payResp = rest.exchange(
                 API + "/payments/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(payReq, authJsonHeaders(customerToken)),
+                new HttpEntity<>(payReq, authJsonHeaders(accessToken)),
                 RentalPaymentResponse.class
         );
-
-        // Then
         assertThat(payResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(payResp.getBody()).isNotNull();
-
         RentalPaymentResponse payment = payResp.getBody();
-
-        // Verify original payment request data echoed back
         assertThat(payment.rentalId()).isEqualTo(rentalId);
         assertThat(payment.originalAmount()).isEqualByComparingTo("10.00");
         assertThat(payment.originalCurrency()).isEqualTo("USD");
-
-        // Verify conversion fields exist and are coherent
         assertThat(payment.fxRateToEur()).as("fxRateToEur must be present").isNotNull();
         assertThat(payment.fxRateToEur()).isGreaterThan(BigDecimal.ZERO);
-
         assertThat(payment.amountEur()).as("amountEur must be present").isNotNull();
         assertThat(payment.amountEur()).isGreaterThan(BigDecimal.ZERO);
-
         // Coherence check: amountEur ~= originalAmount * fxRateToEur
         BigDecimal expectedEur = payment.originalAmount().multiply(payment.fxRateToEur());
         assertThat(payment.amountEur())
                 .as("amountEur should match originalAmount * fxRateToEur (within rounding)")
                 .isCloseTo(expectedEur, org.assertj.core.data.Offset.offset(new BigDecimal("0.05")));
-
-        // Status/paidAt should be set on successful payment flows
         assertThat(payment.status()).isNotNull();
         assertThat(payment.paidAt()).isNotNull();
-
         log.info("US_08 OK - rentalId={}, paid {} {} => {} EUR @ rate {}",
                 rentalId,
                 payment.originalAmount(), payment.originalCurrency(),

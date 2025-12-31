@@ -1,22 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleOfferRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferDetailsResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.*;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory15Test {
-    // US_15: As a Customer, I want to check whether a bike offered for sale is still available
-    //        so that I don’t try to buy a sold or unavailable bike.
+    // US_15: As a Customer, 
+    // I want to check whether a bike offered for sale is still available
+    // so that I don’t try to buy a sold or unavailable bike.
 
     private static final String API = "/api";
 
@@ -64,23 +53,13 @@ class UserStory15Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Operator (secured) to create bike and sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
-
-        // 2) Renter rents once + returns (keeps test compatible with US_10 rule)
+        this.corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.EMPLOYEE, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // 3) Create corporate bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -96,8 +75,6 @@ class UserStory15Test {
         assertThat(bikeCreate.getBody()).isNotNull();
         this.bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // 4) Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -109,7 +86,6 @@ class UserStory15Test {
         assertThat(rent.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rent.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -117,8 +93,6 @@ class UserStory15Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // 5) Create sale offer (LISTED = available to buy)
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -137,29 +111,20 @@ class UserStory15Test {
 
     @Test
     void should_check_sale_offer_availability_and_return_200() {
-        // When: customer checks offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
                 API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class
         );
-
-        // Then: offer is still available (LISTED)
         assertThat(detailsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(detailsResp.getBody()).isNotNull();
         assertThat(detailsResp.getBody().offer()).isNotNull();
-
         SaleOfferResponse offer = detailsResp.getBody().offer();
-
         assertThat(offer.id()).isEqualTo(saleOfferId);
         assertThat(offer.bikeId()).isEqualTo(bikeId);
         assertThat(String.valueOf(offer.status())).isEqualTo("LISTED");
-
-        // If your DTO exposes an "availability" helper string, at least ensure it's present
-        // (we don't hardcode exact value because it may be "AVAILABLE", "LISTED", etc.)
         assertThat(offer.availability()).isNotBlank();
-
         log.info("US_15 OK - saleOfferId={}, bikeId={}, status={}, availability={}",
                 saleOfferId, bikeId, offer.status(), offer.availability());
     }

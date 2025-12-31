@@ -12,7 +12,7 @@ public interface BikeCatalogService {
 
     List<BikeResponse> findAll();
 
-    BikeResponse offerBikeForRent(BikeCreateRequest request);
+    BikeResponse offerBikeForRent(BikeCreateRequest request, UUID offeredById);
 
     BikeResponse updateBike(Long bikeId, BikeUpdateRequest request);
 

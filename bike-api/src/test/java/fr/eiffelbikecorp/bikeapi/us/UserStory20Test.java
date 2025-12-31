@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -34,8 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory20Test {
-    // US_20: As a Customer, I want to view my purchase history so that I can track what I bought and when.
-    // Maps to: GET /api/purchases
+    // US_20: As a Customer,
+    // I want to view my purchase history
+    // so that I can track what I bought and when.
 
     private static final String API = "/api";
 
@@ -56,23 +56,13 @@ class UserStory20Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Provider (secured) to create bike + sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         operatorToken = login(operatorEmail, password);
-
-        // 2) Renter rents once + returns (to satisfy US_10 rule: only used corp bikes can be sold)
+        corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // Create corp bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -88,8 +78,6 @@ class UserStory20Test {
         assertThat(bikeCreate.getBody()).isNotNull();
         Long bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // Rent once
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -101,8 +89,6 @@ class UserStory20Test {
         assertThat(rentResp.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rentResp.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
-        // Return
         ResponseEntity<ReturnBikeResponse> returnResp = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -110,8 +96,6 @@ class UserStory20Test {
                 ReturnBikeResponse.class
         );
         assertThat(returnResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Create sale offer
         ResponseEntity<SaleOfferResponse> offerResp = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -126,13 +110,9 @@ class UserStory20Test {
         assertThat(offerResp.getBody()).isNotNull();
         saleOfferId = offerResp.getBody().id();
         assertThat(saleOfferId).isNotNull();
-
-        // 3) Buyer registers + logs in
         String buyerEmail = "buyer+" + UUID.randomUUID() + "@example.com";
         registerUser(UserType.CUSTOMER, "Buyer Customer", buyerEmail, password);
         buyerToken = login(buyerEmail, password);
-
-        // Add to basket
         ResponseEntity<BasketResponse> basketResp = rest.exchange(
                 API + "/basket/items",
                 HttpMethod.POST,
@@ -144,8 +124,6 @@ class UserStory20Test {
         assertThat(basketResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .contains(saleOfferId);
-
-        // Checkout -> purchase created
         ResponseEntity<PurchaseResponse> checkoutResp = rest.exchange(
                 API + "/purchases/checkout",
                 HttpMethod.POST,
@@ -156,11 +134,8 @@ class UserStory20Test {
         assertThat(checkoutResp.getBody()).isNotNull();
         purchaseId = checkoutResp.getBody().id();
         assertThat(purchaseId).isNotNull();
-
-        // Pay purchase (so history has a completed transaction)
         BigDecimal total = checkoutResp.getBody().totalAmountEur();
         assertThat(total).isNotNull();
-
         ResponseEntity<SalePaymentResponse> payResp = rest.exchange(
                 API + "/payments/purchases",
                 HttpMethod.POST,
@@ -180,42 +155,32 @@ class UserStory20Test {
 
     @Test
     void should_list_purchase_history_and_include_created_at_and_items() {
-        ParameterizedTypeReference<List<PurchaseResponse>> type = new ParameterizedTypeReference<>() {};
-
+        ParameterizedTypeReference<List<PurchaseResponse>> type = new ParameterizedTypeReference<>() {
+        };
         ResponseEntity<List<PurchaseResponse>> listResp = rest.exchange(
                 API + "/purchases",
                 HttpMethod.GET,
                 new HttpEntity<>(authJsonHeaders(buyerToken)),
                 type
         );
-
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(listResp.getHeaders().getContentType()).isNotNull();
         assertThat(listResp.getHeaders().getContentType().toString()).contains("application/json");
-
         List<PurchaseResponse> purchases = listResp.getBody();
         assertThat(purchases).isNotNull();
         assertThat(purchases).isNotEmpty();
-
         PurchaseResponse mine = purchases.stream()
                 .filter(p -> p.id().equals(purchaseId))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected purchase " + purchaseId + " in purchase history"));
-
-        // "what I bought"
         assertThat(mine.items()).isNotNull();
         assertThat(mine.items()).isNotEmpty();
         assertThat(mine.items())
                 .extracting(PurchaseItemResponse::saleOfferId)
                 .contains(saleOfferId);
-
-        // "and when"
         assertThat(mine.createdAt()).isNotNull();
-
-        // optional: since we paid in setup, history should show paid purchase
         assertThat(mine.status()).isEqualTo("PAID");
         assertThat(mine.paidAt()).isNotNull();
-
         log.info("US_20 OK - purchaseId={}, createdAt={}, itemsCount={}",
                 mine.id(), mine.createdAt(), mine.items().size());
     }

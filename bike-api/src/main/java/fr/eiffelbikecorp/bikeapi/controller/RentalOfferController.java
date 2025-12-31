@@ -24,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 @Path("/rental-offers")
@@ -37,7 +39,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
         description = "Bike rental offers"
 )
 @SecurityRequirement(name = "bearerAuth")
-public class RentalOfferController {
+public class RentalOfferController extends BaseController {
 
     private final BikeCatalogService bikeCatalogService;
 
@@ -64,7 +66,8 @@ public class RentalOfferController {
                     description = "Bike creation payload",
                     content = @Content(schema = @Schema(implementation = BikeCreateRequest.class))
             ) BikeCreateRequest request) {
-        BikeResponse created = bikeCatalogService.offerBikeForRent(request);
+        UUID offeredBy = userID();
+        BikeResponse created = bikeCatalogService.offerBikeForRent(request, offeredBy);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
 }

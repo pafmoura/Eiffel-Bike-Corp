@@ -31,7 +31,6 @@ import java.util.UUID;
 @Path("/bikes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Secured
 @CrossOrigin(origins = "http://localhost:4200")
 @SecurityRequirement(name = "BearerAuth")
 @Tag(
@@ -60,6 +59,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Bike not found")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response updateBike(
             @Parameter(description = "Bike id", required = true, example = "10")
@@ -97,7 +97,8 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY","EIFFEL_BIKE_CORP"})
+    @Secured
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response searchBikesToRent(
             @Parameter(description = "Bike status filter", example = "AVAILABLE")
             @QueryParam("status") String status,
@@ -125,7 +126,8 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP", "ORDINARY", "EIFFEL_BIKE_CORP"})
+    @Secured
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP", "ORDINARY",})
     public Response findAllBikes() {
         List<BikeResponse> results = bikeCatalogService.findAll();
         return Response.ok(results).build();
@@ -146,6 +148,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
+    @Secured
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "ORDINARY", "EIFFEL_BIKE_CORP"})
     public Response getBikeReturnHistory(@PathParam("bikeId") Long bikeId) {
         List<ReturnNoteResponse> history = bikeCatalogService.getReturnNotesForBike(bikeId);

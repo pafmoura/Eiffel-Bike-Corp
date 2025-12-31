@@ -137,7 +137,7 @@ public class RentalController extends BaseController {
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response getActiveRentals(
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         List<RentBikeResultResponse> activeRentals = rentalService.findActiveRentalsByCustomer(customerId);
         return Response.ok(activeRentals).build();
     }
@@ -159,7 +159,7 @@ public class RentalController extends BaseController {
     })
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response getMyActiveBikeIds() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         return Response.ok(rentalService.findMyActiveBikeIds(customerId)).build();
     }
 
@@ -181,7 +181,7 @@ public class RentalController extends BaseController {
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response geWaitlist(
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         List<NotificationResponse> waitlist = rentalService.findWaitlistByCustomer(customerId);
         return Response.ok(waitlist).build();
     }
@@ -204,7 +204,7 @@ public class RentalController extends BaseController {
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response listNotifications(
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         List<NotificationResponse> notifications = rentalService.listMyNotifications(customerId);
         return Response.ok(notifications).build();
     }
@@ -225,7 +225,7 @@ public class RentalController extends BaseController {
     })
     @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
     public Response listMyRentals() {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         List<RentalResponse> rentals = rentalService.listMyRentals(customerId);
         return Response.ok(rentals).build();
     }

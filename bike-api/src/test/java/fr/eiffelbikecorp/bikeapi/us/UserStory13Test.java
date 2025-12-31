@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -34,8 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory13Test {
-    // US_13: As a Customer, I want to view the sale price of bikes offered for sale
-    //        so that I can compare options before buying.
+    // US_13: As a Customer, 
+    // I want to view the sale price of bikes offered for sale
+    // so that I can compare options before buying.
 
     private static final String API = "/api";
 
@@ -46,7 +46,7 @@ class UserStory13Test {
     EiffelBikeCorpRepository corpRepository;
 
     private UUID corpProviderId;
-    private String operatorToken;
+    private String providerToken;
 
     private Long saleOfferId;
     private Long bikeId;
@@ -54,23 +54,13 @@ class UserStory13Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // Operator to create bike + sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
-        this.operatorToken = login(operatorEmail, password);
-
-        // Renter to rent once + return (compat with US_10 rule)
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
+        this.providerToken = login(operatorEmail, password);
+        this.corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-
-        // Create corp bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -79,15 +69,13 @@ class UserStory13Test {
                         ProviderType.EIFFEL_BIKE_CORP,
                         corpProviderId,
                         new BigDecimal("1.50")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreate.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreate.getBody()).isNotNull();
         this.bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -99,7 +87,6 @@ class UserStory13Test {
         assertThat(rent.getBody().result()).isEqualTo(RentResult.RENTED);
         Long rentalId = rent.getBody().rentalId();
         assertThat(rentalId).isNotNull();
-
         ResponseEntity<ReturnBikeResponse> returned = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -107,8 +94,6 @@ class UserStory13Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Create sale offer with a known price
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -116,7 +101,7 @@ class UserStory13Test {
                         bikeId,
                         corpProviderId,
                         new BigDecimal("199.99")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 SaleOfferResponse.class
         );
         assertThat(offer.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -127,40 +112,32 @@ class UserStory13Test {
 
     @Test
     void should_view_sale_price_in_offer_list_and_details() {
-        // When: customer lists sale offers (public endpoint)
-        ParameterizedTypeReference<List<SaleOfferResponse>> type = new ParameterizedTypeReference<>() {};
+        ParameterizedTypeReference<List<SaleOfferResponse>> type = new ParameterizedTypeReference<>() {
+        };
         ResponseEntity<List<SaleOfferResponse>> listResp = rest.exchange(
                 API + "/sale-offers?q=Sale",
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 type
         );
-
-        // Then: offer appears with price
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(listResp.getBody()).isNotNull();
-
         SaleOfferResponse listed = listResp.getBody().stream()
                 .filter(o -> o.id().equals(saleOfferId))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected offer " + saleOfferId + " in list"));
-
         assertThat(listed.askingPriceEur()).isEqualByComparingTo("199.99");
-
-        // And: details endpoint also shows the same price
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
                 API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
                 new HttpEntity<>(jsonHeaders()),
                 SaleOfferDetailsResponse.class
         );
-
         assertThat(detailsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(detailsResp.getBody()).isNotNull();
         assertThat(detailsResp.getBody().offer()).isNotNull();
         assertThat(detailsResp.getBody().offer().id()).isEqualTo(saleOfferId);
         assertThat(detailsResp.getBody().offer().askingPriceEur()).isEqualByComparingTo("199.99");
-
         log.info("US_13 OK - saleOfferId={}, bikeId={}, priceEur={}", saleOfferId, bikeId, listed.askingPriceEur());
     }
 

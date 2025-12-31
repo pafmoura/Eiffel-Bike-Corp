@@ -1,22 +1,10 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.CreateSaleOfferRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferDetailsResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.SaleOfferResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
+import fr.eiffelbikecorp.bikeapi.dto.request.*;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.EiffelBikeCorpRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,24 +54,14 @@ class UserStory10Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Create an authenticated "operator" (any secured user can call /bikes and /sale-offers)
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse operator = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
-
-        // 2) Create the renting customer (the rental will create the "rented at least once" history)
+        this.corpProviderId = operator.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter Customer", renterEmail, password);
+        UserResponse renter = registerUser(UserType.EMPLOYEE, "Renter Customer", renterEmail, password);
         this.renterCustomerId = renter.customerId();
         this.renterToken = login(renterEmail, password);
-
-        // 3) EiffelBikeCorp offers a company bike for rent
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -99,8 +77,6 @@ class UserStory10Test {
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.corpBikeId = bikeCreateResp.getBody().id();
         assertThat(corpBikeId).isNotNull();
-
-        // 4) Rent it once (to satisfy "rented at least once")
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -112,8 +88,6 @@ class UserStory10Test {
         assertThat(rentResp.getBody().result()).isEqualTo(RentResult.RENTED);
         assertThat(rentResp.getBody().rentalId()).isNotNull();
         Long rentalId = rentResp.getBody().rentalId();
-
-        // 5) Return it so the bike becomes available again for resale listing
         ResponseEntity<ReturnBikeResponse> returnResp = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
@@ -131,44 +105,35 @@ class UserStory10Test {
 
     @Test
     void should_create_sale_offer_only_after_company_bike_has_been_rented_at_least_once() {
-        // When: list the USED corporate bike for sale
         CreateSaleOfferRequest req = new CreateSaleOfferRequest(
                 corpBikeId,
                 corpProviderId,
                 new BigDecimal("120.00")
         );
-
         ResponseEntity<SaleOfferResponse> saleResp = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(req, authJsonHeaders(operatorToken)),
                 SaleOfferResponse.class
         );
-
-        // Then: sale offer is created and listed
         assertThat(saleResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(saleResp.getBody()).isNotNull();
         assertThat(saleResp.getBody().id()).isNotNull();
         assertThat(saleResp.getBody().bikeId()).isEqualTo(corpBikeId);
         assertThat(String.valueOf(saleResp.getBody().status())).isEqualTo("LISTED");
         assertThat(saleResp.getBody().askingPriceEur()).isEqualByComparingTo("120.00");
-
         Long saleOfferId = saleResp.getBody().id();
-
-        // And: details endpoint by bike returns the same offer
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
                 API + "/sale-offers/by-bike/" + corpBikeId,
                 HttpMethod.GET,
-                new HttpEntity<>(jsonHeaders()),
+                new HttpEntity<>(authJsonHeaders(renterToken)),
                 SaleOfferDetailsResponse.class
         );
-
         assertThat(detailsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(detailsResp.getBody()).isNotNull();
         assertThat(detailsResp.getBody().offer()).isNotNull();
         assertThat(detailsResp.getBody().offer().id()).isEqualTo(saleOfferId);
         assertThat(detailsResp.getBody().offer().bikeId()).isEqualTo(corpBikeId);
-
         log.info("US_10 OK - corpProviderId={}, bikeId={}, saleOfferId={}", corpProviderId, corpBikeId, saleOfferId);
     }
 

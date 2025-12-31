@@ -35,7 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory04Test {
-    //* **US_04:** As a Customer, I want to search for bikes available for rent so that I can quickly find a suitable bike.
+    //* **US_04:** As Student or Employee,
+    // I want to search for bikes available for rent
+    // so that I can quickly find a suitable bike.
 
     private static final String API = "/api";
 
@@ -51,10 +53,8 @@ class UserStory04Test {
 
     @BeforeEach
     void setup() {
-        // 1) Create a Student (provider) + login to offer bikes
         String studentEmail = "student+" + UUID.randomUUID() + "@example.com";
         String password = "secret123";
-
         ResponseEntity<UserResponse> studentRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
@@ -66,57 +66,45 @@ class UserStory04Test {
                 ), jsonHeaders()),
                 UserResponse.class
         );
-
         assertThat(studentRegisterResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(studentRegisterResp.getBody()).isNotNull();
         assertThat(studentRegisterResp.getBody().providerId()).isNotNull();
-
         this.studentProviderId = studentRegisterResp.getBody().providerId();
-
         ResponseEntity<UserLoginResponse> studentLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserLoginRequest(studentEmail, password), jsonHeaders()),
                 UserLoginResponse.class
         );
-
         assertThat(studentLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(studentLoginResp.getBody()).isNotNull();
         String studentToken = studentLoginResp.getBody().accessToken();
         assertThat(studentToken).isNotBlank();
-
-        // 2) Offer a couple of AVAILABLE bikes for rent (data setup)
         bikeId1 = createBike(studentToken,
                 new BikeCreateRequest("City bike - blue", ProviderType.STUDENT, studentProviderId, new BigDecimal("2.50"))
         );
         bikeId2 = createBike(studentToken,
                 new BikeCreateRequest("Mountain bike - red", ProviderType.STUDENT, studentProviderId, new BigDecimal("3.00"))
         );
-
-        // 3) Create a Customer + login (actor of US_04)
         String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
-
         ResponseEntity<UserResponse> customerRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.CUSTOMER,
+                        UserType.STUDENT,
                         "Customer One",
                         customerEmail,
                         password
                 ), jsonHeaders()),
                 UserResponse.class
         );
-
         assertThat(customerRegisterResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-
         ResponseEntity<UserLoginResponse> customerLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserLoginRequest(customerEmail, password), jsonHeaders()),
                 UserLoginResponse.class
         );
-
         assertThat(customerLoginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(customerLoginResp.getBody()).isNotNull();
         this.customerToken = customerLoginResp.getBody().accessToken();
@@ -125,32 +113,25 @@ class UserStory04Test {
 
     @Test
     void should_search_available_bikes_and_return_200() {
-        // When: customer searches for bikes available for rent
-        ParameterizedTypeReference<List<BikeResponse>> type = new ParameterizedTypeReference<>() {};
-
+        ParameterizedTypeReference<List<BikeResponse>> type = new ParameterizedTypeReference<>() {
+        };
         ResponseEntity<List<BikeResponse>> resp = rest.exchange(
                 API + "/bikes?status=AVAILABLE",
                 HttpMethod.GET,
                 new HttpEntity<>(authJsonHeaders(customerToken)),
                 type
         );
-
-        // Then: OK + list contains bikes offered for rent
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getHeaders().getContentType()).isNotNull();
         assertThat(resp.getHeaders().getContentType().toString()).contains("application/json");
         assertThat(resp.getBody()).isNotNull();
-
         List<BikeResponse> bikes = resp.getBody();
-
         assertThat(bikes)
                 .extracting(BikeResponse::id)
                 .contains(bikeId1, bikeId2);
-
         assertThat(bikes)
                 .filteredOn(b -> b.id().equals(bikeId1) || b.id().equals(bikeId2))
                 .allSatisfy(b -> assertThat(b.status()).isEqualTo("AVAILABLE"));
-
         log.info("US_04 OK - found bikes {} and {} in AVAILABLE search", bikeId1, bikeId2);
     }
 

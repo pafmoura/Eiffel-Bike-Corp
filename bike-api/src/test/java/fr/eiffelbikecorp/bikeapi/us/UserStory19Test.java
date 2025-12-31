@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -33,7 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory19Test {
-    // US_19: As a Customer, I want to pay for my purchase through a payment gateway
+    // US_19: As a Customer,
+    // I want to pay for my purchase through a payment gateway
     //        so that the system can verify funds and complete the payment.
 
     private static final String API = "/api";
@@ -54,19 +54,13 @@ class UserStory19Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-        // 0) Ensure corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-        // 1) Operator (secured) creates bike + sale offer
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
         this.operatorToken = login(operatorEmail, password);
-        // 2) Renter rents once + returns (compat with rule: only used corp bikes can be sold)
+        this.corpProviderId = provider.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter", renterEmail, password);
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter", renterEmail, password);
         String renterToken = login(renterEmail, password);
-        // Create corporate bike
         ResponseEntity<BikeResponse> bikeCreate = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -82,7 +76,6 @@ class UserStory19Test {
         assertThat(bikeCreate.getBody()).isNotNull();
         Long bikeId = bikeCreate.getBody().id();
         assertThat(bikeId).isNotNull();
-        // Rent once + return
         ResponseEntity<RentBikeResultResponse> rent = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
@@ -101,7 +94,6 @@ class UserStory19Test {
                 ReturnBikeResponse.class
         );
         assertThat(returned.getStatusCode()).isEqualTo(HttpStatus.OK);
-        // Create sale offer
         ResponseEntity<SaleOfferResponse> offer = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -116,12 +108,10 @@ class UserStory19Test {
         assertThat(offer.getBody()).isNotNull();
         Long saleOfferId = offer.getBody().id();
         assertThat(saleOfferId).isNotNull();
-        // 3) Buyer customer creates basket + checkout => purchase created
         String customerEmail = "buyer+" + UUID.randomUUID() + "@example.com";
         UserResponse buyer = registerUser(UserType.CUSTOMER, "Buyer Customer", customerEmail, password);
         this.customerToken = login(customerEmail, password);
         assertThat(customerToken).isNotBlank();
-        // Add to basket
         ResponseEntity<BasketResponse> addResp = rest.exchange(
                 API + "/basket/items",
                 HttpMethod.POST,
@@ -133,7 +123,6 @@ class UserStory19Test {
         assertThat(addResp.getBody().items())
                 .extracting(BasketItemResponse::saleOfferId)
                 .contains(saleOfferId);
-        // Checkout
         ResponseEntity<PurchaseResponse> checkoutResp = rest.exchange(
                 API + "/purchases/checkout",
                 HttpMethod.POST,
@@ -147,7 +136,6 @@ class UserStory19Test {
         this.purchaseTotalEur = checkoutResp.getBody().totalAmountEur();
         assertThat(purchaseTotalEur).isNotNull();
         assertThat(purchaseTotalEur).isGreaterThan(BigDecimal.ZERO);
-        // sanity: initial status is CREATED
         assertThat(checkoutResp.getBody().status()).isEqualTo("CREATED");
         log.info("Setup OK - buyerCustomerId={}, purchaseId={}, totalEur={}",
                 buyer.customerId(), purchaseId, purchaseTotalEur);
@@ -155,21 +143,18 @@ class UserStory19Test {
 
     @Test
     void should_pay_purchase_through_gateway_and_return_201_and_mark_purchase_as_paid() {
-        // Given: PayPurchaseRequest (EUR to avoid FX mismatch here; FX is covered in US_08)
         PayPurchaseRequest payReq = new PayPurchaseRequest(
                 purchaseId,
                 purchaseTotalEur,
                 "EUR",
                 "pm_card_visa"
         );
-        // When: customer pays the purchase via payment gateway
         ResponseEntity<SalePaymentResponse> payResp = rest.exchange(
                 API + "/payments/purchases",
                 HttpMethod.POST,
                 new HttpEntity<>(payReq, authJsonHeaders(customerToken)),
                 SalePaymentResponse.class
         );
-        // Then: payment created
         assertThat(payResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(payResp.getBody()).isNotNull();
         SalePaymentResponse payment = payResp.getBody();
@@ -182,7 +167,6 @@ class UserStory19Test {
         assertThat(payment.status()).isEqualTo("PAID");
         assertThat(payment.paidAt()).isNotNull();
         assertThat(payment.stripePaymentIntentId()).isNotBlank();
-        // And: purchase is now PAID
         ResponseEntity<PurchaseResponse> purchaseResp = rest.exchange(
                 API + "/purchases/" + purchaseId,
                 HttpMethod.GET,

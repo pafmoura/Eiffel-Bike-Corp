@@ -35,7 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory02Test {
-    //* **US_02:** As an Employee, I want to offer my bike for rent so that other university members can rent it.
+    //* **US_02:** As an Employee,
+    // I want to offer my bike for rent
+    // so that other university members can rent it.
 
     private static final String API = "/api";
 
@@ -50,7 +52,6 @@ class UserStory02Test {
     void setup() {
         String email = "employee+" + UUID.randomUUID() + "@example.com";
         String password = "secret123"; // >= 6
-        // 1) Register employee
         var registerReq = new UserRegisterRequest(
                 UserType.EMPLOYEE,
                 "Employee One",
@@ -68,7 +69,6 @@ class UserStory02Test {
         assertThat(registerResp.getBody().providerId()).as("employee providerId").isNotNull();
         this.employeeProviderId = registerResp.getBody().providerId();
         this.employeeCustomerId = registerResp.getBody().customerId();
-        // 2) Login
         var loginReq = new UserLoginRequest(email, password);
         ResponseEntity<UserLoginResponse> loginResp = rest.exchange(
                 API + "/users/login",
@@ -84,21 +84,18 @@ class UserStory02Test {
 
     @Test
     void should_offer_bike_for_rent_and_return_201() {
-        // Given: employee is authenticated (setup) and has a providerId
         BikeCreateRequest bikeReq = new BikeCreateRequest(
                 "Hybrid bike - employee owned",
                 ProviderType.EMPLOYEE,
                 employeeProviderId,
                 new BigDecimal("3.00")
         );
-        // When: employee offers a bike for rent
         ResponseEntity<BikeResponse> createResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
                 new HttpEntity<>(bikeReq, authJsonHeaders(accessToken)),
                 BikeResponse.class
         );
-        // Then: bike is created
         assertThat(createResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(createResp.getBody()).isNotNull();
         assertThat(createResp.getBody().id()).isNotNull();
@@ -107,7 +104,6 @@ class UserStory02Test {
         assertThat(createResp.getBody().rentalDailyRateEur()).isEqualByComparingTo("3.00");
         assertThat(createResp.getBody().offeredBy()).isNotNull();
         Long createdBikeId = createResp.getBody().id();
-        // And: bike appears in list (available for others to rent later)
         ParameterizedTypeReference<List<BikeResponse>> listType = new ParameterizedTypeReference<>() {
         };
         ResponseEntity<List<BikeResponse>> listResp = rest.exchange(

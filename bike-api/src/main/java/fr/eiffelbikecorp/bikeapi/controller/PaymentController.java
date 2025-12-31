@@ -123,7 +123,7 @@ public class PaymentController extends BaseController {
             )
             PayPurchaseRequest request
     ) {
-        UUID customerId = customerId();
+        UUID customerId = userID();
         SalePaymentResponse paid = salePaymentService.payPurchase(customerId, request);
         return Response.status(Response.Status.CREATED).entity(paid).build();
     }

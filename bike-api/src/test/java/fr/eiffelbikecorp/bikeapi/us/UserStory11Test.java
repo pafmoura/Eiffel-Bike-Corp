@@ -1,6 +1,5 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
-import fr.eiffelbikecorp.bikeapi.domain.entity.EiffelBikeCorp;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
@@ -33,8 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory11Test {
-    // US_11: As EiffelBikeCorp, I want to offer bikes for sale with detailed notes
-    //        so that buyers can assess each bike’s condition before purchasing.
+    // US_11: As EiffelBikeCorp, 
+    // I want to offer bikes for sale with detailed notes
+    //  so that buyers can assess each bike’s condition before purchasing.
 
     private static final String API = "/api";
 
@@ -46,9 +46,9 @@ class UserStory11Test {
 
     private UUID corpProviderId;
 
-    private String operatorToken;     // used for secured endpoints (/bikes, /sale-offers, /sale-offers/notes)
-    private String renterToken;       // used for rental flow
-    private UUID renterCustomerId;
+    private String providerToken;
+    private String renterToken;
+    private UUID renterId;
 
     private Long corpBikeId;
     private Long saleOfferId;
@@ -56,24 +56,14 @@ class UserStory11Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 0) Ensure EiffelBikeCorp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-
-        // 1) Operator user (any secured user) to call create bike / create offer / add notes
         String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
-        registerUser(UserType.CUSTOMER, "Corp Operator", operatorEmail, password);
-        this.operatorToken = login(operatorEmail, password);
-
-        // 2) Renter customer (to rent the corp bike at least once; keeps this test compatible with US_10 rule)
+        UserResponse operator = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
+        this.providerToken = login(operatorEmail, password);
+        this.corpProviderId = operator.providerId();
         String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
-        UserResponse renter = registerUser(UserType.CUSTOMER, "Renter Customer", renterEmail, password);
-        this.renterCustomerId = renter.customerId();
+        UserResponse renter = registerUser(UserType.STUDENT, "Renter Customer", renterEmail, password);
+        this.renterId = renter.customerId();
         this.renterToken = login(renterEmail, password);
-
-        // 3) Create a corporate bike for rent
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -82,19 +72,17 @@ class UserStory11Test {
                         ProviderType.EIFFEL_BIKE_CORP,
                         corpProviderId,
                         new BigDecimal("1.80")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 BikeResponse.class
         );
         assertThat(bikeCreateResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.corpBikeId = bikeCreateResp.getBody().id();
         assertThat(corpBikeId).isNotNull();
-
-        // 4) Rent once (eligibility for resale) + return
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
-                new HttpEntity<>(new RentBikeRequest(corpBikeId, renterCustomerId, 1), authJsonHeaders(renterToken)),
+                new HttpEntity<>(new RentBikeRequest(corpBikeId, renterId, 1), authJsonHeaders(renterToken)),
                 RentBikeResultResponse.class
         );
         assertThat(rentResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -102,12 +90,11 @@ class UserStory11Test {
         assertThat(rentResp.getBody().result()).isEqualTo(RentResult.RENTED);
         assertThat(rentResp.getBody().rentalId()).isNotNull();
         Long rentalId = rentResp.getBody().rentalId();
-
         ResponseEntity<ReturnBikeResponse> returnResp = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
                 new HttpEntity<>(new ReturnBikeRequest(
-                        renterCustomerId,
+                        renterId,
                         "Returned after short use.",
                         "OK"
                 ), authJsonHeaders(renterToken)),
@@ -116,8 +103,7 @@ class UserStory11Test {
         assertThat(returnResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(returnResp.getBody()).isNotNull();
         assertThat(returnResp.getBody().closedRental()).isNotNull();
-
-        // 5) Create sale offer
+        
         ResponseEntity<SaleOfferResponse> saleResp = rest.exchange(
                 API + "/sale-offers",
                 HttpMethod.POST,
@@ -125,7 +111,7 @@ class UserStory11Test {
                         corpBikeId,
                         corpProviderId,
                         new BigDecimal("149.90")
-                ), authJsonHeaders(operatorToken)),
+                ), authJsonHeaders(providerToken)),
                 SaleOfferResponse.class
         );
         assertThat(saleResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -136,46 +122,37 @@ class UserStory11Test {
 
     @Test
     void should_create_sale_offer_with_notes_and_expose_them_in_details() {
-        // Given: add detailed notes to the offer
         CreateSaleNoteRequest noteReq = new CreateSaleNoteRequest(
                 saleOfferId,
                 "Condition report",
                 "Frame is good. Brakes were adjusted. Tires at ~70%. Small scratch on the fork.",
                 "Mechanic A"
         );
-
         ResponseEntity<SaleNoteResponse> noteResp = rest.exchange(
                 API + "/sale-offers/notes",
                 HttpMethod.POST,
-                new HttpEntity<>(noteReq, authJsonHeaders(operatorToken)),
+                new HttpEntity<>(noteReq, authJsonHeaders(providerToken)),
                 SaleNoteResponse.class
         );
-
         assertThat(noteResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(noteResp.getBody()).isNotNull();
         assertThat(noteResp.getBody().id()).isNotNull();
         assertThat(noteResp.getBody().title()).isEqualTo("Condition report");
-
-        // When: buyer views offer details (public endpoint)
         ResponseEntity<SaleOfferDetailsResponse> detailsResp = rest.exchange(
                 API + "/sale-offers/" + saleOfferId,
                 HttpMethod.GET,
-                new HttpEntity<>(jsonHeaders()),
+                new HttpEntity<>(authJsonHeaders(renterToken)),
                 SaleOfferDetailsResponse.class
         );
-
-        // Then: details include the notes
         assertThat(detailsResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(detailsResp.getBody()).isNotNull();
         assertThat(detailsResp.getBody().offer()).isNotNull();
         assertThat(detailsResp.getBody().offer().id()).isEqualTo(saleOfferId);
         assertThat(detailsResp.getBody().offer().bikeId()).isEqualTo(corpBikeId);
-
         assertThat(detailsResp.getBody().notes()).isNotNull();
         assertThat(detailsResp.getBody().notes())
                 .extracting(SaleNoteResponse::title)
                 .contains("Condition report");
-
         assertThat(detailsResp.getBody().notes())
                 .anySatisfy(n -> {
                     assertThat(n.title()).isEqualTo("Condition report");
@@ -183,7 +160,6 @@ class UserStory11Test {
                     assertThat(n.createdBy()).isEqualTo("Mechanic A");
                     assertThat(n.createdAt()).isNotNull();
                 });
-
         log.info("US_11 OK - corpProviderId={}, bikeId={}, saleOfferId={}, noteId={}",
                 corpProviderId, corpBikeId, saleOfferId, noteResp.getBody().id());
     }

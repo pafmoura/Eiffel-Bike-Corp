@@ -38,7 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory03Test {
-    //* **US_03:** As EiffelBikeCorp, I want to offer company bikes for rent so that customers can rent bikes even when no private bikes are available.
+    //* **US_03:** As EiffelBikeCorp,
+    // I want to offer company bikes for rent
+    // so that customers can rent bikes even when no private bikes are available.
 
     private static final String API = "/api";
 
@@ -48,44 +50,26 @@ class UserStory03Test {
     @Autowired
     EiffelBikeCorpRepository corpRepository;
 
-    private String accessToken;
+    private String providerToken;
+    private String renterToken;
     private UUID corpProviderId;
     @Autowired
     private TokenService tokenService;
 
     @BeforeEach
     void setup() {
-        // Ensure a corp provider exists
-        EiffelBikeCorp corp = corpRepository.save(new EiffelBikeCorp());
-        this.corpProviderId = corp.getId();
-        assertThat(corpProviderId).isNotNull();
-        // Create an authenticated user (any secured user can call /bikes; corp "actor" is represented by ProviderType + providerId)
-        String email = "corp-operator+" + UUID.randomUUID() + "@example.com";
         String password = "secret123";
-        var registerReq = new UserRegisterRequest(
-                UserType.EIFFEL_BIKE_CORP,
-                "Corp Operator",
-                email,
-                password
-        );
-        ResponseEntity<UserResponse> registerResp = rest.exchange(
-                API + "/users/register",
-                HttpMethod.POST,
-                new HttpEntity<>(registerReq, jsonHeaders()),
-                UserResponse.class
-        );
-        assertThat(registerResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        var loginReq = new UserLoginRequest(email, password);
-        ResponseEntity<UserLoginResponse> loginResp = rest.exchange(
-                API + "/users/login",
-                HttpMethod.POST,
-                new HttpEntity<>(loginReq, jsonHeaders()),
-                UserLoginResponse.class
-        );
-        assertThat(loginResp.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(loginResp.getBody()).isNotNull();
-        assertThat(loginResp.getBody().accessToken()).isNotBlank();
-        this.accessToken = loginResp.getBody().accessToken();
+
+        
+        String operatorEmail = "operator+" + UUID.randomUUID() + "@example.com";
+        UserResponse provider = registerUser(UserType.EIFFEL_BIKE_CORP, "Corp Operator", operatorEmail, password);
+        this.providerToken = login(operatorEmail, password);
+        this.corpProviderId = provider.providerId();
+
+        
+        String renterEmail = "renter+" + UUID.randomUUID() + "@example.com";
+        UserResponse renter = registerUser(UserType.EMPLOYEE, "Renter", renterEmail, password);
+        this.renterToken = login(renterEmail, password);
     }
 
     @Test
@@ -102,7 +86,7 @@ class UserStory03Test {
         ResponseEntity<BikeResponse> createResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
-                new HttpEntity<>(bikeReq, authJsonHeaders(accessToken)),
+                new HttpEntity<>(bikeReq, authJsonHeaders(providerToken)),
                 BikeResponse.class
         );
         // Then: bike is created and listed as AVAILABLE
@@ -120,7 +104,7 @@ class UserStory03Test {
         ResponseEntity<List<BikeResponse>> listResp = rest.exchange(
                 API + "/bikes?status=AVAILABLE&offeredById=" + corpProviderId,
                 HttpMethod.GET,
-                new HttpEntity<>(authJsonHeaders(accessToken)),
+                new HttpEntity<>(authJsonHeaders(renterToken)),
                 listType
         );
         assertThat(listResp.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -129,6 +113,31 @@ class UserStory03Test {
                 .extracting(BikeResponse::id)
                 .contains(createdBikeId);
         log.info("US_03 OK - corpProviderId={}, bikeId={}", corpProviderId, createdBikeId);
+    }
+
+    private UserResponse registerUser(UserType type, String fullName, String email, String password) {
+        ResponseEntity<UserResponse> resp = rest.exchange(
+                API + "/users/register",
+                HttpMethod.POST,
+                new HttpEntity<>(new UserRegisterRequest(type, fullName, email, password), jsonHeaders()),
+                UserResponse.class
+        );
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(resp.getBody()).isNotNull();
+        return resp.getBody();
+    }
+
+    private String login(String email, String password) {
+        ResponseEntity<UserLoginResponse> resp = rest.exchange(
+                API + "/users/login",
+                HttpMethod.POST,
+                new HttpEntity<>(new UserLoginRequest(email, password), jsonHeaders()),
+                UserLoginResponse.class
+        );
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().accessToken()).isNotBlank();
+        return resp.getBody().accessToken();
     }
 
     private static HttpHeaders jsonHeaders() {

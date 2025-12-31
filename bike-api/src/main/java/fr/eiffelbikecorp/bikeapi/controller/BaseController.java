@@ -11,7 +11,7 @@ public abstract class BaseController {
     @Context
     ContainerRequestContext requestContext;
 
-    protected UUID customerId() {
+    protected UUID userID() {
         Object v = requestContext.getProperty("userId");
         if (v instanceof UUID id) return id;
         throw new WebApplicationException("Unauthorized", Response.Status.UNAUTHORIZED);

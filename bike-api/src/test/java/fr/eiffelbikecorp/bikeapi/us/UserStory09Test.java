@@ -1,19 +1,11 @@
 package fr.eiffelbikecorp.bikeapi.us;
 
+import fr.eiffelbikecorp.bikeapi.domain.entity.ReturnNote;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
 import fr.eiffelbikecorp.bikeapi.domain.enums.RentResult;
 import fr.eiffelbikecorp.bikeapi.domain.enums.UserType;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.RentBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.ReturnBikeRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserLoginRequest;
-import fr.eiffelbikecorp.bikeapi.dto.request.UserRegisterRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.RentBikeResultResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.ReturnBikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserLoginResponse;
-import fr.eiffelbikecorp.bikeapi.dto.response.UserResponse;
-import fr.eiffelbikecorp.bikeapi.domain.entity.ReturnNote;
+import fr.eiffelbikecorp.bikeapi.dto.request.*;
+import fr.eiffelbikecorp.bikeapi.dto.response.*;
 import fr.eiffelbikecorp.bikeapi.persistence.ReturnNoteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserStory09Test {
-    // US_09: As a Customer, I want to add notes when returning a bike so that the next renter
+    // US_09: As Student or Employee,
+    // I want to add notes when returning a bike so that the next renter
     //        and the bike provider know the bike’s condition.
 
     private static final String API = "/api";
@@ -64,10 +57,7 @@ class UserStory09Test {
     @BeforeEach
     void setup() {
         String password = "secret123";
-
-        // 1) Student offers one bike
         String studentEmail = "student+" + UUID.randomUUID() + "@example.com";
-
         ResponseEntity<UserResponse> studentRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
@@ -83,7 +73,6 @@ class UserStory09Test {
         assertThat(studentRegisterResp.getBody()).isNotNull();
         this.studentProviderId = studentRegisterResp.getBody().providerId();
         assertThat(studentProviderId).isNotNull();
-
         ResponseEntity<UserLoginResponse> studentLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -94,7 +83,6 @@ class UserStory09Test {
         assertThat(studentLoginResp.getBody()).isNotNull();
         this.studentToken = studentLoginResp.getBody().accessToken();
         assertThat(studentToken).isNotBlank();
-
         ResponseEntity<BikeResponse> bikeCreateResp = rest.exchange(
                 API + "/rental-offers",
                 HttpMethod.POST,
@@ -110,16 +98,13 @@ class UserStory09Test {
         assertThat(bikeCreateResp.getBody()).isNotNull();
         this.bikeId = bikeCreateResp.getBody().id();
         assertThat(bikeId).isNotNull();
-
-        // 2) Customer registers + logs in
         String customerEmail = "customer+" + UUID.randomUUID() + "@example.com";
-
         ResponseEntity<UserResponse> customerRegisterResp = rest.exchange(
                 API + "/users/register",
                 HttpMethod.POST,
                 new HttpEntity<>(new UserRegisterRequest(
-                        UserType.CUSTOMER,
-                        "Customer One",
+                        UserType.EMPLOYEE,
+                        "Renter One",
                         customerEmail,
                         password
                 ), jsonHeaders()),
@@ -129,7 +114,6 @@ class UserStory09Test {
         assertThat(customerRegisterResp.getBody()).isNotNull();
         this.customerId = customerRegisterResp.getBody().customerId();
         assertThat(customerId).isNotNull();
-
         ResponseEntity<UserLoginResponse> customerLoginResp = rest.exchange(
                 API + "/users/login",
                 HttpMethod.POST,
@@ -140,15 +124,12 @@ class UserStory09Test {
         assertThat(customerLoginResp.getBody()).isNotNull();
         this.customerToken = customerLoginResp.getBody().accessToken();
         assertThat(customerToken).isNotBlank();
-
-        // 3) Customer rents the bike
         ResponseEntity<RentBikeResultResponse> rentResp = rest.exchange(
                 API + "/rentals",
                 HttpMethod.POST,
                 new HttpEntity<>(new RentBikeRequest(bikeId, customerId, 1), authJsonHeaders(customerToken)),
                 RentBikeResultResponse.class
         );
-
         assertThat(rentResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(rentResp.getBody()).isNotNull();
         assertThat(rentResp.getBody().result()).isEqualTo(RentResult.RENTED);
@@ -158,42 +139,31 @@ class UserStory09Test {
 
     @Test
     void should_add_return_note_when_returning_bike() {
-        // Given: return note content
         String comment = "Brakes are slightly squeaky. Otherwise OK.";
         String condition = "MINOR_ISSUES";
-
         ReturnBikeRequest returnReq = new ReturnBikeRequest(
                 customerId,
                 comment,
                 condition
         );
-
-        // When: customer returns the bike with notes
         ResponseEntity<ReturnBikeResponse> returnResp = rest.exchange(
                 API + "/rentals/" + rentalId + "/return",
                 HttpMethod.POST,
                 new HttpEntity<>(returnReq, authJsonHeaders(customerToken)),
                 ReturnBikeResponse.class
         );
-
-        // Then: return is OK
         assertThat(returnResp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(returnResp.getBody()).isNotNull();
         assertThat(returnResp.getBody().closedRental()).isNotNull();
-
-        // And: the note is persisted (so provider/next renter can see condition)
-        // (We verify at persistence level since no "get return note" endpoint was shown in controllers.)
         ReturnNote note = returnNoteRepository.findAll().stream()
                 .filter(n -> n.getRental() != null && n.getRental().getId().equals(rentalId))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Expected a ReturnNote for rental " + rentalId));
-
         assertThat(note.getAuthor()).isNotNull();
         assertThat(note.getAuthor().getId()).isEqualTo(customerId);
         assertThat(note.getComment()).isEqualTo(comment);
         assertThat(note.getCondition()).isEqualTo(condition);
         assertThat(note.getCreatedAt()).isNotNull();
-
         log.info("US_09 OK - rentalId={}, returnNoteId={}, authorCustomerId={}",
                 rentalId, note.getId(), customerId);
     }
