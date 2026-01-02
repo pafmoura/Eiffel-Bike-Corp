@@ -2,6 +2,9 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
+/**
+ * Landing component for the application.
+ */
 @Component({
   selector: 'app-landing-component',
   templateUrl: './landing-component.html',

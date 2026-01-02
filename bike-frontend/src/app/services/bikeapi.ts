@@ -6,6 +6,10 @@ const API_BASE = 'http://localhost:8080/api';
 })
 
 
+/**
+ * Service to interact with the Bike API.
+ * TODO: Wrap all API calls in this service.
+ */
 export class Bikeapi {
   
   private static getHeaders() {

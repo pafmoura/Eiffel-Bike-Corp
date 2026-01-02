@@ -6,6 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { FxRateService } from '../../fx-rate-service';
 import { UserService } from '../../services/user-service';
 
+/**
+ * Dashboard component for user interactions.
+ * Displays available bikes, manages rentals, and handles payments.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -62,7 +66,10 @@ if (this.userService.userReady()){
 
 
   
-
+/**
+ * Displays user notifications related to rentals.
+ * @returns 
+ */
 loadNotifications() {
     const id = this.userId();
     if (!id) return;
@@ -79,6 +86,9 @@ loadNotifications() {
     return new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`);
   }
 
+  /**
+   * Loads the user's active rentals and all bikes, marking which are rented by the user.
+   */
   loadMyRentalsAndBikes() {
       this.http.get<any[]>(
     `${this.baseUrl}/rentals/active/bikes?customerId=${this.userId()}`,
@@ -104,6 +114,11 @@ loadNotifications() {
     });
   }
 
+  /**
+   * Handles the rent button click for a bike.
+   * @param bike Bike selected for rent
+   * @returns 
+   */
   handleRentClick(bike: any) {
     if (bike.isRentedByMe) return;
 

@@ -4,6 +4,12 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
+
+
+/**
+ * Service to manage user authentication, registration, and role management.
+ * Handles JWT token storage and user state.
+ */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);

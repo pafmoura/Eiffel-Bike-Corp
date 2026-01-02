@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 import { UserService } from '../../services/user-service';
 import { FormsModule } from '@angular/forms'; 
 
+/**
+ * Login page component for user authentication.
+ */
 @Component({
   selector: 'app-loginpage',
   standalone: true,

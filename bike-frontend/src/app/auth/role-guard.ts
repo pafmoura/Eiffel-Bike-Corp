@@ -1,6 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
+/**
+ * Role-based route guard to restrict access based on user roles.
+ * @param route Route information
+ * @param state Router state information
+ * @returns Whether the route can be activated
+ */
 export const roleGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const token = localStorage.getItem('token');

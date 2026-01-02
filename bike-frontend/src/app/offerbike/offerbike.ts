@@ -23,7 +23,7 @@ interface AlertState {
 export class OfferBikeComponent implements OnInit, OnDestroy {
 
   private userService = inject(UserService); 
-  // --- UI State Signals ---
+  // --- State Signals ---
   showSaleModal = signal(false);
   showNotesModal = signal(false);
   selectedBikeForSale = signal<any>(null);
@@ -56,6 +56,9 @@ existingSaleBikeIds = signal<number[]>([]);
     this.tryLoadOffers();
   }
 
+  /**
+   * Cleans up any pending timeouts on component destroy.
+   */
   ngOnDestroy(): void {
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
@@ -63,6 +66,10 @@ existingSaleBikeIds = signal<number[]>([]);
   }
 
 
+  /**
+   * opens the sale modal for the selected bike.
+   * @param bike bike selected for sale
+   */
   openSaleModal(bike: any) {
     this.selectedBikeForSale.set(bike);
     this.salePrice = bike.rentalDailyRateEur * 10;
@@ -70,6 +77,10 @@ existingSaleBikeIds = signal<number[]>([]);
     this.showSaleModal.set(true);
   }
 
+  /**
+   * Submits a sale offer for the selected bike.
+   * @returns 
+   */
   submitSaleOffer() {
     const bike = this.selectedBikeForSale();
     if (!bike || this.salePrice <= 0) {
@@ -105,6 +116,10 @@ existingSaleBikeIds = signal<number[]>([]);
       });
   }
 
+  /**
+   * Adds an initial condition note to the newly created sale offer.
+   * @param saleOfferId SAle offer to apply the note
+   */
   private addInitialSaleNote(saleOfferId: number) {
     const notePayload = {
       saleOfferId: saleOfferId,
@@ -121,6 +136,10 @@ existingSaleBikeIds = signal<number[]>([]);
       });
   }
 
+  /**
+   * Finalizes the sale offer creation process with success feedback.
+   * 
+   */
 private finalizeSaleSuccess() {
     this.isLoading = false;
     this.showSaleModal.set(false);
@@ -128,6 +147,9 @@ private finalizeSaleSuccess() {
     this.loadMyOffers(); 
   }
 
+  /**
+   * TODO: wrap on a service
+   */
   submitOffer() {
     if (!this.bike.offeredBy) return;
 
@@ -168,6 +190,11 @@ private finalizeSaleSuccess() {
       });
   }
 
+  /**
+   * TODO:Wrap on a service
+   * Allows viewing the history of a bike's return notes.
+   * @param bikeId Bike selected for history
+   */
   viewBikeHistory(bikeId: number) {
     this.http.get<any[]>(`http://localhost:8080/api/bikes/${bikeId}/return-notes`)
       .subscribe({

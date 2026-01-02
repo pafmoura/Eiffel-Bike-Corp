@@ -5,10 +5,8 @@ import { UserService } from '../services/user-service';
 
 
 /**
- * Main layout component that includes the navigation bar and router outlet.
- * Displays the username extracted from the JWT token stored in localStorage.
- * Provides a logout function to clear the token and reload the app.
- * Uses Angular signals for reactive state management.
+ * Main layout component for the application.
+ * Handles user information display and navigation.
  */
 @Component({
   selector: 'app-mainlayout',
@@ -19,6 +17,8 @@ imports: [CommonModule, RouterModule],
 export class Mainlayout {
   userService = inject(UserService);
 
+  // Reactive signal for username display
+  
   username = computed(() => this.userService.currentUser()?.fullName || 'Guest');
 
   hasAccess(roles: string[]): boolean {

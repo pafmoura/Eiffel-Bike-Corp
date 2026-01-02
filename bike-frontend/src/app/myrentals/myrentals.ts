@@ -35,6 +35,11 @@ interface AlertState {
   type: 'success' | 'error' | 'info';
 }
 
+
+/**
+ * Myrentals component to manage and display user's rentals, waitlist, and rental history.
+ * Handles bike returns and displays alerts for user actions.
+ */
 @Component({
   selector: 'app-myrentals',
   standalone: true,
@@ -42,6 +47,8 @@ interface AlertState {
   templateUrl: './myrentals.html',
   styleUrl: './myrentals.scss',
 })
+
+
 export class Myrentals implements OnInit {
   private http = inject(HttpClient);
   private baseUrl = 'http://localhost:8080/api';
@@ -95,7 +102,6 @@ export class Myrentals implements OnInit {
 
   /* ===== DATA LOADING ===== */
   
-  /** Refreshes active components (Rentals and Waitlists) */
   refreshDashboard() {
     const userId = this.getUserId();
     if (!userId) return;
@@ -159,11 +165,19 @@ export class Myrentals implements OnInit {
       });
   }
 
+  /**
+   * Prefill the return form with the selected rental ID and scroll to the form.
+   */
   prefillReturn(rentalId: number) {
     this.returnForm.rentalId = rentalId;
     document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  /**
+   * Create and display an alert message.
+   * @param message message for alert
+   * @param type type of alert
+   */
   showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
     this.alert.set({ show: true, message, type });
     setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
@@ -174,11 +188,14 @@ export class Myrentals implements OnInit {
     return this.allHistoryRaw().reduce((sum, item) => sum + (item.totalAmountEur || 0), 0);
   }
 
+  
+  // to wrap on service
   private getHeaders() {
     const token = localStorage.getItem('token');
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
+  // to wrap on service
   private getUserId(): string | null {
     const token = localStorage.getItem('token');
     if (!token) return null;
