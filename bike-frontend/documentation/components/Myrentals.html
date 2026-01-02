@@ -1,0 +1,1789 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>bike-frontend documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">bike-frontend documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content component">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Components</li>
+  <li class="breadcrumb-item"
+  >
+  Myrentals</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" class="nav-link"
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+        <li class="nav-item">
+            <a href="#templateData" class="nav-link"
+                role="tab" id="templateData-tab" data-bs-toggle="tab" data-link="template">Template</a>
+        </li>
+        <li class="nav-item">
+            <a href="#tree" class="nav-link"
+                role="tab" id="tree-tab" data-bs-toggle="tab" data-link="dom-tree">DOM Tree</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info"><p class="comment">
+    <h3>File</h3>
+</p>
+<p class="comment">
+    <code>src/app/myrentals/myrentals.ts</code>
+</p>
+
+
+    <p class="comment">
+        <h3>Description</h3>
+    </p>
+    <p class="comment">
+        <p>Myrentals component to manage and display user&#39;s rentals, waitlist, and rental history.
+Handles bike returns and displays alerts for user actions.</p>
+
+    </p>
+
+
+    <p class="comment">
+        <h3>Implements</h3>
+    </p>
+    <p class="comment">
+                <code>OnInit</code>
+    </p>
+
+
+<section data-compodoc="block-metadata">
+    <h3>Metadata</h3>
+    <table class="table table-sm table-hover metadata">
+        <tbody>
+
+
+
+
+
+
+
+
+
+
+
+
+            <tr>
+                <td class="col-md-3">selector</td>
+                <td class="col-md-9"><code>app-myrentals</code></td>
+            </tr>
+
+            <tr>
+                <td class="col-md-3">standalone</td>
+                <td class="col-md-9"><code>true</code></td>
+            </tr>
+
+            <tr>
+                <td class="col-md-3">imports</td>
+                <td class="col-md-9">
+                            <code>CommonModule</code>
+                            <code>FormsModule</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-3">templateUrl</td>
+                <td class="col-md-9"><code>./myrentals.html</code></td>
+            </tr>
+
+
+
+            <tr>
+                <td class="col-md-3">styleUrl</td>
+                <td class="col-md-9"><code>./myrentals.scss</code></td>
+            </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+    <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Properties</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                <a href="#alert" >alert</a>
+                            </li>
+                            <li>
+                                <a href="#allHistoryRaw" >allHistoryRaw</a>
+                            </li>
+                            <li>
+                                <a href="#allRentalsRaw" >allRentalsRaw</a>
+                            </li>
+                            <li>
+                                <a href="#allWaitlistRaw" >allWaitlistRaw</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#baseUrl" >baseUrl</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#http" >http</a>
+                            </li>
+                            <li>
+                                <a href="#isHistoryOpen" >isHistoryOpen</a>
+                            </li>
+                            <li>
+                                <a href="#myActiveRentals" >myActiveRentals</a>
+                            </li>
+                            <li>
+                                <a href="#myHistory" >myHistory</a>
+                            </li>
+                            <li>
+                                <a href="#myWaitlist" >myWaitlist</a>
+                            </li>
+                            <li>
+                                <a href="#returnForm" >returnForm</a>
+                            </li>
+                            <li>
+                                <a href="#searchQuery" >searchQuery</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                <a href="#calculateTotalSpent" >calculateTotalSpent</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#getHeaders" >getHeaders</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#getUserId" >getUserId</a>
+                            </li>
+                            <li>
+                                <a href="#loadRentalHistory" >loadRentalHistory</a>
+                            </li>
+                            <li>
+                                <a href="#ngOnInit" >ngOnInit</a>
+                            </li>
+                            <li>
+                                <a href="#prefillReturn" >prefillReturn</a>
+                            </li>
+                            <li>
+                                <a href="#refreshDashboard" >refreshDashboard</a>
+                            </li>
+                            <li>
+                                <a href="#returnBike" >returnBike</a>
+                            </li>
+                            <li>
+                                <a href="#showAlert" >showAlert</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+
+
+
+
+
+    <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="calculateTotalSpent"></a>
+                    <span class="name">
+                        <span ><b>calculateTotalSpent</b></span>
+                        <a href="#calculateTotalSpent"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>calculateTotalSpent()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="187"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:187</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getHeaders"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>getHeaders</b></span>
+                        <a href="#getHeaders"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getHeaders()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="193"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:193</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getUserId"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>getUserId</b></span>
+                        <a href="#getUserId"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getUserId()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="199"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:199</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>string | null</code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadRentalHistory"></a>
+                    <span class="name">
+                        <span ><b>loadRentalHistory</b></span>
+                        <a href="#loadRentalHistory"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadRentalHistory()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="127"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:127</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>US_21: Fetch full rental history from GET /api/rentals</p>
+</div>
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ngOnInit"></a>
+                    <span class="name">
+                        <span ><b>ngOnInit</b></span>
+                        <a href="#ngOnInit"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>ngOnInit()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="98"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:98</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="prefillReturn"></a>
+                    <span class="name">
+                        <span ><b>prefillReturn</b></span>
+                        <a href="#prefillReturn"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>prefillReturn(rentalId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="171"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:171</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Prefill the return form with the selected rental ID and scroll to the form.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>rentalId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="refreshDashboard"></a>
+                    <span class="name">
+                        <span ><b>refreshDashboard</b></span>
+                        <a href="#refreshDashboard"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>refreshDashboard()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="105"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:105</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="returnBike"></a>
+                    <span class="name">
+                        <span ><b>returnBike</b></span>
+                        <a href="#returnBike"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>returnBike()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="138"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:138</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="showAlert"></a>
+                    <span class="name">
+                        <span ><b>showAlert</b></span>
+                        <a href="#showAlert"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>showAlert(message: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, type: "success" | "error" | "info")</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="181"
+                                    class="link-to-prism">src/app/myrentals/myrentals.ts:181</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Create and display an alert message.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Default value</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>message</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                            <td>
+                                                    <p>message for alert</p>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                                <td>type</td>
+                                            <td>
+                                                        <code>&quot;success&quot; | &quot;error&quot; | &quot;info&quot;</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>&#x27;info&#x27;</code>
+                                            </td>
+
+                                            <td>
+                                                    <p>type of alert</p>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+    <section data-compodoc="block-properties">
+    
+    <h3 id="inputs">
+        Properties
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="alert"></a>
+                    <span class="name">
+                        <span ><b>alert</b></span>
+                        <a href="#alert"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal&lt;AlertState&gt;({ show: false, message: &#x27;&#x27;, type: &#x27;info&#x27; })</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/app/myrentals/myrentals.ts:61</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="allHistoryRaw"></a>
+                    <span class="name">
+                        <span ><b>allHistoryRaw</b></span>
+                        <a href="#allHistoryRaw"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal&lt;RentalResponse[]&gt;([])</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="59" class="link-to-prism">src/app/myrentals/myrentals.ts:59</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="allRentalsRaw"></a>
+                    <span class="name">
+                        <span ><b>allRentalsRaw</b></span>
+                        <a href="#allRentalsRaw"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal&lt;ActiveRentalDto[]&gt;([])</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="57" class="link-to-prism">src/app/myrentals/myrentals.ts:57</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="allWaitlistRaw"></a>
+                    <span class="name">
+                        <span ><b>allWaitlistRaw</b></span>
+                        <a href="#allWaitlistRaw"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal&lt;WaitlistDto[]&gt;([])</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="58" class="link-to-prism">src/app/myrentals/myrentals.ts:58</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="baseUrl"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>baseUrl</b></span>
+                        <a href="#baseUrl"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x27;http://localhost:8080/api&#x27;</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="54" class="link-to-prism">src/app/myrentals/myrentals.ts:54</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="http"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>http</b></span>
+                        <a href="#http"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>inject(HttpClient)</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="53" class="link-to-prism">src/app/myrentals/myrentals.ts:53</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="isHistoryOpen"></a>
+                    <span class="name">
+                        <span ><b>isHistoryOpen</b></span>
+                        <a href="#isHistoryOpen"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal(false)</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="64" class="link-to-prism">src/app/myrentals/myrentals.ts:64</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="myActiveRentals"></a>
+                    <span class="name">
+                        <span ><b>myActiveRentals</b></span>
+                        <a href="#myActiveRentals"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>computed(() &#x3D;&gt; {
+    const query &#x3D; this.searchQuery().toLowerCase();
+    return this.allRentalsRaw().filter(r &#x3D;&gt;
+      (r.result &#x3D;&#x3D;&#x3D; &#x27;RENTED&#x27; || r.result &#x3D;&#x3D;&#x3D; &#x27;ACTIVE&#x27;) &amp;&amp;
+      (r.rentalId.toString().includes(query) || r.message.toLowerCase().includes(query))
+    );
+  })</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="67" class="link-to-prism">src/app/myrentals/myrentals.ts:67</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="myHistory"></a>
+                    <span class="name">
+                        <span ><b>myHistory</b></span>
+                        <a href="#myHistory"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>computed(() &#x3D;&gt; {
+    const query &#x3D; this.searchQuery().toLowerCase();
+    return this.allHistoryRaw()
+      .filter(h &#x3D;&gt; 
+        h.id.toString().includes(query) || 
+        h.status.toLowerCase().includes(query)
+      )
+      .sort((a, b) &#x3D;&gt; new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  })</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="80" class="link-to-prism">src/app/myrentals/myrentals.ts:80</a></div>
+                        </td>
+                    </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>US_21: Computed history filtered by search and sorted by newest first</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="myWaitlist"></a>
+                    <span class="name">
+                        <span ><b>myWaitlist</b></span>
+                        <a href="#myWaitlist"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>computed(() &#x3D;&gt; {
+    return this.allWaitlistRaw().filter(w &#x3D;&gt; !w.servedAt);
+  })</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="75" class="link-to-prism">src/app/myrentals/myrentals.ts:75</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="returnForm"></a>
+                    <span class="name">
+                        <span ><b>returnForm</b></span>
+                        <a href="#returnForm"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/object" target="_blank" >object</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+    rentalId: null as number | null,
+    condition: &#x27;GOOD&#x27;,
+    comment: &#x27;&#x27;
+  }</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="91" class="link-to-prism">src/app/myrentals/myrentals.ts:91</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="searchQuery"></a>
+                    <span class="name">
+                        <span ><b>searchQuery</b></span>
+                        <a href="#searchQuery"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>signal(&#x27;&#x27;)</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="60" class="link-to-prism">src/app/myrentals/myrentals.ts:60</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+</div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { CommonModule } from &#x27;@angular/common&#x27;;
+import { HttpClient, HttpHeaders } from &#x27;@angular/common/http&#x27;;
+import { Component, inject, signal, computed, OnInit } from &#x27;@angular/core&#x27;;
+import { FormsModule } from &#x27;@angular/forms&#x27;;
+
+interface ActiveRentalDto {
+  rentalId: number;
+  message: string;      // Bike name/description
+  result: &#x27;RENTED&#x27; | &#x27;ACTIVE&#x27;;
+  waitingListEntryId: number | null;
+}
+
+interface WaitlistDto {
+  id: number;          
+  customerId: string;  
+  bikeId: number;
+  message: string;     
+  sentAt: string;      
+  servedAt?: string | null;
+}
+
+interface RentalResponse {
+  id: number;
+  bikeId: number;
+  customerId: string;
+  status: string;
+  startAt: string;
+  endAt: string | null;
+  totalAmountEur: number;
+}
+
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: &#x27;success&#x27; | &#x27;error&#x27; | &#x27;info&#x27;;
+}
+
+
+/**
+ * Myrentals component to manage and display user&#x27;s rentals, waitlist, and rental history.
+ * Handles bike returns and displays alerts for user actions.
+ */
+@Component({
+  selector: &#x27;app-myrentals&#x27;,
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: &#x27;./myrentals.html&#x27;,
+  styleUrl: &#x27;./myrentals.scss&#x27;,
+})
+
+
+export class Myrentals implements OnInit {
+  private http &#x3D; inject(HttpClient);
+  private baseUrl &#x3D; &#x27;http://localhost:8080/api&#x27;;
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; STATE SIGNALS &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  allRentalsRaw &#x3D; signal&lt;ActiveRentalDto[]&gt;([]);
+  allWaitlistRaw &#x3D; signal&lt;WaitlistDto[]&gt;([]);
+  allHistoryRaw &#x3D; signal&lt;RentalResponse[]&gt;([]); 
+  searchQuery &#x3D; signal(&#x27;&#x27;);
+  alert &#x3D; signal&lt;AlertState&gt;({ show: false, message: &#x27;&#x27;, type: &#x27;info&#x27; });
+  
+  // Controls the History Dialog visibility
+  isHistoryOpen &#x3D; signal(false);
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; COMPUTED PROPERTIES &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  myActiveRentals &#x3D; computed(() &#x3D;&gt; {
+    const query &#x3D; this.searchQuery().toLowerCase();
+    return this.allRentalsRaw().filter(r &#x3D;&gt;
+      (r.result &#x3D;&#x3D;&#x3D; &#x27;RENTED&#x27; || r.result &#x3D;&#x3D;&#x3D; &#x27;ACTIVE&#x27;) &amp;&amp;
+      (r.rentalId.toString().includes(query) || r.message.toLowerCase().includes(query))
+    );
+  });
+
+  myWaitlist &#x3D; computed(() &#x3D;&gt; {
+    return this.allWaitlistRaw().filter(w &#x3D;&gt; !w.servedAt);
+  });
+
+  /** US_21: Computed history filtered by search and sorted by newest first */
+  myHistory &#x3D; computed(() &#x3D;&gt; {
+    const query &#x3D; this.searchQuery().toLowerCase();
+    return this.allHistoryRaw()
+      .filter(h &#x3D;&gt; 
+        h.id.toString().includes(query) || 
+        h.status.toLowerCase().includes(query)
+      )
+      .sort((a, b) &#x3D;&gt; new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  });
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; FORM STATE &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  returnForm &#x3D; {
+    rentalId: null as number | null,
+    condition: &#x27;GOOD&#x27;,
+    comment: &#x27;&#x27;
+  };
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; LIFECYCLE &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  ngOnInit() {
+    this.refreshDashboard();
+    this.loadRentalHistory(); 
+  }
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; DATA LOADING &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  
+  refreshDashboard() {
+    const userId &#x3D; this.getUserId();
+    if (!userId) return;
+
+    const headers &#x3D; this.getHeaders();
+
+    this.http
+      .get&lt;ActiveRentalDto[]&gt;(&#x60;${this.baseUrl}/rentals/active?customerId&#x3D;${userId}&#x60;, { headers })
+      .subscribe({
+        next: (data) &#x3D;&gt; this.allRentalsRaw.set(data),
+        error: (err) &#x3D;&gt; console.error(&#x27;[MyRentals] Active error:&#x27;, err),
+      });
+
+    this.http
+      .get&lt;WaitlistDto[]&gt;(&#x60;${this.baseUrl}/rentals/waitlist?customerId&#x3D;${userId}&#x60;, { headers })
+      .subscribe({
+        next: (data) &#x3D;&gt; this.allWaitlistRaw.set(data),
+        error: (err) &#x3D;&gt; console.error(&#x27;[MyRentals] Waitlist error:&#x27;, err),
+      });
+  }
+
+  /** US_21: Fetch full rental history from GET /api/rentals */
+  loadRentalHistory() {
+    const headers &#x3D; this.getHeaders();
+    this.http
+      .get&lt;RentalResponse[]&gt;(&#x60;${this.baseUrl}/rentals&#x60;, { headers })
+      .subscribe({
+        next: (data) &#x3D;&gt; this.allHistoryRaw.set(data),
+        error: (err) &#x3D;&gt; console.error(&#x27;[MyRentals] History error:&#x27;, err),
+      });
+  }
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; ACTIONS &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  returnBike() {
+    const userId &#x3D; this.getUserId();
+    if (!this.returnForm.rentalId || !userId) {
+      this.showAlert(&#x27;Validation failed. Please select a rental.&#x27;, &#x27;error&#x27;);
+      return;
+    }
+
+    const body &#x3D; {
+      authorCustomerId: userId, 
+      comment: this.returnForm.comment,
+      condition: this.returnForm.condition,
+    };
+
+    this.http
+      .post(&#x60;${this.baseUrl}/rentals/${this.returnForm.rentalId}/return&#x60;, body, { headers: this.getHeaders() })
+      .subscribe({
+        next: () &#x3D;&gt; {
+          this.showAlert(&#x27;Bike returned successfully!&#x27;, &#x27;success&#x27;);
+          this.returnForm &#x3D; { rentalId: null, condition: &#x27;GOOD&#x27;, comment: &#x27;&#x27; };
+          // Refresh everything
+          this.refreshDashboard(); 
+          this.loadRentalHistory();
+        },
+        error: (err) &#x3D;&gt; {
+          this.showAlert(&#x27;Return failed. Please try again.&#x27;, &#x27;error&#x27;);
+          console.error(&#x27;Return error:&#x27;, err);
+        },
+      });
+  }
+
+  /**
+   * Prefill the return form with the selected rental ID and scroll to the form.
+   */
+  prefillReturn(rentalId: number) {
+    this.returnForm.rentalId &#x3D; rentalId;
+    document.querySelector(&#x27;form&#x27;)?.scrollIntoView({ behavior: &#x27;smooth&#x27; });
+  }
+
+  /**
+   * Create and display an alert message.
+   * @param message message for alert
+   * @param type type of alert
+   */
+  showAlert(message: string, type: &#x27;success&#x27; | &#x27;error&#x27; | &#x27;info&#x27; &#x3D; &#x27;info&#x27;) {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() &#x3D;&gt; this.alert.set({ ...this.alert(), show: false }), 5000);
+  }
+
+  /* &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; HELPERS &#x3D;&#x3D;&#x3D;&#x3D;&#x3D; */
+  calculateTotalSpent(): number {
+    return this.allHistoryRaw().reduce((sum, item) &#x3D;&gt; sum + (item.totalAmountEur || 0), 0);
+  }
+
+  
+  // to wrap on service
+  private getHeaders() {
+    const token &#x3D; localStorage.getItem(&#x27;token&#x27;);
+    return new HttpHeaders().set(&#x27;Authorization&#x27;, &#x60;Bearer ${token}&#x60;);
+  }
+
+  // to wrap on service
+  private getUserId(): string | null {
+    const token &#x3D; localStorage.getItem(&#x27;token&#x27;);
+    if (!token) return null;
+    try {
+      const payload &#x3D; JSON.parse(atob(token.split(&#x27;.&#x27;)[1]));
+      return payload.sub; 
+    } catch {
+      return null;
+    }
+  }
+}</code></pre>
+    </div>
+
+    <div class="tab-pane fade " id="templateData">
+        <pre class="line-numbers"><code class="language-html">&lt;div *ngIf&#x3D;&quot;alert().show&quot; 
+     class&#x3D;&quot;fixed top-6 right-6 z-[100] transition-all duration-300 transform&quot;&gt;
+  &lt;div [ngClass]&#x3D;&quot;{
+      &#x27;bg-emerald-50 border-emerald-500 text-emerald-800&#x27;: alert().type &#x3D;&#x3D;&#x3D; &#x27;success&#x27;,
+      &#x27;bg-red-50 border-red-500 text-red-800&#x27;: alert().type &#x3D;&#x3D;&#x3D; &#x27;error&#x27;,
+      &#x27;bg-blue-50 border-blue-500 text-blue-800&#x27;: alert().type &#x3D;&#x3D;&#x3D; &#x27;info&#x27;
+    }&quot; 
+    class&#x3D;&quot;flex items-center p-4 rounded-2xl border-l-4 shadow-xl min-w-[300px]&quot;&gt;
+    
+    &lt;div class&#x3D;&quot;flex-1 mr-4&quot;&gt;
+      &lt;p class&#x3D;&quot;text-xs font-black uppercase tracking-widest opacity-60 mb-1&quot;&gt;{{ alert().type }}&lt;/p&gt;
+      &lt;p class&#x3D;&quot;text-sm font-bold&quot;&gt;{{ alert().message }}&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;button (click)&#x3D;&quot;alert.set({show: false, message: &#x27;&#x27;, type: &#x27;info&#x27;})&quot; class&#x3D;&quot;text-xl font-bold opacity-50 hover:opacity-100&quot;&gt;
+      &amp;times;
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class&#x3D;&quot;p-8 lg:p-12 max-w-6xl mx-auto&quot;&gt;
+  &lt;div class&#x3D;&quot;flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4&quot;&gt;
+    &lt;h2 class&#x3D;&quot;text-3xl font-extrabold text-slate-900&quot;&gt;My Rental Hub&lt;/h2&gt;
+
+    &lt;div class&#x3D;&quot;relative w-full md:w-64&quot;&gt;
+      &lt;input
+        type&#x3D;&quot;text&quot;
+        [ngModel]&#x3D;&quot;searchQuery()&quot;
+        (ngModelChange)&#x3D;&quot;searchQuery.set($event)&quot;
+        placeholder&#x3D;&quot;Filter by ID or Bike...&quot;
+        class&#x3D;&quot;w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm&quot;
+      /&gt;
+      &lt;svg
+        class&#x3D;&quot;w-4 h-4 text-slate-400 absolute left-3 top-3&quot;
+        fill&#x3D;&quot;none&quot;
+        stroke&#x3D;&quot;currentColor&quot;
+        viewBox&#x3D;&quot;0 0 24 24&quot;
+      &gt;
+        &lt;path
+          stroke-linecap&#x3D;&quot;round&quot;
+          stroke-linejoin&#x3D;&quot;round&quot;
+          stroke-width&#x3D;&quot;2&quot;
+          d&#x3D;&quot;M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z&quot;
+        /&gt;
+      &lt;/svg&gt;
+
+      &lt;button (click)&#x3D;&quot;isHistoryOpen.set(true)&quot;
+        class&#x3D;&quot;flex items-center gap-2 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all&quot;&gt;
+        &lt;span class&#x3D;&quot;text-lg&quot;&gt;📜&lt;/span&gt;
+        View History
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class&#x3D;&quot;grid grid-cols-1 lg:grid-cols-2 gap-8&quot;&gt;
+    &lt;div class&#x3D;&quot;space-y-8&quot;&gt;
+      
+      &lt;div class&#x3D;&quot;bg-white rounded-3xl p-6 shadow-sm border border-slate-100&quot;&gt;
+        &lt;div class&#x3D;&quot;flex items-center justify-between mb-6&quot;&gt;
+          &lt;h3 class&#x3D;&quot;text-xl font-bold text-slate-800&quot;&gt;My Active Rentals&lt;/h3&gt;
+          &lt;span
+            class&#x3D;&quot;px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full&quot;
+          &gt;
+            {{ myActiveRentals().length }} Active
+          &lt;/span&gt;
+        &lt;/div&gt;
+
+        &lt;div
+          *ngIf&#x3D;&quot;myActiveRentals().length &#x3D;&#x3D;&#x3D; 0&quot;
+          class&#x3D;&quot;text-slate-400 text-center py-10&quot;
+        &gt;
+          &lt;p class&#x3D;&quot;text-sm&quot;&gt;No active rentals found.&lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class&#x3D;&quot;space-y-4&quot;&gt;
+          &lt;div
+            *ngFor&#x3D;&quot;let rental of myActiveRentals()&quot;
+            class&#x3D;&quot;p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center hover:border-emerald-200 transition-colors&quot;
+          &gt;
+            &lt;div&gt;
+              &lt;span
+                class&#x3D;&quot;text-xs font-bold text-emerald-600 uppercase tracking-wider&quot;
+              &gt;
+                ID #{{ rental.rentalId }}
+              &lt;/span&gt;
+              &lt;p class&#x3D;&quot;text-sm text-slate-800 font-bold mt-1&quot;&gt;
+                {{ rental.message }}
+              &lt;/p&gt;
+              &lt;p class&#x3D;&quot;text-xs text-slate-500 mt-1&quot;&gt;
+                Status: {{ rental.result }}
+              &lt;/p&gt;
+            &lt;/div&gt;
+
+            &lt;button
+              (click)&#x3D;&quot;prefillReturn(rental.rentalId)&quot;
+              class&#x3D;&quot;px-4 py-2 bg-white text-slate-900 text-xs font-bold rounded-xl border border-slate-200 shadow-sm hover:bg-slate-900 hover:text-white transition-all&quot;
+            &gt;
+              Return
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class&#x3D;&quot;bg-white rounded-3xl p-6 shadow-sm border border-slate-100&quot;&gt;
+        &lt;div class&#x3D;&quot;flex items-center justify-between mb-6&quot;&gt;
+          &lt;h3 class&#x3D;&quot;text-xl font-bold text-slate-800&quot;&gt;My Waitlist&lt;/h3&gt;
+          &lt;span
+            class&#x3D;&quot;px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full&quot;
+          &gt;
+            {{ myWaitlist().length }} Queueing
+          &lt;/span&gt;
+        &lt;/div&gt;
+
+        &lt;div
+          *ngIf&#x3D;&quot;myWaitlist().length &#x3D;&#x3D;&#x3D; 0&quot;
+          class&#x3D;&quot;text-slate-400 text-center py-10&quot;
+        &gt;
+          &lt;p class&#x3D;&quot;text-sm&quot;&gt;You are not currently in any waiting lists.&lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class&#x3D;&quot;space-y-4&quot;&gt;
+          &lt;div
+            *ngFor&#x3D;&quot;let wait of myWaitlist()&quot;
+            class&#x3D;&quot;p-4 rounded-2xl bg-amber-50/30 border border-amber-100 flex gap-4 items-center&quot;
+          &gt;
+            &lt;div
+              class&#x3D;&quot;w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600&quot;
+            &gt;
+              ⏳
+            &lt;/div&gt;
+
+            &lt;div class&#x3D;&quot;flex-1&quot;&gt;
+              &lt;p class&#x3D;&quot;text-sm text-slate-800 font-bold&quot;&gt;
+                {{ wait.message }}
+              &lt;/p&gt;
+              &lt;div class&#x3D;&quot;flex gap-2 mt-1&quot;&gt;
+                &lt;span class&#x3D;&quot;text-[10px] font-bold text-amber-700 uppercase&quot;&gt;
+                  Waitlist #{{ wait.id }}
+                &lt;/span&gt;
+                &lt;span class&#x3D;&quot;text-[10px] text-slate-400&quot;&gt;•&lt;/span&gt;
+                &lt;p class&#x3D;&quot;text-[10px] text-slate-500&quot;&gt;
+                  Requested on {{ wait.sentAt | date: &#x27;MMM d, yyyy&#x27; }} at {{ wait.sentAt | date: &#x27;HH:mm&#x27; }}
+                &lt;/p&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div
+      class&#x3D;&quot;bg-white rounded-3xl p-6 shadow-sm border border-slate-100 h-fit sticky top-8&quot;
+    &gt;
+      &lt;h3 class&#x3D;&quot;text-xl font-bold text-slate-800 mb-2&quot;&gt;Complete a Return&lt;/h3&gt;
+      &lt;p class&#x3D;&quot;text-slate-500 text-sm mb-6&quot;&gt;
+        Review the bike condition before confirming your return.
+      &lt;/p&gt;
+
+      &lt;form (ngSubmit)&#x3D;&quot;returnBike()&quot; class&#x3D;&quot;space-y-4&quot;&gt;
+        &lt;div&gt;
+          &lt;label class&#x3D;&quot;block text-sm font-medium text-slate-700 mb-1&quot;
+            &gt;Selected Rental ID&lt;/label
+          &gt;
+          &lt;input
+            type&#x3D;&quot;number&quot;
+            [(ngModel)]&#x3D;&quot;returnForm.rentalId&quot;
+            name&#x3D;&quot;rentalId&quot;
+            class&#x3D;&quot;w-full px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 font-mono&quot;
+            placeholder&#x3D;&quot;Select a rental from the left&quot;
+          /&gt;
+        &lt;/div&gt;
+
+        &lt;div&gt;
+          &lt;label class&#x3D;&quot;block text-sm font-medium text-slate-700 mb-1&quot;
+            &gt;Bike Condition&lt;/label
+          &gt;
+          &lt;select
+            [(ngModel)]&#x3D;&quot;returnForm.condition&quot;
+            name&#x3D;&quot;condition&quot;
+            class&#x3D;&quot;w-full px-4 py-2 rounded-xl border border-slate-200&quot;
+          &gt;
+            &lt;option value&#x3D;&quot;GOOD&quot;&gt;Excellent / Good&lt;/option&gt;
+            &lt;option value&#x3D;&quot;DAMAGED&quot;&gt;Damaged (Requires Repair)&lt;/option&gt;
+            &lt;option value&#x3D;&quot;NEEDS_SERVICE&quot;&gt;Needs Service&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+
+        &lt;div&gt;
+          &lt;label class&#x3D;&quot;block text-sm font-medium text-slate-700 mb-1&quot;
+            &gt;Additional Comments&lt;/label
+          &gt;
+          &lt;textarea
+            [(ngModel)]&#x3D;&quot;returnForm.comment&quot;
+            name&#x3D;&quot;comment&quot;
+            rows&#x3D;&quot;4&quot;
+            class&#x3D;&quot;w-full px-4 py-2 rounded-xl border border-slate-200&quot;
+            placeholder&#x3D;&quot;Describe any issues or feedback...&quot;
+          &gt;&lt;/textarea&gt;
+        &lt;/div&gt;
+
+        &lt;button
+          type&#x3D;&quot;submit&quot;
+          class&#x3D;&quot;w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all shadow-xl active:scale-95&quot;
+        &gt;
+          Confirm &amp; End Rental
+        &lt;/button&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;div *ngIf&#x3D;&quot;isHistoryOpen()&quot; 
+     class&#x3D;&quot;fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity&quot;&gt;
+  
+  &lt;div class&#x3D;&quot;bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100&quot;&gt;
+    
+    &lt;div class&#x3D;&quot;p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50&quot;&gt;
+      &lt;div&gt;
+        &lt;h3 class&#x3D;&quot;text-xl font-black text-slate-900&quot;&gt;Rental Archives&lt;/h3&gt;
+        &lt;p class&#x3D;&quot;text-xs text-slate-500 font-medium&quot;&gt;Tracking your past journeys and payments&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;button (click)&#x3D;&quot;isHistoryOpen.set(false)&quot; 
+              class&#x3D;&quot;w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-2xl text-slate-400 hover:text-slate-900&quot;&gt;
+        &amp;times;
+      &lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class&#x3D;&quot;flex-1 overflow-y-auto p-6&quot;&gt;
+      
+      &lt;div *ngIf&#x3D;&quot;myHistory().length &#x3D;&#x3D;&#x3D; 0&quot; class&#x3D;&quot;py-20 text-center&quot;&gt;
+        &lt;div class&#x3D;&quot;text-5xl mb-4&quot;&gt;🚲&lt;/div&gt;
+        &lt;p class&#x3D;&quot;text-slate-500 font-bold&quot;&gt;No history records found.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div *ngIf&#x3D;&quot;myHistory().length &gt; 0&quot; class&#x3D;&quot;overflow-x-auto&quot;&gt;
+        &lt;table class&#x3D;&quot;w-full text-left border-separate border-spacing-y-3&quot;&gt;
+          &lt;thead&gt;
+            &lt;tr class&#x3D;&quot;text-[10px] uppercase tracking-widest text-slate-400 font-black&quot;&gt;
+              &lt;th class&#x3D;&quot;px-4&quot;&gt;Reference&lt;/th&gt;
+              &lt;th class&#x3D;&quot;px-4&quot;&gt;Timeline&lt;/th&gt;
+              &lt;th class&#x3D;&quot;px-4&quot;&gt;Amount&lt;/th&gt;
+              &lt;th class&#x3D;&quot;px-4&quot;&gt;Status&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody&gt;
+            &lt;tr *ngFor&#x3D;&quot;let item of myHistory()&quot; class&#x3D;&quot;group&quot;&gt;
+              &lt;td class&#x3D;&quot;px-4 py-4 bg-slate-50 rounded-l-2xl group-hover:bg-indigo-50/50 transition-colors&quot;&gt;
+                &lt;span class&#x3D;&quot;text-xs font-black text-slate-900 block&quot;&gt;#{{ item.id }}&lt;/span&gt;
+                &lt;span class&#x3D;&quot;text-[10px] text-slate-400 uppercase font-bold&quot;&gt;Bike {{ item.bikeId }}&lt;/span&gt;
+              &lt;/td&gt;
+              &lt;td class&#x3D;&quot;px-4 py-4 bg-slate-50 group-hover:bg-indigo-50/50 transition-colors&quot;&gt;
+                &lt;div class&#x3D;&quot;text-[11px] font-bold text-slate-700&quot;&gt;
+                  {{ item.startAt | date:&#x27;mediumDate&#x27; }}
+                &lt;/div&gt;
+                &lt;div class&#x3D;&quot;text-[10px] text-slate-500&quot;&gt;
+                  {{ item.startAt | date:&#x27;HH:mm&#x27; }} — {{ item.endAt ? (item.endAt | date:&#x27;HH:mm&#x27;) : &#x27;Active&#x27; }}
+                &lt;/div&gt;
+              &lt;/td&gt;
+              &lt;td class&#x3D;&quot;px-4 py-4 bg-slate-50 group-hover:bg-indigo-50/50 transition-colors&quot;&gt;
+                &lt;span class&#x3D;&quot;text-xs font-mono font-black text-slate-900&quot;&gt;
+                  {{ item.totalAmountEur | currency:&#x27;EUR&#x27; }}
+                &lt;/span&gt;
+              &lt;/td&gt;
+              &lt;td class&#x3D;&quot;px-4 py-4 bg-slate-50 rounded-r-2xl group-hover:bg-indigo-50/50 transition-colors&quot;&gt;
+                &lt;span [ngClass]&#x3D;&quot;{
+                  &#x27;bg-emerald-100 text-emerald-700&#x27;: item.status &#x3D;&#x3D;&#x3D; &#x27;ACTIVE&#x27; || item.status &#x3D;&#x3D;&#x3D; &#x27;RENTED&#x27;,
+                  &#x27;bg-slate-200 text-slate-500&#x27;: item.status &#x3D;&#x3D;&#x3D; &#x27;CLOSED&#x27; || item.status &#x3D;&#x3D;&#x3D; &#x27;RETURNED&#x27;
+                }&quot; class&#x3D;&quot;px-2 py-1 rounded text-[9px] font-black uppercase&quot;&gt;
+                  {{ item.status }}
+                &lt;/span&gt;
+              &lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class&#x3D;&quot;p-4 bg-slate-50 border-t border-slate-100 text-center&quot;&gt;
+      &lt;p class&#x3D;&quot;text-[10px] text-slate-400 font-medium&quot;&gt;Total Expenditures: 
+        &lt;span class&#x3D;&quot;text-slate-900 font-bold&quot;&gt;{{ calculateTotalSpent() | currency:&#x27;EUR&#x27; }}&lt;/span&gt;
+      &lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+    </div>
+
+
+    <div class="tab-pane fade " id="tree">
+        <div id="tree-container"></div>
+        <div class="tree-legend">
+            <div class="title">
+                <b>Legend</b>
+            </div>
+            <div>
+                <div class="color htmlelement"></div><span>Html element</span>
+            </div>
+            <div>
+                <div class="color component"></div><span>Component</span>
+            </div>
+            <div>
+                <div class="color directive"></div><span>Html element with directive</span>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+<script src="../js/libs/vis-network.min.js"></script>
+<script src="../js/libs/htmlparser.js"></script>
+<script src="../js/libs/deep-iterator.js"></script>
+<script>
+        var COMPONENT_TEMPLATE = '<div><div *ngIf="alert().show"      class="fixed top-6 right-6 z-[100] transition-all duration-300 transform">  <div [ngClass]="{      \'bg-emerald-50 border-emerald-500 text-emerald-800\': alert().type === \'success\',      \'bg-red-50 border-red-500 text-red-800\': alert().type === \'error\',      \'bg-blue-50 border-blue-500 text-blue-800\': alert().type === \'info\'    }"     class="flex items-center p-4 rounded-2xl border-l-4 shadow-xl min-w-[300px]">        <div class="flex-1 mr-4">      <p class="text-xs font-black uppercase tracking-widest opacity-60 mb-1">{{ alert().type }}</p>      <p class="text-sm font-bold">{{ alert().message }}</p>    </div>    <button (click)="alert.set({show: false, message: \'\', type: \'info\'})" class="text-xl font-bold opacity-50 hover:opacity-100">      &times;    </button>  </div></div><div class="p-8 lg:p-12 max-w-6xl mx-auto">  <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">    <h2 class="text-3xl font-extrabold text-slate-900">My Rental Hub</h2>    <div class="relative w-full md:w-64">      <input        type="text"        [ngModel]="searchQuery()"        (ngModelChange)="searchQuery.set($event)"        placeholder="Filter by ID or Bike..."        class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"      />      <svg        class="w-4 h-4 text-slate-400 absolute left-3 top-3"        fill="none"        stroke="currentColor"        viewBox="0 0 24 24"      >        <path          stroke-linecap="round"          stroke-linejoin="round"          stroke-width="2"          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"        />      </svg>      <button (click)="isHistoryOpen.set(true)"        class="flex items-center gap-2 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">        <span class="text-lg">📜</span>        View History      </button>    </div>  </div>  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">    <div class="space-y-8">            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">        <div class="flex items-center justify-between mb-6">          <h3 class="text-xl font-bold text-slate-800">My Active Rentals</h3>          <span            class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full"          >            {{ myActiveRentals().length }} Active          </span>        </div>        <div          *ngIf="myActiveRentals().length === 0"          class="text-slate-400 text-center py-10"        >          <p class="text-sm">No active rentals found.</p>        </div>        <div class="space-y-4">          <div            *ngFor="let rental of myActiveRentals()"            class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center hover:border-emerald-200 transition-colors"          >            <div>              <span                class="text-xs font-bold text-emerald-600 uppercase tracking-wider"              >                ID #{{ rental.rentalId }}              </span>              <p class="text-sm text-slate-800 font-bold mt-1">                {{ rental.message }}              </p>              <p class="text-xs text-slate-500 mt-1">                Status: {{ rental.result }}              </p>            </div>            <button              (click)="prefillReturn(rental.rentalId)"              class="px-4 py-2 bg-white text-slate-900 text-xs font-bold rounded-xl border border-slate-200 shadow-sm hover:bg-slate-900 hover:text-white transition-all"            >              Return            </button>          </div>        </div>      </div>      <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">        <div class="flex items-center justify-between mb-6">          <h3 class="text-xl font-bold text-slate-800">My Waitlist</h3>          <span            class="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full"          >            {{ myWaitlist().length }} Queueing          </span>        </div>        <div          *ngIf="myWaitlist().length === 0"          class="text-slate-400 text-center py-10"        >          <p class="text-sm">You are not currently in any waiting lists.</p>        </div>        <div class="space-y-4">          <div            *ngFor="let wait of myWaitlist()"            class="p-4 rounded-2xl bg-amber-50/30 border border-amber-100 flex gap-4 items-center"          >            <div              class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600"            >              ⏳            </div>            <div class="flex-1">              <p class="text-sm text-slate-800 font-bold">                {{ wait.message }}              </p>              <div class="flex gap-2 mt-1">                <span class="text-[10px] font-bold text-amber-700 uppercase">                  Waitlist #{{ wait.id }}                </span>                <span class="text-[10px] text-slate-400">•</span>                <p class="text-[10px] text-slate-500">                  Requested on {{ wait.sentAt | date: \'MMM d, yyyy\' }} at {{ wait.sentAt | date: \'HH:mm\' }}                </p>              </div>            </div>          </div>        </div>      </div>    </div>    <div      class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 h-fit sticky top-8"    >      <h3 class="text-xl font-bold text-slate-800 mb-2">Complete a Return</h3>      <p class="text-slate-500 text-sm mb-6">        Review the bike condition before confirming your return.      </p>      <form (ngSubmit)="returnBike()" class="space-y-4">        <div>          <label class="block text-sm font-medium text-slate-700 mb-1"            >Selected Rental ID</label          >          <input            type="number"            [(ngModel)]="returnForm.rentalId"            name="rentalId"            class="w-full px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 font-mono"            placeholder="Select a rental from the left"          />        </div>        <div>          <label class="block text-sm font-medium text-slate-700 mb-1"            >Bike Condition</label          >          <select            [(ngModel)]="returnForm.condition"            name="condition"            class="w-full px-4 py-2 rounded-xl border border-slate-200"          >            <option value="GOOD">Excellent / Good</option>            <option value="DAMAGED">Damaged (Requires Repair)</option>            <option value="NEEDS_SERVICE">Needs Service</option>          </select>        </div>        <div>          <label class="block text-sm font-medium text-slate-700 mb-1"            >Additional Comments</label          >          <textarea            [(ngModel)]="returnForm.comment"            name="comment"            rows="4"            class="w-full px-4 py-2 rounded-xl border border-slate-200"            placeholder="Describe any issues or feedback..."          ></textarea>        </div>        <button          type="submit"          class="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition-all shadow-xl active:scale-95"        >          Confirm & End Rental        </button>      </form>    </div>  </div></div><div *ngIf="isHistoryOpen()"      class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">    <div class="bg-white w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100">        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">      <div>        <h3 class="text-xl font-black text-slate-900">Rental Archives</h3>        <p class="text-xs text-slate-500 font-medium">Tracking your past journeys and payments</p>      </div>      <button (click)="isHistoryOpen.set(false)"               class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-2xl text-slate-400 hover:text-slate-900">        &times;      </button>    </div>    <div class="flex-1 overflow-y-auto p-6">            <div *ngIf="myHistory().length === 0" class="py-20 text-center">        <div class="text-5xl mb-4">🚲</div>        <p class="text-slate-500 font-bold">No history records found.</p>      </div>      <div *ngIf="myHistory().length > 0" class="overflow-x-auto">        <table class="w-full text-left border-separate border-spacing-y-3">          <thead>            <tr class="text-[10px] uppercase tracking-widest text-slate-400 font-black">              <th class="px-4">Reference</th>              <th class="px-4">Timeline</th>              <th class="px-4">Amount</th>              <th class="px-4">Status</th>            </tr>          </thead>          <tbody>            <tr *ngFor="let item of myHistory()" class="group">              <td class="px-4 py-4 bg-slate-50 rounded-l-2xl group-hover:bg-indigo-50/50 transition-colors">                <span class="text-xs font-black text-slate-900 block">#{{ item.id }}</span>                <span class="text-[10px] text-slate-400 uppercase font-bold">Bike {{ item.bikeId }}</span>              </td>              <td class="px-4 py-4 bg-slate-50 group-hover:bg-indigo-50/50 transition-colors">                <div class="text-[11px] font-bold text-slate-700">                  {{ item.startAt | date:\'mediumDate\' }}                </div>                <div class="text-[10px] text-slate-500">                  {{ item.startAt | date:\'HH:mm\' }} — {{ item.endAt ? (item.endAt | date:\'HH:mm\') : \'Active\' }}                </div>              </td>              <td class="px-4 py-4 bg-slate-50 group-hover:bg-indigo-50/50 transition-colors">                <span class="text-xs font-mono font-black text-slate-900">                  {{ item.totalAmountEur | currency:\'EUR\' }}                </span>              </td>              <td class="px-4 py-4 bg-slate-50 rounded-r-2xl group-hover:bg-indigo-50/50 transition-colors">                <span [ngClass]="{                  \'bg-emerald-100 text-emerald-700\': item.status === \'ACTIVE\' || item.status === \'RENTED\',                  \'bg-slate-200 text-slate-500\': item.status === \'CLOSED\' || item.status === \'RETURNED\'                }" class="px-2 py-1 rounded text-[9px] font-black uppercase">                  {{ item.status }}                </span>              </td>            </tr>          </tbody>        </table>      </div>    </div>    <div class="p-4 bg-slate-50 border-t border-slate-100 text-center">      <p class="text-[10px] text-slate-400 font-medium">Total Expenditures:         <span class="text-slate-900 font-bold">{{ calculateTotalSpent() | currency:\'EUR\' }}</span>      </p>    </div>  </div></div></div>'
+    var COMPONENTS = [{'name': 'Alert', 'selector': 'app-alert'},{'name': 'App', 'selector': 'app-root'},{'name': 'Dashboard', 'selector': 'app-dashboard'},{'name': 'LandingComponent', 'selector': 'app-landing-component'},{'name': 'Loginpage', 'selector': 'app-loginpage'},{'name': 'Mainlayout', 'selector': 'app-mainlayout'},{'name': 'MarketplaceComponent', 'selector': 'app-marketplace'},{'name': 'Myrentals', 'selector': 'app-myrentals'},{'name': 'OfferBikeComponent', 'selector': 'app-offerbike'},{'name': 'Register', 'selector': 'app-register'}];
+    var DIRECTIVES = [];
+    var ACTUAL_COMPONENT = {'name': 'Myrentals'};
+</script>
+<script src="../js/tree.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'component';
+            var COMPODOC_CURRENT_PAGE_URL = 'Myrentals.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>
