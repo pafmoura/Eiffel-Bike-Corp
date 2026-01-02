@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ExtendWith(MockitoExtension.class)
+
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserControllerTest {
@@ -48,7 +48,6 @@ class UserControllerTest {
     @Test
     void should_register_customer_and_return_201() {
         String email = "customer_" + UUID.randomUUID() + "@test.com";
-        // Added 4th argument: "password123"
         UserRegisterRequest req = new UserRegisterRequest(
                 UserType.CUSTOMER,
                 "John Customer",
@@ -73,7 +72,6 @@ class UserControllerTest {
     @Test
     void should_register_student_and_return_201_with_provider_id_equal_customer_id() {
         String email = randomEmail();
-        // Added 4th argument: "password123"
         UserRegisterRequest req = new UserRegisterRequest(
                 UserType.STUDENT,
                 "Alice Student",
@@ -97,7 +95,6 @@ class UserControllerTest {
     @Test
     void should_register_employee_and_return_201_with_provider_id_equal_customer_id() {
         String email = randomEmail();
-        // Added 4th argument: "password123"
         UserRegisterRequest req = new UserRegisterRequest(
                 UserType.EMPLOYEE,
                 "Bob Employee",
@@ -119,7 +116,6 @@ class UserControllerTest {
     @Test
     void should_return_409_when_email_already_registered() {
         String email = randomEmail();
-        // Added 4th argument to both
         UserRegisterRequest req1 = new UserRegisterRequest(UserType.CUSTOMER, "First", email, "pass1333");
         UserRegisterRequest req2 = new UserRegisterRequest(UserType.STUDENT, "Second", email, "pass2333");
         rest.exchange("/api/users/register", HttpMethod.POST, jsonEntity(req1), UserResponse.class);
@@ -134,7 +130,6 @@ class UserControllerTest {
 
     @Test
     void should_return_400_when_register_request_is_invalid() {
-        // Record constructor requires 4 arguments. Null/Empty will trigger @Valid 400
         UserRegisterRequest invalid = new UserRegisterRequest(null, "", "", "");
         ResponseEntity<String> r = rest.exchange(
                 "/api/users/register",
@@ -149,14 +144,12 @@ class UserControllerTest {
     void should_login_and_return_200_with_token_equal_customer_uuid() {
         String email = "login_" + UUID.randomUUID() + "@test.com";
         String pass = "password123";
-        // Register first with password
         rest.exchange(
                 "/api/users/register",
                 HttpMethod.POST,
                 jsonEntity(new UserRegisterRequest(UserType.CUSTOMER, "Login User", email, pass)),
                 UserResponse.class
         );
-        // Login with email and password (assuming UserLoginRequest now has both)
         ResponseEntity<UserLoginResponse> r = rest.exchange(
                 "/api/users/login",
                 HttpMethod.POST,
@@ -184,7 +177,6 @@ class UserControllerTest {
 
     @Test
     void should_return_400_when_login_request_is_invalid() {
-        // Login request with empty fields
         ResponseEntity<String> r = rest.exchange(
                 "/api/users/login",
                 HttpMethod.POST,
