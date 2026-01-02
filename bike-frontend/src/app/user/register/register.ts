@@ -4,6 +4,11 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Registration component for new users.
+ * Handles user sign-up functionality.
+ * 
+ */
 @Component({
   selector: 'app-register',
   imports: [FormsModule, CommonModule],
@@ -15,12 +20,15 @@ private userService = inject(UserService);
   private router = inject(Router);
 
   user = {
-  fullName: '', // Changed from 'name' to 'fullName'
+  fullName: '', 
   email: '',
   type: 'CUSTOMER',
-  password: '' // ed mandatory field. Ensure 'CUSTOMER' matches your UserType Enum
+  password: '' 
 };
 
+/**
+ * Handles user registration process.
+ */
   onRegister() {
   this.userService.register(this.user).subscribe({
     next: (res) => {
@@ -28,10 +36,8 @@ private userService = inject(UserService);
       this.router.navigate(['/login']);
     },
     error: (err) => {
-      // 1. Log the full object to the browser console (Press F12 to see it)
       console.error('Full Error Object:', err);
 
-      // 2. Try to show the specific message from the Java backend
       const errorMessage = err.error?.message || JSON.stringify(err.error);
       alert('Registration failed: ' + errorMessage);
     }

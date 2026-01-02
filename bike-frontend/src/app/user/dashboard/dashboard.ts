@@ -136,6 +136,10 @@ loadNotifications() {
     this.isPaymentStep.set(true);
   }
 
+  /**
+   * Confirms payment and creates the rental for the selected bike.
+   * 
+   */
   confirmPaymentAndRent() {
     this.createRental(this.selectedBike(), true);
   }
@@ -159,9 +163,17 @@ loadNotifications() {
     });
   }
 
+  /**
+   * Increases or decreases rental days within allowed limits.
+   */
   increaseDays() { if (this.rentalDays() < 30) this.rentalDays.update(v => v + 1); }
   decreaseDays() { if (this.rentalDays() > 1) this.rentalDays.update(v => v - 1); }
 
+  /**
+   * Processes payment for a rental.
+   * @param rentalId id of rental to pay
+   * @param bike bike
+   */
   private processPayment(rentalId: number, bike: any) {
     const paymentData = {
       rentalId,
@@ -184,6 +196,6 @@ loadNotifications() {
     this.isPaymentStep.set(false);
     this.selectedBike.set(null);
     this.rentalDays.set(3);
-    this.loadMyRentalsAndBikes();   // refresh correctly
+    this.loadMyRentalsAndBikes();   
   }
 }

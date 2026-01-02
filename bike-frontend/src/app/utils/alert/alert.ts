@@ -7,6 +7,10 @@ export type AlertType = 'success' | 'error' | 'info';
   templateUrl: './alert.html',
   styleUrl: './alert.scss',
 })
+/**
+ * Alert utility to display messages to users.
+ * Supports different alert types: success, error, and info.
+ */
 export class Alert {
 message = signal<string | null>(null);
   type = signal<AlertType>('info');

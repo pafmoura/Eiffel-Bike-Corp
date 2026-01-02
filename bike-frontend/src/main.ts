@@ -3,12 +3,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
 
-// Merge the providers properly
+
+/**
+ * Bootstrap the Angular application with necessary providers.
+ * Includes HTTP client support.
+ */
 bootstrapApplication(App, {
   ...appConfig,
   providers: [
-    ...(appConfig.providers || []), // Keep the Router providers from appConfig
-    provideHttpClient()             // Add HttpClient on top
+    ...(appConfig.providers || []), 
+    provideHttpClient()             
   ]
 })
 .catch((err) => console.error(err));
