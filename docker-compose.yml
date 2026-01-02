@@ -15,8 +15,16 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/uge_bike
       SPRING_DATASOURCE_USERNAME: uge
       SPRING_DATASOURCE_PASSWORD: uge
+
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: ""
+      SPRING_MAIL_PASSWORD: ""
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
     depends_on:
       - postgres
+      - mailhog
     command: mvn spring-boot:run
 
   frontend:
@@ -33,7 +41,6 @@ services:
       - backend
     command: ng serve --host 0.0.0.0 --poll=2000
 
-
   postgres:
     image: postgres:16
     container_name: uge_bike
@@ -45,6 +52,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   postgres_data:
