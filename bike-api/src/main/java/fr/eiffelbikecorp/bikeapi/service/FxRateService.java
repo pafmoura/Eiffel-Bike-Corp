@@ -29,7 +29,6 @@ public class FxRateService {
 
     private final ExchangeRateApiProperties props;
 
-    // simple in-memory cache (e.g., 30 minutes)
     private final AtomicReference<CachedRates> cache = new AtomicReference<>();
 
     public BigDecimal getRateToEur(String currency) {
@@ -45,7 +44,7 @@ public class FxRateService {
             throw new BusinessRuleException("Invalid FX rate for " + c);
         }
         // API gives: 1 EUR = eurToCurrency * C
-        // We need: 1 C = rateToEur * EUR => rateToEur = 1 / eurToCurrency
+        //  need: 1 C = rateToEur * EUR => rateToEur = 1 / eurToCurrency
         return BigDecimal.ONE.divide(eurToCurrency, 10, RoundingMode.HALF_UP);
     }
 

@@ -1,7 +1,10 @@
 package fr.eiffelbikecorp.bikeapi;
 
 import fr.eiffelbikecorp.bikeapi.domain.entity.*;
-import fr.eiffelbikecorp.bikeapi.domain.enums.*;
+import fr.eiffelbikecorp.bikeapi.domain.enums.BasketStatus;
+import fr.eiffelbikecorp.bikeapi.domain.enums.BikeStatus;
+import fr.eiffelbikecorp.bikeapi.domain.enums.RentalStatus;
+import fr.eiffelbikecorp.bikeapi.domain.enums.SaleOfferStatus;
 import fr.eiffelbikecorp.bikeapi.persistence.*;
 import fr.eiffelbikecorp.bikeapi.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +33,6 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final BasketRepository basketRepository;
     private final BasketItemRepository basketItemRepository;
 
-
     @Override
     @Transactional
     public void run(String... args) throws Exception {
@@ -38,22 +40,16 @@ public class DatabaseSeeder implements CommandLineRunner {
             System.out.println(">>> DB Seeding: Data already exists. Skipping.");
             return;
         }
-
         System.out.println(">>> DB Seeding Starting...");
-
         // ==========================================
         // 1. CREATE PROVIDERS & USERS
         // ==========================================
-
-
-
         // --- 1b. Alice (The Student Provider) ---
         // Alice needs two records:
         // 1. A Customer record (to login)
         // 2. A Student record (to provide bikes)
         // They MUST share the same UUID.
         UUID aliceId = UUID.randomUUID();
-
         // Alice - The User/Login part
         Customer aliceUser = new Customer();
         aliceUser.setId(aliceId);
@@ -61,14 +57,10 @@ public class DatabaseSeeder implements CommandLineRunner {
         aliceUser.setEmail("alice@bike.com");
         aliceUser.setPassword(SecurityUtils.hashSHA256("123456"));
         customerRepository.save(aliceUser);
-
         // Alice - The Provider part
         Student aliceProvider = new Student();
         aliceProvider.setId(aliceId); // Critical: Same ID as Customer
-
         studentRepository.save(aliceProvider);
-
-
         // --- 1c. Bob (The Standard Customer) ---
         Customer bobUser = new Customer();
         bobUser.setId(UUID.randomUUID());
@@ -76,8 +68,6 @@ public class DatabaseSeeder implements CommandLineRunner {
         bobUser.setEmail("bob@bike.com");
         bobUser.setPassword(SecurityUtils.hashSHA256("123456"));
         customerRepository.save(bobUser);
-
-
         UUID adminId = UUID.randomUUID();
         Customer adminUser = new Customer();
         adminUser.setId(adminId);
@@ -85,17 +75,12 @@ public class DatabaseSeeder implements CommandLineRunner {
         adminUser.setEmail("admin@bike.com");
         adminUser.setPassword(SecurityUtils.hashSHA256("123456"));
         customerRepository.save(adminUser);
-
         EiffelBikeCorp corp = new EiffelBikeCorp();
         corp.setId(adminId);
         corpRepository.save(corp);
-
-
-
         // ==========================================
         // 2. CREATE BIKES
         // ==========================================
-
         // Bike 1: Owned by Alice (The Student)
         Bike bikeStudent = Bike.builder()
                 .description("Mountain Bike Rockrider")
@@ -104,7 +89,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .rentalDailyRateEur(new BigDecimal("5.00"))
                 .build();
         bikeRepository.save(bikeStudent);
-
         // Bike 2: Owned by Corp (Rented out)
         Bike bikeCorpRented = Bike.builder()
                 .description("Peugeot E-Bike City")
@@ -113,7 +97,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .rentalDailyRateEur(new BigDecimal("15.00"))
                 .build();
         bikeRepository.save(bikeCorpRented);
-
         // Bike 3: Owned by Corp (For Sale)
         Bike bikeForSale = Bike.builder()
                 .description("Vintage Road Bike 1980")
@@ -122,12 +105,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .rentalDailyRateEur(new BigDecimal("10.00"))
                 .build();
         bikeRepository.save(bikeForSale);
-
-
         // ==========================================
         // 3. CREATE RENTALS
         // ==========================================
-
         // Alice rents the Corp's E-Bike
         Rental activeRental = Rental.builder()
                 .customer(aliceUser)
@@ -137,7 +117,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .totalAmountEur(new BigDecimal("30.00"))
                 .build();
         rentalRepository.save(activeRental);
-
         // Bob rented Alice's Mountain Bike (Closed now)
         Rental pastRental = Rental.builder()
                 .customer(bobUser)
@@ -147,7 +126,6 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .status(RentalStatus.CLOSED)
                 .totalAmountEur(new BigDecimal("25.00"))
                 .build();
-
         // Bob left a note
         ReturnNote note = ReturnNote.builder()
                 .rental(pastRental)
@@ -156,15 +134,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .condition("Good")
                 .createdAt(LocalDateTime.now().minusDays(5))
                 .build();
-
         pastRental.setReturnNote(note);
         rentalRepository.save(pastRental);
-
-
         // ==========================================
         // 4. SALE OFFERS
         // ==========================================
-
         SaleOffer offer = SaleOffer.builder()
                 .bike(bikeForSale)
                 .sellerId(bobUser.getId())
@@ -172,35 +146,27 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .status(SaleOfferStatus.LISTED)
                 .listedAt(LocalDateTime.now().minusHours(4))
                 .build();
-
         SaleNote saleNote = new SaleNote();
         saleNote.setSaleOffer(offer);
         saleNote.setTitle("Extra Details");
         saleNote.setContent("New Brakes installed by mechanics.");
         saleNote.setCreatedBy("Admin");
         saleNote.setCreatedAt(LocalDateTime.now());
-
         offer.getNotes().add(saleNote);
         saleOfferRepository.save(offer);
-
-
         // ==========================================
         // 5. WAITING LIST & BASKET
         // ==========================================
-
         // Bob is waiting for the E-Bike (currently rented by Alice)
         WaitingList waitingList = new WaitingList();
         waitingList.setBike(bikeCorpRented);
         waitingList.setEntries(new ArrayList<>());
-
         WaitingListEntry entry = new WaitingListEntry();
         entry.setWaitingList(waitingList);
         entry.setCustomer(bobUser);
         entry.setCreatedAt(LocalDateTime.now());
-
         waitingList.getEntries().add(entry);
         waitingListRepository.save(waitingList);
-
         // Alice has the Vintage Bike offer in her basket
         Basket basket = Basket.builder()
                 .customer(aliceUser)
@@ -210,14 +176,12 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .items(new ArrayList<>())
                 .build();
         basketRepository.save(basket);
-
         BasketItem item = new BasketItem();
         item.setBasket(basket);
         item.setOffer(offer);
         item.setUnitPriceEurSnapshot(offer.getAskingPriceEur());
         item.setAddedAt(LocalDateTime.now());
         basketItemRepository.save(item);
-
         System.out.println(">>> DB Seeding: Concluded successfully!");
     }
 }

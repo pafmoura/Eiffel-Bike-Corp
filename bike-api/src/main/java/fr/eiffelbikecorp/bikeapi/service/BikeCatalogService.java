@@ -1,8 +1,8 @@
 package fr.eiffelbikecorp.bikeapi.service;
 
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
 
 import java.util.List;
@@ -18,6 +18,5 @@ public interface BikeCatalogService {
 
     List<BikeResponse> searchBikesToRent(String status, String q, UUID offeredById);
 
-     List<ReturnNoteResponse> getReturnNotesForBike(Long bikeId);
-
-    }
+    List<ReturnNoteResponse> getReturnNotesForBike(Long bikeId);
+}

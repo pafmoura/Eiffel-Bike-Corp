@@ -19,7 +19,6 @@ public class JerseyConfiguration extends ResourceConfig {
         // Enable Bean Validation (Jakarta Validation)
         register(ValidationFeature.class);
         // Controllers
-
         packages("fr.eiffelbikecorp.bikeapi.controller"); // JAX-RS resources
         // Exception mappers
         register(NotFoundExceptionMapper.class);
@@ -34,7 +33,7 @@ public class JerseyConfiguration extends ResourceConfig {
         // Swagger OpenAPI endpoints
         register(OpenApiResource.class);
         register(SwaggerSerializers.class);
+        // Security role feature enable
         register(RolesAllowedDynamicFeature.class);
-
     }
 }

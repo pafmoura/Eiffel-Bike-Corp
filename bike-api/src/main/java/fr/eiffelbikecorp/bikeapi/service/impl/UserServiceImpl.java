@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService {
                 request.email(),
                 SecurityUtils.hashSHA256(request.password())
         ).orElseThrow(() -> new AuthenticationException("Invalid credentials."));
-
         return new UserLoginResponse(
                 tokenService.generateToken(customer),
                 "Bearer",

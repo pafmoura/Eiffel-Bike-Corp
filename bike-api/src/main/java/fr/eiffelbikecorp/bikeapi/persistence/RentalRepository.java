@@ -11,8 +11,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     boolean existsByBike_IdAndStatus(Long bikeId, RentalStatus status);
 
-    boolean existsByBike_Id(Long bikeId);
-
     List<Rental> findByCustomer_IdAndStatusIn(UUID customerId, List<RentalStatus> statuses);
 
     List<Rental> findByCustomer_IdOrderByStartAtDesc(UUID customerId);
