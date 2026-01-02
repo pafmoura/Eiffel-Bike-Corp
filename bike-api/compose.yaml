@@ -11,5 +11,16 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    # optional, only if you want persistence (usually not needed)
+    # volumes:
+    #   - mailhog_data:/home/mailhog
+
 volumes:
   postgres_data:
+  # mailhog_data:
