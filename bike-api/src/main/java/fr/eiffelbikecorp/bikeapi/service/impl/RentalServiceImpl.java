@@ -43,10 +43,8 @@ public class RentalServiceImpl implements RentalService {
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + request.customerId()));
         Bike bike = bikeRepository.findByIdForUpdate(request.bikeId())
                 .orElseThrow(() -> new NotFoundException("Bike not found: " + request.bikeId()));
-        // Rule: if there is an ACTIVE rental, bike is not available (even if status got desynced).
         boolean hasActiveRental = rentalRepository.existsByBike_IdAndStatus(bike.getId(), RentalStatus.ACTIVE);
         if (bike.getStatus() == BikeStatus.AVAILABLE && !hasActiveRental) {
-            // RENT NOW
             var now = LocalDateTime.now();
             BigDecimal total = bike.getRentalDailyRateEur()
                     .multiply(BigDecimal.valueOf(request.days()));
@@ -61,7 +59,6 @@ public class RentalServiceImpl implements RentalService {
             bike.setStatus(BikeStatus.RENTED);
             Rental saved = rentalRepository.save(rental);
             bikeRepository.save(bike);
-            // a pending payment could be created here, but out of scope for now
             return new RentBikeResultResponse(
                     RentResult.RENTED,
                     saved.getId(),
@@ -69,7 +66,7 @@ public class RentalServiceImpl implements RentalService {
                     "Bike rented successfully."
             );
         }
-        // OTHERWISE: JOIN WAITING LIST
+        // join waiting
         WaitingList waitingList = waitingListRepository.findByBike_Id(bike.getId())
                 .orElseGet(() -> waitingListRepository.save(
                         WaitingList.builder().bike(bike).build()
@@ -103,11 +100,9 @@ public class RentalServiceImpl implements RentalService {
                 .orElseThrow(() -> new NotFoundException("Customer (author) not found: " + request.authorCustomerId()));
         Bike bike = bikeRepository.findByIdForUpdate(rental.getBike().getId())
                 .orElseThrow(() -> new NotFoundException("Bike not found: " + rental.getBike().getId()));
-        // Close rental
         rental.setStatus(RentalStatus.CLOSED);
         rental.setEndAt(LocalDateTime.now());
         Rental closed = rentalRepository.save(rental);
-        // Add return note (one per rental)
         if (returnNoteRepository.existsByRental_Id(rentalId)) {
             throw new BusinessRuleException("A return note already exists for this rental.");
         }
@@ -141,7 +136,8 @@ public class RentalServiceImpl implements RentalService {
             );
         }
         WaitingList wl = maybeWaitingList.get();
-        var nextEntryOpt = waitingListEntryRepository.findFirstByWaitingList_IdAndServedAtIsNullOrderByCreatedAtAsc(wl.getId());        if (nextEntryOpt.isEmpty()) {
+        var nextEntryOpt = waitingListEntryRepository.findFirstByWaitingList_IdAndServedAtIsNullOrderByCreatedAtAsc(wl.getId());
+        if (nextEntryOpt.isEmpty()) {
             return new ReturnBikeResponse(
                     RentalMapper.toResponse(closed),
                     null,
@@ -157,7 +153,7 @@ public class RentalServiceImpl implements RentalService {
                 .startAt(LocalDateTime.now())
                 .endAt(null)
                 .status(RentalStatus.ACTIVE)
-                .totalAmountEur(bike.getRentalDailyRateEur()) // default 1 day until payment/extension rules exist
+                .totalAmountEur(bike.getRentalDailyRateEur())
                 .build();
         bike.setStatus(BikeStatus.RENTED);
         Rental savedNextRental = rentalRepository.save(nextRental);
@@ -181,7 +177,6 @@ public class RentalServiceImpl implements RentalService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationResponse> listMyNotifications(UUID customerId) {
-        // verify customer exists (optional but gives clean 404)
         if (!customerRepository.existsById(customerId)) {
             throw new NotFoundException("Customer not found: " + customerId);
         }
@@ -194,14 +189,13 @@ public class RentalServiceImpl implements RentalService {
     @Override
     @Transactional(readOnly = true)
     public List<RentBikeResultResponse> findActiveRentalsByCustomer(UUID customerId) {
-        // Fetch only ACTIVE rentals for this specific user
         return rentalRepository.findByCustomer_IdAndStatusIn(customerId, List.of(RentalStatus.ACTIVE))
                 .stream()
                 .map(rental -> new RentBikeResultResponse(
-                        RentResult.RENTED,             // RentResult result
-                        rental.getId(),                // Long rentalId
-                        null,                          // Long waitingListEntryId (not applicable here)
-                        rental.getBike().getDescription() // String message
+                        RentResult.RENTED,
+                        rental.getId(),
+                        null,
+                        rental.getBike().getDescription()
                 ))
                 .toList();
     }
@@ -218,7 +212,6 @@ public class RentalServiceImpl implements RentalService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationResponse> findWaitlistByCustomer(UUID customerId) {
-        // Fetch waiting list entries for this customer that haven't been served yet
         return waitingListEntryRepository.findByCustomer_IdAndServedAtIsNull(customerId)
                 .stream()
                 .map(entry -> new NotificationResponse(

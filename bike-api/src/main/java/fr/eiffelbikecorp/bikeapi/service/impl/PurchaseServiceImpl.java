@@ -8,7 +8,10 @@ import fr.eiffelbikecorp.bikeapi.dto.response.PurchaseResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.BusinessRuleException;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import fr.eiffelbikecorp.bikeapi.mapper.PurchaseMapper;
-import fr.eiffelbikecorp.bikeapi.persistence.*;
+import fr.eiffelbikecorp.bikeapi.persistence.BasketRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.CustomerRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.PurchaseRepository;
+import fr.eiffelbikecorp.bikeapi.persistence.SaleOfferRepository;
 import fr.eiffelbikecorp.bikeapi.service.PurchaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,30 +36,23 @@ public class PurchaseServiceImpl implements PurchaseService {
     public PurchaseResponse checkout(UUID customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new NotFoundException("Customer not found: " + customerId));
-
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseThrow(() -> new NotFoundException("Open basket not found for customer: " + customerId));
-
         if (basket.getItems().isEmpty()) {
             throw new BusinessRuleException("Basket is empty.");
         }
-
-        // lock and validate offers
         List<SaleOffer> lockedOffers = basket.getItems().stream()
                 .map(i -> saleOfferRepository.findByIdForUpdate(i.getOffer().getId())
                         .orElseThrow(() -> new NotFoundException("SaleOffer not found: " + i.getOffer().getId())))
                 .toList();
-
         for (SaleOffer o : lockedOffers) {
             if (o.getStatus() != SaleOfferStatus.LISTED) {
                 throw new BusinessRuleException("Offer is no longer available: " + o.getId());
             }
         }
-
         BigDecimal total = basket.getItems().stream()
                 .map(BasketItem::getUnitPriceEurSnapshot)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         LocalDateTime now = LocalDateTime.now();
         Purchase purchase = Purchase.builder()
                 .customer(customer)
@@ -65,8 +61,6 @@ public class PurchaseServiceImpl implements PurchaseService {
                 .createdAt(now)
                 .paidAt(null)
                 .build();
-
-        // purchase items snapshot
         for (BasketItem bi : basket.getItems()) {
             SaleOffer offer = saleOfferRepository.getReferenceById(bi.getOffer().getId());
             PurchaseItem pi = PurchaseItem.builder()
@@ -76,14 +70,10 @@ public class PurchaseServiceImpl implements PurchaseService {
                     .build();
             purchase.getItems().add(pi);
         }
-
         Purchase saved = purchaseRepository.save(purchase);
-
-        // close basket
         basket.setStatus(BasketStatus.CHECKED_OUT);
         basket.setUpdatedAt(now);
         basketRepository.save(basket);
-
         saved.getItems().size();
         return PurchaseMapper.toResponse(saved);
     }
@@ -93,11 +83,9 @@ public class PurchaseServiceImpl implements PurchaseService {
     public PurchaseResponse getPurchase(UUID customerId, Long purchaseId) {
         Purchase purchase = purchaseRepository.findById(purchaseId)
                 .orElseThrow(() -> new NotFoundException("Purchase not found: " + purchaseId));
-
         if (!purchase.getCustomer().getId().equals(customerId)) {
             throw new BusinessRuleException("Purchase does not belong to customer.");
         }
-
         purchase.getItems().size();
         return PurchaseMapper.toResponse(purchase);
     }

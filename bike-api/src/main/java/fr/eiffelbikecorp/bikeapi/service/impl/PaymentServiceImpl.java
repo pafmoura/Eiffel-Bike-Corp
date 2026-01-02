@@ -65,18 +65,15 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(PaymentStatus.PAID)
                 .paidAt(LocalDateTime.now())
                 .build();
-        // 1) authorize funds (hold)
         var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
         if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
             throw new BusinessRuleException("Payment not authorized: " + auth.message());
         }
-        // 2) capture funds
         var capture = paymentGateway.capture(auth.authorizationId());
         if (capture.status() != PaymentGateway.GatewayStatus.PAID) {
             throw new BusinessRuleException("Payment capture failed: " + capture.message());
         }
         logger.info("Payment captured: " + capture.paymentId() + " for rental " + rental.getId());
-        // save payment record
         RentalPayment saved = rentalPaymentRepository.save(payment);
         return RentalPaymentMapper.toResponse(saved);
     }
@@ -84,7 +81,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(readOnly = true)
     public List<RentalPaymentResponse> listPayments(Long rentalId) {
-        // gives clean 404 if rental doesn't exist
         if (!rentalRepository.existsById(rentalId)) {
             throw new NotFoundException("Rental not found: " + rentalId);
         }
@@ -112,11 +108,9 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal amountEur = request.amount()
                 .multiply(rateToEur)
                 .setScale(2, RoundingMode.HALF_UP);
-        // ensure enough amount to cover total (simple rule)
         if (amountEur.compareTo(purchase.getTotalAmountEur()) < 0) {
             throw new BusinessRuleException("Insufficient amount to cover purchase total in EUR.");
         }
-        // Stripe: authorize then capture
         PaymentGateway.AuthorizationResult auth = paymentGateway.authorize(
                 currency,
                 request.amount(),
@@ -139,14 +133,11 @@ public class PaymentServiceImpl implements PaymentService {
                 .amountEur(amountEur)
                 .status(PaymentStatus.PAID)
                 .paidAt(now)
-                //.stripePaymentIntentId(cap.paymentId()) // store PaymentIntent id
                 .stripePaymentIntentId("some_id")
                 .build();
         SalePayment saved = salePaymentRepository.save(payment);
-        // mark purchase PAID
         purchase.setStatus(PurchaseStatus.PAID);
         purchase.setPaidAt(now);
-        // mark offers SOLD (lock each one)
         purchase.getItems().forEach(it -> {
             SaleOffer offer = saleOfferRepository.findByIdForUpdate(it.getOffer().getId())
                     .orElseThrow(() -> new NotFoundException("SaleOffer not found: " + it.getOffer().getId()));
@@ -157,7 +148,6 @@ public class PaymentServiceImpl implements PaymentService {
             offer.setBuyer(customer);
             offer.setSoldAt(now);
         });
-        // save purchase (offers will be saved by dirty checking)
         purchaseRepository.save(purchase);
         return SalePaymentMapper.toResponse(saved);
     }

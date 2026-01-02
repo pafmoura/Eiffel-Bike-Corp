@@ -46,7 +46,6 @@ public class BasketServiceImpl implements BasketService {
                             .build();
                     return basketRepository.save(b);
                 });
-        // Load items (if LAZY)
         basket.getItems().size();
         return BasketMapper.toResponse(basket);
     }
@@ -91,14 +90,11 @@ public class BasketServiceImpl implements BasketService {
     public BasketResponse removeItem(UUID customerId, Long saleOfferId) {
         Basket basket = basketRepository.findByCustomer_IdAndStatus(customerId, BasketStatus.OPEN)
                 .orElseThrow(() -> new NotFoundException("Open basket not found"));
-
         boolean removed = basket.removeOffer(saleOfferId);
         if (!removed) {
             throw new NotFoundException("Item not found in basket");
         }
-
         basketRepository.saveAndFlush(basket);
-
         return BasketMapper.toResponse(basket);
     }
 

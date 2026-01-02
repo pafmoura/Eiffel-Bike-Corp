@@ -3,10 +3,10 @@ package fr.eiffelbikecorp.bikeapi.service.impl;
 import fr.eiffelbikecorp.bikeapi.domain.entity.Bike;
 import fr.eiffelbikecorp.bikeapi.domain.entity.BikeProvider;
 import fr.eiffelbikecorp.bikeapi.domain.enums.BikeStatus;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
-import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
-import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
 import fr.eiffelbikecorp.bikeapi.domain.enums.ProviderType;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeCreateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.request.BikeUpdateRequest;
+import fr.eiffelbikecorp.bikeapi.dto.response.BikeResponse;
 import fr.eiffelbikecorp.bikeapi.dto.response.ReturnNoteResponse;
 import fr.eiffelbikecorp.bikeapi.exceptions.NotFoundException;
 import fr.eiffelbikecorp.bikeapi.exceptions.ValidationException;
@@ -30,11 +30,9 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
     private final EmployeeRepository employeeRepository;
     private final ReturnNoteRepository returnNoteRepository;
 
-
     @Override
     @Transactional(readOnly = true)
     public List<ReturnNoteResponse> getReturnNotesForBike(Long bikeId) {
-        // Fetch notes using the new repository method
         return returnNoteRepository.findAllByRental_Bike_IdOrderByCreatedAtDesc(bikeId)
                 .stream()
                 .map(note -> new ReturnNoteResponse(
@@ -47,11 +45,9 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
                 .toList();
     }
 
-
     @Override
     @Transactional
     public BikeResponse offerBikeForRent(BikeCreateRequest request, UUID offeredById) {
-
         BikeProvider offeredBy = resolveProvider(request.offeredByType(), offeredById);
         Bike bike = Bike.builder()
                 .description(request.description())
@@ -83,9 +79,6 @@ public class BikeCatalogServiceImpl implements BikeCatalogService {
         }
         return BikeMapper.toResponse(bikeRepository.save(bike));
     }
-
-
-
 
     @Override
     @Transactional(readOnly = true)
