@@ -36,6 +36,8 @@ public class RentalServiceImpl implements RentalService {
     private final ReturnNoteRepository returnNoteRepository;
     private final NotificationRepository notificationRepository;
 
+    private final EmailServiceImpl emailService;
+
     @Override
     @Transactional
     public RentBikeResultResponse rentBikeOrJoinWaitingList(RentBikeRequest request) {
@@ -80,6 +82,8 @@ public class RentalServiceImpl implements RentalService {
                 .createdAt(LocalDateTime.now())
                 .build();
         WaitingListEntry savedEntry = waitingListEntryRepository.save(entry);
+        // send email notification async
+        emailService.sendEmail(customer.getEmail(), "[Eiffel Bike] Rental wait list", "You have been added to the waiting list for bike ID: " + bike.getId());
         return new RentBikeResultResponse(
                 RentResult.WAITLISTED,
                 null,
@@ -167,6 +171,10 @@ public class RentalServiceImpl implements RentalService {
                 .sentAt(LocalDateTime.now())
                 .build();
         Notification savedNotification = notificationRepository.save(notification);
+        // send email notification async
+        emailService.sendEmail(notification.getEntry().getCustomer().getEmail(),
+                "[Eiffel Bike] Bike Available",
+                "The bike you were waiting for (ID: " + bike.getId() + ") is now available and a rental has been created for you.");
         return new ReturnBikeResponse(
                 RentalMapper.toResponse(closed),
                 RentalMapper.toResponse(savedNextRental),
