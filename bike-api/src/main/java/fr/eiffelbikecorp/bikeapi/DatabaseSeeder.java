@@ -59,8 +59,23 @@ public class DatabaseSeeder implements CommandLineRunner {
         customerRepository.save(aliceUser);
         // Alice - The Provider part
         Student aliceProvider = new Student();
-        aliceProvider.setId(aliceId); // Critical: Same ID as Customer
+        aliceProvider.setId(aliceId);
         studentRepository.save(aliceProvider);
+
+
+        UUID alexaId = UUID.randomUUID();
+
+        // Alice - The User/Login part
+        Customer alexaUser = new Customer();
+        alexaUser.setId(alexaId);
+        alexaUser.setFullName("Alexa Student");
+        alexaUser.setEmail("alexa@bike.com");
+        alexaUser.setPassword(SecurityUtils.hashSHA256("123456"));
+        customerRepository.save(alexaUser);
+        // Alice - The Provider part
+        Student alexaProvider = new Student();
+        alexaProvider.setId(alexaId);
+        studentRepository.save(alexaProvider);
         // --- 1c. Bob (The Standard Customer) ---
         Customer bobUser = new Customer();
         bobUser.setId(UUID.randomUUID());
@@ -117,19 +132,19 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .totalAmountEur(new BigDecimal("30.00"))
                 .build();
         rentalRepository.save(activeRental);
-        // Bob rented Alice's Mountain Bike (Closed now)
+        // Alexa rented Alice's Mountain Bike (Closed now)
         Rental pastRental = Rental.builder()
-                .customer(bobUser)
+                .customer(alexaUser)
                 .bike(bikeStudent)
                 .startAt(LocalDateTime.now().minusDays(10))
                 .endAt(LocalDateTime.now().minusDays(5))
                 .status(RentalStatus.CLOSED)
                 .totalAmountEur(new BigDecimal("25.00"))
                 .build();
-        // Bob left a note
+        // Alexa left a note
         ReturnNote note = ReturnNote.builder()
                 .rental(pastRental)
-                .author(bobUser)
+                .author(alexaUser)
                 .comment("Returned without problems. Great bike!")
                 .condition("Good")
                 .createdAt(LocalDateTime.now().minusDays(5))
@@ -141,7 +156,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         // ==========================================
         SaleOffer offer = SaleOffer.builder()
                 .bike(bikeForSale)
-                .sellerId(bobUser.getId())
+                .sellerId(alexaUser.getId())
                 .askingPriceEur(new BigDecimal("150.00"))
                 .status(SaleOfferStatus.LISTED)
                 .listedAt(LocalDateTime.now().minusHours(4))
