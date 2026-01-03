@@ -98,7 +98,7 @@ public class BikeCatalogController {
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @Secured
-    @RolesAllowed(value = {"STUDENT", "EMPLOYEE"})
+    @RolesAllowed(value = {"STUDENT", "EMPLOYEE", "EIFFEL_BIKE_CORP"})
     public Response searchBikesToRent(
             @Parameter(description = "Bike status filter", example = "AVAILABLE")
             @QueryParam("status") String status,
