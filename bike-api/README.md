@@ -289,7 +289,7 @@ The backend design and examples in this report assume:
 
 ## 3. Requirements mapping (User Stories → API → Domain Model)
 
-This section links the functional requirements (user stories) to the REST API endpoints and the main domain objects that implement them. It also defines the main “happy-path” usage scenarios that will be referenced later in the user manual.
+This section links the functional requirements (user stories) to the REST API endpoints and the main domain objects that implement them. It also defines the main “happy-path” usage scenarios.
 
 ### 3.1 User stories (grouped)
 
@@ -370,7 +370,7 @@ A few domain modeling choices directly enforce requirements:
 
 ### 3.4 Happy-path scenarios of use (backend perspective)
 
-These scenarios are the baseline flows used later in the user manual and test strategy.
+These scenarios are the baseline flows used later in the test strategy.
 
 **Scenario S1 — Offer a bike for rent (US_01/02/03)**
 
@@ -1383,8 +1383,6 @@ Current listing endpoints for bikes and sale offers return full lists.
 *   **Versioning:** Introduce a dedicated `/api/v1` endpoint to support future API evolution and provide a stable base for client integrations.
 
 ---
-
-## Appendix A — Runbook (commands and URLs)
 
 ## Appendix A — Runbook (commands and URLs)
 
