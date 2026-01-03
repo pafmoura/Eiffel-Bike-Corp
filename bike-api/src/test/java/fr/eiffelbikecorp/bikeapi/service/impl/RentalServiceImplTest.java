@@ -149,7 +149,7 @@ class RentalServiceImplTest {
         assertThat(returned.nextRental()).isNotNull();
         assertThat(returned.nextRental().customerId()).isEqualTo(customerId2);
         assertThat(returned.nextRental().bikeId()).isEqualTo(bike.id());
-        assertThat(returned.nextRental().status()).isEqualTo("ACTIVE");
+        assertThat(returned.nextRental().status()).isEqualTo("RESERVED");
         // Notification sent to customer2
         assertThat(returned.notificationSent()).isNotNull();
         assertThat(returned.notificationSent().customerId()).isEqualTo(customerId2);

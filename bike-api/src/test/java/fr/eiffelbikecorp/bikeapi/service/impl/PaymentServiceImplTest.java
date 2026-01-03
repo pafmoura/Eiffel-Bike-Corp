@@ -154,7 +154,7 @@ class PaymentServiceImplTest {
                 "pm_card_visa"
         )))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("Only ACTIVE rentals can be paid");
+                .hasMessageContaining("Only ACTIVE or RESERVED rentals can be paid.");
     }
     // -------------------------
     // payPurchase(UUID, PayPurchaseRequest)
