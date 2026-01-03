@@ -156,18 +156,18 @@ public class RentalServiceImpl implements RentalService {
                 .customer(nextCustomer)
                 .startAt(LocalDateTime.now())
                 .endAt(null)
-                .status(RentalStatus.ACTIVE)
+                .status(RentalStatus.RESERVED)
                 .totalAmountEur(bike.getRentalDailyRateEur())
                 .build();
         bike.setStatus(BikeStatus.RENTED);
-        Rental savedNextRental = rentalRepository.save(nextRental);
-        bikeRepository.save(bike);
+
+        Rental savedNextRental = rentalRepository.save(nextRental);        bikeRepository.save(bike);
         // mark as served
         nextEntry.setServedAt(LocalDateTime.now());
         waitingListEntryRepository.save(nextEntry);
         Notification notification = Notification.builder()
                 .entry(nextEntry)
-                .message("Bike " + bike.getId() + " is now available. A rental has been created for you.")
+                .message("Bike " + bike.getId() + " is now available. Please complete the payment.")
                 .sentAt(LocalDateTime.now())
                 .build();
         Notification savedNotification = notificationRepository.save(notification);

@@ -43,34 +43,27 @@ export class Dashboard implements OnInit {
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuqnSeZPqSaCHmM8Wj8fqD8bPkHKd1HODlCw&s'
   ];
 
-
   constructor() {
     effect(() => {
-      
-
       const user = this.userService.currentUser();
       if (!user) return;
       
-if (this.userService.userReady()){
-      this.userId.set(user.id); 
-      this.loadMyRentalsAndBikes();
-      this.loadNotifications();
-}
+      if (this.userService.userReady()){
+        this.userId.set(user.id); 
+        this.loadMyRentalsAndBikes();
+        this.loadNotifications();
+      }
     });
   }
-  ngOnInit() {
-  }
 
+  ngOnInit() {}
 
   notifications = signal<any[]>([]); 
 
-
-  
-/**
- * Displays user notifications related to rentals.
- * @returns 
- */
-loadNotifications() {
+  /**
+   * Displays user notifications related to rentals.
+   */
+  loadNotifications() {
     const id = this.userId();
     if (!id) return;
 
@@ -87,26 +80,30 @@ loadNotifications() {
   }
 
   /**
-   * Loads the user's active rentals and all bikes, marking which are rented by the user.
+   * Loads the user's active rentals and all bikes, marking which are rented or reserved by the user.
    */
   loadMyRentalsAndBikes() {
-      this.http.get<any[]>(
-    `${this.baseUrl}/rentals/active/bikes?customerId=${this.userId()}`,
-    { headers: this.getHeaders() }
-  ).subscribe(rentals => {
+    // 1. Get all rentals for this user to check for RESERVED status
+    this.http.get<any[]>(
+      `${this.baseUrl}/rentals`,
+      { headers: this.getHeaders() }
+    ).subscribe(allRentals => {
+      
+      // Map out active bikes and specific reserved rentals
+      const activeBikeIds = new Set(allRentals.filter(r => r.status === 'ACTIVE').map(r => r.bikeId));
+      const reservedMap = new Map(allRentals.filter(r => r.status === 'RESERVED').map(r => [r.bikeId, r.id]));
 
-      this.myActiveRentals.set(rentals);
-      const myBikeIds = new Set(rentals.map(r => r.bikeId));
-
+      // 2. Get the full bike catalog
       this.http.get<any[]>(
         `${this.baseUrl}/bikes/all`,
         { headers: this.getHeaders() }
       ).subscribe(bikes => {
-
         const mapped = bikes.map(b => ({
           ...b,
           imageUrl: this.bikeImages[Math.floor(Math.random() * this.bikeImages.length)],
-          isRentedByMe: myBikeIds.has(b.id)
+          isRentedByMe: activeBikeIds.has(b.id),
+          isReservedForMe: reservedMap.has(b.id),
+          reservedRentalId: reservedMap.get(b.id)
         }));
 
         this.bikes.set(mapped);
@@ -116,8 +113,6 @@ loadNotifications() {
 
   /**
    * Handles the rent button click for a bike.
-   * @param bike Bike selected for rent
-   * @returns 
    */
   handleRentClick(bike: any) {
     if (bike.isRentedByMe) return;
@@ -127,21 +122,37 @@ loadNotifications() {
       return;
     }
 
-    if (bike.status !== 'AVAILABLE') {
-      this.createRental(bike, false);
+    // CASE 1: Bike is reserved for me (from waitlist) -> Go straight to payment
+    if (bike.isReservedForMe) {
+      this.selectedBike.set(bike);
+      this.isPaymentStep.set(true);
       return;
     }
 
-    this.selectedBike.set(bike);
-    this.isPaymentStep.set(true);
+    // CASE 2: Bike is available -> Proceed to payment step
+    if (bike.status === 'AVAILABLE') {
+      this.selectedBike.set(bike);
+      this.isPaymentStep.set(true);
+      return;
+    }
+
+    // CASE 3: Bike is taken -> Join waitlist (no payment yet)
+    this.createRental(bike, false);
   }
 
   /**
-   * Confirms payment and creates the rental for the selected bike.
-   * 
+   * Confirms payment.
    */
   confirmPaymentAndRent() {
-    this.createRental(this.selectedBike(), true);
+    const bike = this.selectedBike();
+    
+    // If it was already reserved from a waitlist, use the existing rental ID
+    if (bike.isReservedForMe && bike.reservedRentalId) {
+      this.processPayment(bike.reservedRentalId, bike);
+    } else {
+      // Otherwise, create a new rental and pay
+      this.createRental(bike, true);
+    }
   }
 
   private createRental(bike: any, pay: boolean) {
@@ -156,24 +167,19 @@ loadNotifications() {
       rentalRequest,
       { headers: this.getHeaders() }
     ).subscribe(res => {
-      if (pay && res.rentalId) this.processPayment(res.rentalId, bike);
-      else alert(res.message || 'Added to Waiting List.');
-
-      this.closeModal();
+      // res.rentalId is returned if status is RENTED (Active) or RESERVED
+      if (pay && res.rentalId) {
+        this.processPayment(res.rentalId, bike);
+      } else {
+        alert(res.message || 'Action completed.');
+        this.closeModal();
+      }
     });
   }
 
-  /**
-   * Increases or decreases rental days within allowed limits.
-   */
   increaseDays() { if (this.rentalDays() < 30) this.rentalDays.update(v => v + 1); }
   decreaseDays() { if (this.rentalDays() > 1) this.rentalDays.update(v => v - 1); }
 
-  /**
-   * Processes payment for a rental.
-   * @param rentalId id of rental to pay
-   * @param bike bike
-   */
   private processPayment(rentalId: number, bike: any) {
     const paymentData = {
       rentalId,
@@ -186,9 +192,15 @@ loadNotifications() {
       `${this.baseUrl}/payments/rentals`,
       paymentData,
       { headers: this.getHeaders() }
-    ).subscribe(() => {
-      alert('Payment successful!');
-      this.closeModal();
+    ).subscribe({
+      next: () => {
+        alert('Payment successful! Your rental is now active.');
+        this.closeModal();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Payment failed. Please try again.');
+      }
     });
   }
 
@@ -196,6 +208,7 @@ loadNotifications() {
     this.isPaymentStep.set(false);
     this.selectedBike.set(null);
     this.rentalDays.set(3);
-    this.loadMyRentalsAndBikes();   
+    this.loadMyRentalsAndBikes(); 
+    this.loadNotifications();
   }
 }

@@ -48,14 +48,37 @@ public class PaymentServiceImpl implements PaymentService {
     public RentalPaymentResponse payRental(PayRentalRequest request) {
         Rental rental = rentalRepository.findById(request.rentalId())
                 .orElseThrow(() -> new NotFoundException("Rental not found: " + request.rentalId()));
-        if (rental.getStatus() != RentalStatus.ACTIVE) {
-            throw new BusinessRuleException("Only ACTIVE rentals can be paid.");
+
+        if (rental.getStatus() != RentalStatus.ACTIVE && rental.getStatus() != RentalStatus.RESERVED) {
+            throw new BusinessRuleException("Only ACTIVE or RESERVED rentals can be paid.");
         }
+
         String currency = request.currency().trim().toUpperCase();
         BigDecimal rateToEur = fxRateService.getRateToEur(currency);
         BigDecimal amountEur = request.amount()
                 .multiply(rateToEur)
                 .setScale(2, RoundingMode.HALF_UP);
+
+        // Gateway Authorization
+        var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
+        if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
+            throw new BusinessRuleException("Payment not authorized: " + auth.message());
+        }
+
+        // Gateway Capture
+        var capture = paymentGateway.capture(auth.authorizationId());
+        if (capture.status() != PaymentGateway.GatewayStatus.PAID) {
+            throw new BusinessRuleException("Payment capture failed: " + capture.message());
+        }
+
+        logger.info("Payment captured: " + capture.paymentId() + " for rental " + rental.getId());
+
+        if (rental.getStatus() == RentalStatus.RESERVED) {
+            rental.setStatus(RentalStatus.ACTIVE);
+            rental.setStartAt(LocalDateTime.now()); // The official rental time starts at payment
+            rentalRepository.save(rental);
+        }
+
         RentalPayment payment = RentalPayment.builder()
                 .rental(rental)
                 .originalAmount(request.amount())
@@ -65,15 +88,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(PaymentStatus.PAID)
                 .paidAt(LocalDateTime.now())
                 .build();
-        var auth = paymentGateway.authorize(currency, request.amount(), request.paymentMethodId(), "rental:" + rental.getId());
-        if (auth.status() != PaymentGateway.GatewayStatus.AUTHORIZED) {
-            throw new BusinessRuleException("Payment not authorized: " + auth.message());
-        }
-        var capture = paymentGateway.capture(auth.authorizationId());
-        if (capture.status() != PaymentGateway.GatewayStatus.PAID) {
-            throw new BusinessRuleException("Payment capture failed: " + capture.message());
-        }
-        logger.info("Payment captured: " + capture.paymentId() + " for rental " + rental.getId());
+
         RentalPayment saved = rentalPaymentRepository.save(payment);
         return RentalPaymentMapper.toResponse(saved);
     }

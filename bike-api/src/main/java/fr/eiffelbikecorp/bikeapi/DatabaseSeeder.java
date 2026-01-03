@@ -155,18 +155,9 @@ public class DatabaseSeeder implements CommandLineRunner {
         offer.getNotes().add(saleNote);
         saleOfferRepository.save(offer);
         // ==========================================
-        // 5. WAITING LIST & BASKET
+        // 5.  BASKET
         // ==========================================
-        // Bob is waiting for the E-Bike (currently rented by Alice)
-        WaitingList waitingList = new WaitingList();
-        waitingList.setBike(bikeCorpRented);
-        waitingList.setEntries(new ArrayList<>());
-        WaitingListEntry entry = new WaitingListEntry();
-        entry.setWaitingList(waitingList);
-        entry.setCustomer(bobUser);
-        entry.setCreatedAt(LocalDateTime.now());
-        waitingList.getEntries().add(entry);
-        waitingListRepository.save(waitingList);
+
         // Alice has the Vintage Bike offer in her basket
         Basket basket = Basket.builder()
                 .customer(aliceUser)

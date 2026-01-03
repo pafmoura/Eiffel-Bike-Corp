@@ -30,7 +30,6 @@
           <span class="text-white font-bold text-sm">{{ n.message }}</span>
           <span class="text-indigo-200 text-[10px] uppercase font-bold tracking-widest">{{ n.sentAt | date:'shortTime' }}</span>
         </div>
-        
       </div>
     </div>
   </div>
@@ -41,8 +40,12 @@
       
       <div class="relative w-full h-56 mb-5 overflow-hidden rounded-2xl bg-slate-100">
         <div class="absolute top-3 right-3 z-10 backdrop-blur-md bg-white/90 px-3 py-1 rounded-full text-xs font-bold border shadow-sm"
-             [ngClass]="{'text-emerald-600 border-emerald-100': bike.status === 'AVAILABLE', 'text-orange-500 border-orange-100': bike.status !== 'AVAILABLE'}">
-          {{ bike.status === 'AVAILABLE' ? 'Available' : 'Waitlist' }}
+             [ngClass]="{
+               'text-emerald-600 border-emerald-100': bike.status === 'AVAILABLE', 
+               'text-orange-500 border-orange-100': bike.status !== 'AVAILABLE' && !bike.isReservedForMe,
+               'text-indigo-600 border-indigo-100': bike.isReservedForMe
+             }">
+          {{ bike.isReservedForMe ? 'Reserved for You' : (bike.status === 'AVAILABLE' ? 'Available' : 'Waitlist') }}
         </div>
         <img [src]="bike.imageUrl" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700">
       </div>
@@ -62,127 +65,88 @@
           </div>
 
           <button
-  (click)="handleRentClick(bike)"
-  [disabled]="bike.offeredBy.id === userId() || bike.isRentedByMe"
-  class="px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all"
-  [ngClass]="
-    bike.isRentedByMe
-      ? 'bg-emerald-100 text-emerald-600 cursor-not-allowed'
-      : bike.offeredBy.id === userId()
-        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        : bike.status === 'AVAILABLE'
-          ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
-          : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'
-  ">
+            (click)="handleRentClick(bike)"
+            [disabled]="bike.offeredBy.id === userId() || (bike.isRentedByMe && !bike.isReservedForMe)"
+            class="px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all"
+            [ngClass]="{
+              'bg-emerald-100 text-emerald-600 cursor-not-allowed': bike.isRentedByMe,
+              'bg-slate-200 text-slate-400 cursor-not-allowed': bike.offeredBy.id === userId(),
+              'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100': bike.status === 'AVAILABLE' || bike.isReservedForMe,
+              'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100': bike.status !== 'AVAILABLE' && !bike.isReservedForMe && !bike.isRentedByMe
+            }">
 
-  {{
-    bike.isRentedByMe
-      ? 'Rented by you'
-      : bike.offeredBy.id === userId()
-        ? 'Your Bike'
-        : bike.status === 'AVAILABLE'
-          ? 'Rent Now'
-          : 'Join Waitlist'
-  }}
-</button>
-
-
-
+            {{
+              bike.isRentedByMe
+                ? 'Rented by you'
+                : bike.offeredBy.id === userId()
+                  ? 'Your Bike'
+                  : bike.isReservedForMe
+                    ? 'Pay & Claim'
+                    : bike.status === 'AVAILABLE'
+                      ? 'Rent Now'
+                      : 'Join Waitlist'
+            }}
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-<div *ngIf="isPaymentStep()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-  <div class="bg-white rounded-[2.5rem] max-w-md w-full shadow-2xl overflow-hidden transform transition-all border border-white/20">
+  <div *ngIf="isPaymentStep()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] max-w-md w-full shadow-2xl overflow-hidden transform transition-all border border-white/20">
 
-    <!-- Header -->
-    <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-      <div>
-        <h3 class="font-bold text-2xl text-slate-900">Secure Payment</h3>
-        <p class="text-xs text-slate-500 mt-1">
-          Complete your rental for {{ rentalDays() }} days
-        </p>
-      </div>
-      <button (click)="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-400 text-2xl">×</button>
-    </div>
-
-    <div class="p-8">
-
-      <!--  Rental Days Picker -->
-      <div class="flex items-center justify-between mb-6">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Rental Duration
-        </label>
-
-        <div class="flex items-center bg-slate-50 border border-slate-200 rounded-full shadow-sm overflow-hidden">
-          <button type="button"
-                  (click)="decreaseDays()"
-                  class="w-10 h-10 flex items-center justify-center text-lg font-bold text-slate-500 hover:bg-slate-100 transition">
-            −
-          </button>
-
-          <div class="px-4 text-sm font-bold text-slate-900 min-w-[80px] text-center">
-            {{ rentalDays() }} days
-          </div>
-
-          <button type="button"
-                  (click)="increaseDays()"
-                  class="w-10 h-10 flex items-center justify-center text-lg font-bold text-slate-500 hover:bg-slate-100 transition">
-            +
-          </button>
-        </div>
-      </div>
-
-      <!-- Total -->
-      <div class="mb-8 p-6 bg-indigo-600 rounded-3xl text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
-        <div class="relative z-10">
-          <label class="text-[10px] uppercase font-bold opacity-80 tracking-widest">Total to Pay</label>
-          <p class="text-4xl font-black mt-1">
-            {{ fx.convert(selectedBike()?.rentalDailyRateEur * rentalDays()) | currency: fx.currency() }}
+      <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+        <div>
+          <h3 class="font-bold text-2xl text-slate-900">Secure Payment</h3>
+          <p class="text-xs text-slate-500 mt-1">
+            Complete your rental for {{ rentalDays() }} days
           </p>
         </div>
-        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
+        <button (click)="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-400 text-2xl">×</button>
       </div>
 
-      <!-- Payment Form -->
-      <form (ngSubmit)="confirmPaymentAndRent()" class="space-y-5">
+      <div class="p-8">
+        <div class="flex items-center justify-between mb-6">
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Rental Duration
+          </label>
 
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Card Number</label>
-          <input [value]="cardNumber()"
-                 (input)="cardNumber.set($any($event.target).value)"
-                 placeholder="4242 4242 4242 4242"
-                 class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-full shadow-sm overflow-hidden">
+            <button type="button" (click)="decreaseDays()" class="w-10 h-10 flex items-center justify-center text-lg font-bold text-slate-500 hover:bg-slate-100 transition">−</button>
+            <div class="px-4 text-sm font-bold text-slate-900 min-w-[80px] text-center">{{ rentalDays() }} days</div>
+            <button type="button" (click)="increaseDays()" class="w-10 h-10 flex items-center justify-center text-lg font-bold text-slate-500 hover:bg-slate-100 transition">+</button>
+          </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <input [value]="expiry()"
-                 (input)="expiry.set($any($event.target).value)"
-                 placeholder="MM / YY"
-                 class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
-          <input [value]="cvc()"
-                 (input)="cvc.set($any($event.target).value)"
-                 type="password"
-                 placeholder="CVC"
-                 class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+        <div class="mb-8 p-6 bg-indigo-600 rounded-3xl text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
+          <div class="relative z-10">
+            <label class="text-[10px] uppercase font-bold opacity-80 tracking-widest">Total to Pay</label>
+            <p class="text-4xl font-black mt-1">
+              {{ fx.convert(selectedBike()?.rentalDailyRateEur * rentalDays()) | currency: fx.currency() }}
+            </p>
+          </div>
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full"></div>
         </div>
 
-        <div class="pt-4 space-y-3">
-          <button type="submit"
-                  class="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">
-            Authorize {{ fx.convert(selectedBike()?.rentalDailyRateEur * rentalDays()) | currency: fx.currency() }} →
-          </button>
+        <form (ngSubmit)="confirmPaymentAndRent()" class="space-y-5">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Card Number</label>
+            <input [value]="cardNumber()" (input)="cardNumber.set($any($event.target).value)" placeholder="4242 4242 4242 4242" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+          </div>
 
-          <button type="button"
-                  (click)="closeModal()"
-                  class="w-full py-3 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600">
-            Cancel Transaction
-          </button>
-        </div>
-      </form>
+          <div class="grid grid-cols-2 gap-4">
+            <input [value]="expiry()" (input)="expiry.set($any($event.target).value)" placeholder="MM / YY" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+            <input [value]="cvc()" (input)="cvc.set($any($event.target).value)" type="password" placeholder="CVC" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div class="pt-4 space-y-3">
+            <button type="submit" class="w-full py-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98]">
+              Authorize {{ fx.convert(selectedBike()?.rentalDailyRateEur * rentalDays()) | currency: fx.currency() }} →
+            </button>
+            <button type="button" (click)="closeModal()" class="w-full py-3 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600">Cancel Transaction</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
-
 </div>
