@@ -121,20 +121,22 @@ existingSaleBikeIds = signal<number[]>([]);
    * @param saleOfferId SAle offer to apply the note
    */
   private addInitialSaleNote(saleOfferId: number) {
-    const notePayload = {
-      saleOfferId: saleOfferId,
-      content: this.saleNote
-    };
+  const notePayload = {
+    saleOfferId: saleOfferId,
+    title: 'Initial Condition Note',
+    content: this.saleNote,
+    createdBy: this.bike.offeredBy  
+  };
 
     this.http.post('http://localhost:8080/api/sale-offers/notes', notePayload)
-      .pipe(finalize(() => this.finalizeSaleSuccess()))
-      .subscribe({
-        error: (err) => {
-          console.error('Note error:', err);
-          this.showAlert('Offer created, but condition note failed to save.', 'info');
-        }
-      });
-  }
+    .pipe(finalize(() => this.finalizeSaleSuccess()))
+    .subscribe({
+      error: (err) => {
+        console.error('Note error:', err);
+        this.showAlert('Offer created, but condition note failed to save.', 'info');
+      }
+    });
+}
 
   /**
    * Finalizes the sale offer creation process with success feedback.
