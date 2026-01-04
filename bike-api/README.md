@@ -875,6 +875,8 @@ Below is the **functional** endpoint list, grouped by controller. (All paths are
 
 * `POST /users/register` — Register a new user (Student, Employee, etc.).
 * `POST /users/login` — Login with credentials, returns a JWT `accessToken`.
+* `GET /users/{id}` — Get user by ID. Returns user details, including full name and account type.
+
 
 #### 6.3.2 Rental Offers (`/rental-offers`)
 
