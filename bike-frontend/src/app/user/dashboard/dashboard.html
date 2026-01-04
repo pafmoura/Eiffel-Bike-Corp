@@ -1,3 +1,23 @@
+<div *ngIf="alert().show" 
+     class="fixed top-6 right-6 z-[120] transition-all duration-300 transform animate-in fade-in slide-in-from-right-5">
+  <div [ngClass]="{
+      'bg-emerald-50 border-emerald-500 text-emerald-800': alert().type === 'success',
+      'bg-red-50 border-red-500 text-red-800': alert().type === 'error',
+      'bg-blue-50 border-blue-500 text-blue-800': alert().type === 'info'
+    }" 
+    class="flex items-center p-4 rounded-2xl border-l-4 shadow-2xl min-w-[320px]">
+    
+    <div class="flex-1 mr-4">
+      <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{{ alert().type }}</p>
+      <p class="text-sm font-bold">{{ alert().message }}</p>
+    </div>
+
+    <button (click)="alert.set({show: false, message: '', type: 'info'})" class="text-xl font-light hover:opacity-50">
+      &times;
+    </button>
+  </div>
+</div>
+
 <div class="p-8 bg-slate-50 min-h-screen font-sans">
   <header class="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
     <div>

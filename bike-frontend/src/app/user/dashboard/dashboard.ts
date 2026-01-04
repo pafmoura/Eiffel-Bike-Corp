@@ -6,6 +6,13 @@ import { FormsModule } from '@angular/forms';
 import { FxRateService } from '../../fx-rate-service';
 import { UserService } from '../../services/user-service';
 
+
+
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
 /**
  * Dashboard component for user interactions.
  * Displays available bikes, manages rentals, and handles payments.
@@ -24,6 +31,7 @@ export class Dashboard implements OnInit {
   private baseUrl = 'http://localhost:8080/api';
   private userService = inject(UserService);
 
+  alert = signal<AlertState>({ show: false, message: '', type: 'info' });
   bikes = signal<any[]>([]);
   myActiveRentals = signal<any[]>([]);
 
@@ -75,6 +83,11 @@ export class Dashboard implements OnInit {
     });
   }
 
+  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
+  }
+
   private getHeaders() {
     return new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`);
   }
@@ -118,7 +131,7 @@ export class Dashboard implements OnInit {
     if (bike.isRentedByMe) return;
 
     if (bike.offeredBy.id === this.userId()) {
-      alert("You can't rent your own bike.");
+this.showAlert("You can't rent your own bike.", 'error');
       return;
     }
 
@@ -171,7 +184,7 @@ export class Dashboard implements OnInit {
       if (pay && res.rentalId) {
         this.processPayment(res.rentalId, bike);
       } else {
-        alert(res.message || 'Action completed.');
+        this.showAlert(res.message || 'Action completed.', 'success');
         this.closeModal();
       }
     });
@@ -194,12 +207,12 @@ export class Dashboard implements OnInit {
       { headers: this.getHeaders() }
     ).subscribe({
       next: () => {
-        alert('Payment successful! Your rental is now active.');
+this.showAlert('Payment successful! Your rental is now active.', 'success');
         this.closeModal();
       },
       error: (err) => {
         console.error(err);
-        alert('Payment failed. Please try again.');
+        this.showAlert('Payment failed. Please try again.', 'error');
       }
     });
   }
