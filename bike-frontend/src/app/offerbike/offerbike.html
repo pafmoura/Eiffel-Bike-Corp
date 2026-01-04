@@ -198,7 +198,7 @@
         <p class="text-sm text-slate-700 leading-relaxed font-medium italic">"{{ note.comment }}"</p>
         <div class="mt-3 flex items-center gap-2 pt-3 border-t border-slate-200/50">
           <div class="w-5 h-5 rounded-full bg-slate-200"></div>
-          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter"> ID: {{ note.authorId || 'Member' | slice:0:8 }}</p>
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter"> {{ userNames().get(note.authorId) || 'Loading name...' }}</p>
         </div>
       </div>
     </div>

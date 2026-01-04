@@ -40,6 +40,8 @@ existingSaleBikeIds = signal<number[]>([]);
     offeredBy: ''
   };
 
+  userNames = signal<Map<string, string>>(new Map());
+
   // --- Logic State ---
   myOffers: any[] = [];
   private _isLoading = false;
@@ -197,12 +199,14 @@ private finalizeSaleSuccess() {
    * Allows viewing the history of a bike's return notes.
    * @param bikeId Bike selected for history
    */
-  viewBikeHistory(bikeId: number) {
+ viewBikeHistory(bikeId: number) {
     this.http.get<any[]>(`http://localhost:8080/api/bikes/${bikeId}/return-notes`)
       .subscribe({
         next: (notes) => {
           this.selectedBikeNotes.set(notes);
           this.showNotesModal.set(true);
+          
+          this.resolveAuthorNames(notes);
         },
         error: (err) => this.showAlert('Could not load history', 'error')
       });
@@ -211,6 +215,31 @@ private finalizeSaleSuccess() {
   /* =========================================================
      DATA HELPERS
      ========================================================= */
+
+private resolveAuthorNames(notes: any[]) {
+    const uniqueIds = [...new Set(notes.map(n => n.authorId))].filter(id => !!id);
+
+    uniqueIds.forEach(id => {
+      if (!this.userNames().has(id)) {
+        this.http.get<any>(`http://localhost:8080/api/users/${id}`).subscribe({
+          next: (user) => {
+            this.userNames.update(map => {
+              const newMap = new Map(map);
+              newMap.set(id, user.fullName);
+              return newMap;
+            });
+          },
+          error: () => {
+            this.userNames.update(map => {
+              const newMap = new Map(map);
+              newMap.set(id, 'Unknown Member');
+              return newMap;
+            });
+          }
+        });
+      }
+    });
+  }
 
   private tryLoadOffers() {
     this.extractUser();

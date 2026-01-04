@@ -76,4 +76,15 @@ public class UserServiceImpl implements UserService {
                 10L
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse findById(String id) {
+        UUID uuid = UUID.fromString(id);
+
+        Customer customer = customerRepository.findById(uuid)
+                .orElseThrow(() -> new BusinessRuleException("User not found with ID: " + id));
+
+        return UserMapper.toResponse(customer, null, "MEMBER");
+    }
 }

@@ -12,10 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -70,4 +67,32 @@ public class UserController {
         UserLoginResponse login = userService.login(request);
         return Response.ok(login).build();
     }
+
+    @GET
+    @Path("/{id}")
+    @Operation(summary = "Get user by ID", description = "Returns user details including full name")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User found",
+                    content = @Content(
+                            schema = @Schema(implementation = UserResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid user ID"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found"
+            )
+    })
+    public Response getUserById(@PathParam("id") String id) {
+        UserResponse user = userService.findById(id);
+        return Response.ok(user).build();
+    }
+
+
+
 }

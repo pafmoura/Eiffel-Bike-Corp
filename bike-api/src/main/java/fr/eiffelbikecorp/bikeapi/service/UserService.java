@@ -9,4 +9,6 @@ public interface UserService {
     UserResponse register(UserRegisterRequest request);
 
     UserLoginResponse login(UserLoginRequest request);
+
+    UserResponse findById(String id);
 }
