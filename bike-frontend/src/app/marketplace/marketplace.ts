@@ -5,6 +5,12 @@ import { BikeMarketplace } from '../services/bike-marketplace';
 import { FxRateService } from '../fx-rate-service';
 import { UserService } from '../services/user-service';
 
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 @Component({
   selector: 'app-marketplace',
   standalone: true,
@@ -15,7 +21,7 @@ export class MarketplaceComponent implements OnInit {
   private marketService = inject(BikeMarketplace);
   // Injecting the FX service as public so the template can access its signals
   public fx = inject(FxRateService);
-
+alert = signal<AlertState>({ show: false, message: '', type: 'info' });
     private userService = inject(UserService);
 
 currentUserId = signal<string | null>(null);
@@ -39,6 +45,12 @@ allBikes = signal<any[]>([]);
   totalEur = computed(() =>
     this.basketItems().reduce((acc, i) => acc + (i.unitPriceEurSnapshot || 0), 0)
   );
+
+
+  showAlert(message: string, type: 'success' | 'error' | 'info' = 'info') {
+    this.alert.set({ show: true, message, type });
+    setTimeout(() => this.alert.set({ ...this.alert(), show: false }), 5000);
+  }
 
   ngOnInit() {
 
@@ -110,13 +122,14 @@ addToBasket(offerId: number) {
   console.log("current user id:", this.currentUserId());
 
   if (bike.offeredBy.id === this.currentUserId()) {
-    return alert("You cannot add your own bike to the basket.");
+return this.showAlert("You cannot add your own bike to the basket.", 'error');
   }
 
   this.marketService.addToBasket(offerId).subscribe({
     next: res => {
       this.basketItems.set(res.items);
       this.isOpen.set(true);
+      this.showAlert("Added to basket!", "success");
     },
     error: err => console.error(err)
   });
@@ -143,7 +156,7 @@ addToBasket(offerId: number) {
 
   confirmPayment() {
     if (!this.isValidCard()) {
-      return alert('Please enter valid card details.');
+return this.showAlert('Please enter valid card details.', 'error');
     }
 
     const id = this.currentPurchaseId();
@@ -157,7 +170,7 @@ addToBasket(offerId: number) {
       paymentMethodId: 'pm_card_visa'
     }).subscribe({
       next: () => {
-        alert('Payment successful!');
+this.showAlert('Payment successful! Your bike is on the way.', 'success');
         this.resetUI();
       }
     });
