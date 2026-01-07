@@ -9,12 +9,14 @@ enum BikeStatus {
   AVAILABLE
   RENTED
   MAINTENANCE
+  SOLD
 }
 
 enum RentalStatus {
   ACTIVE
   CLOSED
   CANCELED
+  RESERVED
 }
 
 enum PaymentStatus {
@@ -53,6 +55,7 @@ enum UserType {
   CUSTOMER
   STUDENT
   EMPLOYEE
+  EIFFEL_BIKE_CORP
 }
 
 enum CustomerType {
@@ -238,20 +241,5 @@ Purchase "1" o-- "0..*" PurchaseItem : items
 PurchaseItem "0..*" --> "1" SaleOffer : offer >
 Purchase "1" o-- "0..*" SalePayment : payments
 
-note right of BasketItem
-uk_basket_offer (basket_id, sale_offer_id)
-end note
-
-note right of PurchaseItem
-uk_purchase_offer (purchase_id, sale_offer_id)
-end note
-
-note right of Customer
-id is UUID (assigned in constructor)
-end note
-
-note right of BikeProvider
-id is UUID (assigned by subclasses' constructors)
-end note
 
 @enduml
