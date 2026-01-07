@@ -87,6 +87,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .amountEur(amountEur)
                 .status(PaymentStatus.PAID)
                 .paidAt(LocalDateTime.now())
+                .stripePaymentIntentId(capture.paymentId())
                 .build();
 
         RentalPayment saved = rentalPaymentRepository.save(payment);
@@ -148,7 +149,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .amountEur(amountEur)
                 .status(PaymentStatus.PAID)
                 .paidAt(now)
-                .stripePaymentIntentId("some_id")
+                .stripePaymentIntentId(cap.paymentId())
                 .build();
         SalePayment saved = salePaymentRepository.save(payment);
         purchase.setStatus(PurchaseStatus.PAID);
